@@ -2,9 +2,12 @@ from flask import Flask, render_template, request, g, redirect
 import sqlite3
 import requests
 import math
+import matplotlib.pyplot as plt
+import matplotlib as mpt
+mpt.use('agg')
 
 app = Flask(__name__)
-database = 'datafile.db'
+database = 'reference/datafile.db'
 
 
 def get_db():
@@ -98,6 +101,17 @@ def home():
     for stock in stock_info:
         stock['value_percentage'] = round(
             stock['total_value'] * 100 / total_stock_value, 2)
+
+    # -- 繪製圓餅圖 --
+    if len(unique_stock_list) != 0:
+        labels = tuple(unique_stock_list)
+        sizes = [d['total_value'] for d in stock_info]
+
+        fig, ax = plt.subplots(figsize=(6, 5))
+        ax.pie(sizes, labels=labels, autopct=None, shadow=None)
+        fig.subplots_adjust(top=1, bottom=0, right=1,
+                            left=0, hspace=0, wspace=0)
+        plt.savefig("reference/static/piechart.jpg", dpi=200)
 
     # 傳送至前端的物件資訊
     datas = {
