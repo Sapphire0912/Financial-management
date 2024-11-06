@@ -3,11 +3,38 @@
   <h2>現金庫存</h2>
   <table class="table table-bordered">
     <tr>
-      <td>台幣總額: 元</td>
-      <td>美金總額: 元</td>
-      <td>今日匯率:</td>
-      <td>現金總額: 元</td>
+      <td>台幣總額: {{data['TWD']}}元</td>
+      <td>美金總額: {{data['USD']}}元</td>
+      <td>今日匯率: {{data['rate']}}元</td>
+      <td>現金總額: {{data['total']}}元</td>
     </tr>
+  </table>
+  <p>(出處: 全球即時匯率 API https://tw.rter.info/howto_currencyapi.php)</p>
+
+  <h4>現金更動紀錄</h4>
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th scope="col">ID</th>
+        <th scope="col">台幣</th>
+        <th scope="col">美金</th>
+        <th scope="col">備註</th>
+        <th scope="col">日期</th>
+        <th scope="col">刪除資料</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for data in data['cash_result'] %}
+      <tr>
+        <td>{{data[0]}}</td>
+        <td>{{data[1]}}</td>
+        <td>{{data[2]}}</td>
+        <td>{{data[3]}}</td>
+        <td>{{data[4]}}</td>
+        <td><button class="btn-primary">刪除此筆資料</button></td>
+      </tr>
+      {% endfor %}
+    </tbody>
   </table>
 </div>
 {% endblock %}
