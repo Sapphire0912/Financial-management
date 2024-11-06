@@ -1,25 +1,48 @@
 {% extends "base.html" %} {% block content %}
-<form method="POST" action="http://127.0.0.1:5000/stock>
+<form method="POST" action="http://127.0.0.1:5000/stock">
   <div class="mb-3">
-    <label for="exampleInputEmail1" class="form-label">Email address</label>
+    <label for="stock-id" class="form-label">股票代號</label>
+    <input type="text" class="form-control" id="stock-id" name="stock-id" />
+  </div>
+  <div class="mb-3">
+    <label for="stock-num" class="form-label">成交股數</label>
     <input
-      type="email"
+      type="number"
       class="form-control"
-      id="exampleInputEmail1"
-      aria-describedby="emailHelp"
+      id="stock-num"
+      name="stock-num"
+      min="0"
     />
-    <div id="emailHelp" class="form-text">
-      We'll never share your email with anyone else.
-    </div>
   </div>
   <div class="mb-3">
-    <label for="exampleInputPassword1" class="form-label">Password</label>
-    <input type="password" class="form-control" id="exampleInputPassword1" />
+    <label for="stock-price" class="form-label">成交單價</label>
+    <input
+      type="number"
+      step="0.01"
+      class="form-control"
+      id="stock-price"
+      name="stock-price"
+      min="0"
+    />
   </div>
-  <div class="mb-3 form-check">
-    <input type="checkbox" class="form-check-input" id="exampleCheck1" />
-    <label class="form-check-label" for="exampleCheck1">Check me out</label>
+  <div class="mb-3">
+    <label for="processing-fee" class="form-label">手續費</label>
+    <input
+      type="number"
+      class="form-control"
+      id="processing-fee"
+      name="processing-fee"
+      min="0"
+    />
   </div>
-  <button type="submit" class="btn btn-primary">Submit</button>
+  <div class="mb-3">
+    <label for="tax" class="form-label">交易稅</label>
+    <input type="number" class="form-control" id="tax" name="tax" min="0" />
+  </div>
+  <div class="mb-3">
+    <label for="date" class="form-label">日期</label>
+    <input type="date" class="form-control" id="date" name="date" />
+  </div>
+  <button type="submit" class="btn btn-primary">送出</button>
 </form>
 {% endblock %}
