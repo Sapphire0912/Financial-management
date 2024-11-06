@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, g, redirect
 import sqlite3
 import requests
 import math
+import os
 import matplotlib.pyplot as plt
 import matplotlib as mpt
 mpt.use('agg')
@@ -112,9 +113,32 @@ def home():
         fig.subplots_adjust(top=1, bottom=0, right=1,
                             left=0, hspace=0, wspace=0)
         plt.savefig("reference/static/piechart.jpg", dpi=200)
+    else:
+        try:
+            os.remove("reference/static/piechart.jpg")
+        except:
+            pass
+
+    # -- 繪製股票現金圓餅圖 --
+    if us_dollars != 0 or tw_dollars != 0 or total_stock_value != 0:
+        labels = ('USD', 'TWD', 'Stock')
+        sizes = (us_dollars * USD_to_TWD_rate, tw_dollars, total_stock_value)
+
+        fig, ax = plt.subplots(figsize=(6, 5))
+        ax.pie(sizes, labels=labels, autopct=None, shadow=None)
+        fig.subplots_adjust(top=1, bottom=0, right=1,
+                            left=0, hspace=0, wspace=0)
+        plt.savefig("reference/static/piechart2.jpg", dpi=200)
+    else:
+        try:
+            os.remove("reference/static/piechart2.jpg")
+        except:
+            pass
 
     # 傳送至前端的物件資訊
     datas = {
+        'show_pic_1': os.path.exists('reference/static/piechart.jpg'),
+        'show_pic_2': os.path.exists('reference/static/piechart2.jpg'),
         'total': total_dollars,
         'rate': USD_to_TWD_rate,
         'USD': us_dollars,
