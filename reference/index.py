@@ -88,6 +88,20 @@ def submit_cash():
     return redirect("/")
 
 
+@app.route('/cash-delete', methods=['POST'])
+def delete_cash():
+    transaction_id = request.values['id']
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        """DELETE FROM cash WHERE transaction_id=?""", (transaction_id, ))
+    conn.commit()
+
+    return redirect("/")
+
+
 @app.route('/stock')
 def stock_form():
     return render_template('stock.html')

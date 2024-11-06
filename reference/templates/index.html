@@ -31,7 +31,12 @@
         <td>{{data[2]}}</td>
         <td>{{data[3]}}</td>
         <td>{{data[4]}}</td>
-        <td><button class="btn-primary">刪除此筆資料</button></td>
+        <td>
+          <form action="/cash-delete" method="post">
+            <input type="hidden" name="id" value="{{data[0]}}" />
+            <button type="submit" class="btn btn-primary">刪除此筆資料</button>
+          </form>
+        </td>
       </tr>
       {% endfor %}
     </tbody>
