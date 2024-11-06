@@ -1,3 +1,34 @@
 {% extends "base.html" %} {% block content %}
-<h2>this is cash form page.</h2>
+<form method="POST" action="http://127.0.0.1:5000/cash">
+  <div class="mb-3">
+    <label for="tw-dollars" class="form-label">台幣</label>
+    <input
+      type="number"
+      class="form-control"
+      id="tw-dollars"
+      name="tw-dollars"
+      min="0"
+    />
+  </div>
+  <div class="mb-3">
+    <label for="us-dollars" class="form-label">美金</label>
+    <input
+      step="0.01"
+      type="number"
+      class="form-control"
+      id="us-dollars"
+      name="us-dollars"
+      min="0.00"
+    />
+  </div>
+  <div class="mb-3">
+    <label for="note" class="form-label">備註</label>
+    <input type="text" class="form-control" id="note" name="note" />
+  </div>
+  <div class="mb-3">
+    <label for="date" class="form-label">日期</label>
+    <input type="date" class="form-control" id="date" name="date" />
+  </div>
+  <button type="submit" class="btn btn-primary">送出</button>
+</form>
 {% endblock %}
