@@ -14,5 +14,5 @@ def init_app() -> FastAPI:
     def root():
         return {"message": "Hello from FastAPI in Docker!"}
 
-    app.include_router(users.router)
+    app.include_router(users.router, prefix="/app")
     return app

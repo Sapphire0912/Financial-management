@@ -15,6 +15,23 @@ services:
       - mysql-financial
       - mongo-financial
 
+  frontend-financial:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:80"
+    volumes:
+      - ./frontend:/app
+    environment:
+      - NODE_ENV=development
+    env_file:
+      - financial.env
+    depends_on:
+      - backend-financial
+    stdin_open: true
+    tty: true
+
   mysql-financial:
     image: mysql:8.0
     restart: always
