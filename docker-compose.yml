@@ -1,0 +1,36 @@
+services:
+  backend-financial:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "32220:8000"
+    volumes:
+      - ./backend:/app
+    environment:
+      - PYTHONPATH=/app
+    env_file:
+      - financial.env
+    depends_on:
+      - mysql-financial
+      - mongo-financial
+
+  mysql-financial:
+    image: mysql:8.0
+    restart: always
+    env_file:
+      - financial.env
+    ports:
+      - "32221:3306"
+    volumes:
+      - ./financial-mysql:/var/lib/mysql
+
+  mongo-financial:
+    image: mongo:latest
+    restart: always
+    env_file:
+      - financial.env
+    ports:
+      - "32222:27017"
+    volumes:
+      - ./financial-mongo:/data/db
