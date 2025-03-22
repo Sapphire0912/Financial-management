@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from app.databases.mongo_setting import connect_mongo
-from app.router import users
+from app.router import users_accounting
 
 
 def init_app() -> FastAPI:
@@ -14,5 +14,5 @@ def init_app() -> FastAPI:
     def root():
         return {"message": "Hello from FastAPI in Docker!"}
 
-    app.include_router(users.router, prefix="/app")
+    app.include_router(users_accounting.router, prefix="/app")
     return app
