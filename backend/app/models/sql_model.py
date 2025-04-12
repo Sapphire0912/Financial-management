@@ -22,12 +22,12 @@ class User(Base):
     """
     __tablename__ = "users"
     id = Column(Integer, primary_key=True)
-    username = Column(String, unique=True, nullable=False)
-    email = Column(String, unique=True, nullable=False)
-    password = Column(String, nullable=False)
+    username = Column(String(50), unique=True, nullable=False)
+    email = Column(String(100), unique=True, nullable=False)
+    password = Column(String(255), nullable=False)
     is_active = Column(Boolean, default=True)
-    line_user_name = Column(String, nullable=True)
-    line_user_id = Column(String, unique=True, nullable=True)
+    line_user_name = Column(String(100), nullable=True)
+    line_user_id = Column(String(100), unique=True, nullable=True)
     created_at = Column(DateTime, default=datetime.now)
     updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
     last_login_at = Column(DateTime, default=datetime.now)

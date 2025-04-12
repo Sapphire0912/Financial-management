@@ -1,5 +1,6 @@
 services:
   backend-financial:
+    container_name: backend-financial
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -14,8 +15,8 @@ services:
     depends_on:
       - mysql-financial
       - mongo-financial
-
   frontend-financial:
+    container_name: frontend-financial
     build:
       context: ./frontend
       dockerfile: Dockerfile
@@ -33,6 +34,7 @@ services:
     tty: true
 
   mysql-financial:
+    container_name: mysql-financial
     image: mysql:8.0
     restart: always
     env_file:
@@ -43,6 +45,7 @@ services:
       - ./financial-mysql:/var/lib/mysql
 
   mongo-financial:
+    container_name: mongo-financial
     image: mongo:latest
     restart: always
     env_file:

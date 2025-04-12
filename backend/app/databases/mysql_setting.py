@@ -5,15 +5,10 @@ from sqlalchemy.orm import sessionmaker, Session
 
 load_dotenv()
 
-MYSQL_HOST = os.getenv("MYSQL_HOST")
-MYSQL_PORT = os.getenv("MYSQL_PORT")
-MYSQL_USER = os.getenv("MYSQL_USER")
-MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD")
-MYSQL_DB = os.getenv("MYSQL_DB")
 
-MYSQL_URL = f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}"
+MYSQL_URI = os.getenv("MYSQL_URI")
 
-engine = create_engine(MYSQL_URL)
+engine = create_engine(MYSQL_URI)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 

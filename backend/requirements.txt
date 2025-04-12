@@ -5,3 +5,4 @@ mongoengine
 pymysql
 sqlalchemy
 pymongo
+cryptography
