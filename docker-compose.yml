@@ -48,6 +48,6 @@ services:
     env_file:
       - financial.env
     ports:
-      - "32222:27017"
+      - "32226:27017"
     volumes:
       - ./financial-mongo:/data/db

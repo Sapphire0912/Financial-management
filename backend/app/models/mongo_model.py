@@ -45,6 +45,18 @@ class Accounting(BaseModel):
     store_name = me.StringField(default="")
     # invoice_number = me.StringField(default="")  # 發票號碼, 之後串金流可用
 
+    meta = {
+        "indexes": [
+            {
+                "fields": [
+                    "user_name", "user_id", "statistics_kind",
+                    "category", "cost_name", "store_name"
+                ],
+                "sparse": True
+            }
+        ]
+    }
+
     def __str__(self):
         return f"{self.user_name} | {self.cost_name} -> {self.unit} {self.cost}. {self.store_name}"
 
