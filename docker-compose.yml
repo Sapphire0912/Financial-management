@@ -54,3 +54,12 @@ services:
       - "32226:27017"
     volumes:
       - ./financial-mongo:/data/db
+
+  redis-financial:
+    container_name: redis-financial
+    image: redis:latest
+    restart: always
+    env_file:
+      - financial.env
+    ports:
+      - "32227:6379"

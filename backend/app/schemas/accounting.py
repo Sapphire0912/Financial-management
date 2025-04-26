@@ -3,6 +3,7 @@ from typing import Optional
 from datetime import datetime, date
 
 
+# -- Accounting Router 相關 --
 class AccountingCreate(BaseModel):
     user_name: str
     user_id: str
@@ -40,3 +41,4 @@ class AccountingDelete(BaseModel):
     cost_name: str
     cost: Optional[int] = None
     store_name: Optional[str] = None
+# -- End --

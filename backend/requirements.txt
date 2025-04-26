@@ -6,3 +6,6 @@ pymysql
 sqlalchemy
 pymongo
 cryptography
+python-jose[cryptography]
+passlib[bcrypt]
+redis
