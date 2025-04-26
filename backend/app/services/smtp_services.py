@@ -22,6 +22,9 @@ SMTP_USER = os.environ.get("SMTP_USER")
 SMTP_APP_PASSWORD = os.environ.get("SMTP_APP_PASSWORD")  # Gmail 應用程式密碼
 
 
+__all__ = ['send_email', 'verify_digital_code']
+
+
 def set_digital_code(to_email: str) -> str:
     """
       set_digital_code(to_email: str): 生成 6 位數字驗證碼
@@ -67,6 +70,24 @@ async def send_email(to_email: str):
             print(f"{to_email} 信件送達失敗, {e}")
 
     await loop.run_in_executor(None, _handle_email)
+
+
+async def verify_digital_code(to_email: str, code: str) -> bool:
+    """
+      verify_digital_code(to_email: str, code: str): 驗證數字驗證碼是否正確
+
+      :params
+        to_email: 使用者信箱
+        code: 數字驗證碼
+    """
+    if not code:
+        return False
+
+    # redis/3
+    verification_redis = connect_redis(redis_db=3)
+    key = f"{to_email}_digital_code"
+    verify_code = verification_redis.get(key)
+    return verify_code == code
 
 
 if __name__ == "__main__":

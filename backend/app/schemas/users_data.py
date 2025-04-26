@@ -6,5 +6,20 @@ from pydantic import BaseModel
 class UserLogin(BaseModel):
     email: str
     password: str
+    login_status: int
 
+
+class UserVerifyAccount(BaseModel):
+    username: str
+    email: str
+    password: str
+    login_status: int
+
+
+class UserSignUp(BaseModel):
+    username: str
+    email: str
+    password: str
+    verification_code: str
+    login_status: int
 # -- End. --

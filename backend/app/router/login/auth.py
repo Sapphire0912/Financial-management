@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 
 # Databases
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 from app.databases.mysql_setting import connect_mysql
 from app.models.sql_model import User
@@ -12,17 +13,14 @@ from app.utils.jwt_verification import create_jwt_token
 from passlib.context import CryptContext
 
 # User api schema
-from app.schemas.users_data import UserLogin
+from app.schemas.users_data import UserLogin, UserVerifyAccount, UserSignUp
 
+# Gmail SMTP services
+from app.services.smtp_services import send_email, verify_digital_code
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")  # 使用者密碼加密方式
 
-
-# 前端需要傳登入方式的資料
-# email: 1
-# line: 2
-# google: 3  (未來新增)
 
 @router.post("/login")
 async def login(data: UserLogin, sqldb: Session = Depends(connect_mysql)):
@@ -39,11 +37,81 @@ async def login(data: UserLogin, sqldb: Session = Depends(connect_mysql)):
     return JSONResponse(status_code=200, content={"success": True, "token": jwt_token, "token_type": "bearer"})
 
 
-@router.post("/register")
-def register():
-    return {"message": "Register Router test"}
+@router.post("/signup")
+async def signup(data: UserSignUp, sqldb: Session = Depends(connect_mysql)):
+    """
+      含驗證碼的註冊 (Gmail)
+    """
+    if data.login_status == 1:
+        if not verify_digital_code(to_email=data.email, code=data.verification_code):
+            return JSONResponse(status_code=401, content={"success": False, "message": "Gmail 驗證碼錯誤"})
+
+        else:
+            try:
+                new_user = User(
+                    username=data.username,
+                    email=data.email,
+                    password=pwd_context.hash(data.password),
+                    is_active=False,  # 尚未綁定 line 帳號
+                    line_user_name=None,
+                    line_user_id=None
+                )
+                sqldb.add(new_user)
+                sqldb.commit()
+                return JSONResponse(status_code=201, content={"success": True, "message": "註冊帳號成功"})
+
+            except Exception as e:
+                sqldb.rollback()  # 避免 session 卡住
+                return JSONResponse(status_code=500, content={"success": False, "message": f"伺服器錯誤: {str(e)}"})
+
+    elif data.login_status == 2:
+        # TODO: Line 註冊
+        pass
+
+    else:
+        return JSONResponse(status_code=500, content={"success": False, "message": "註冊參數錯誤"})
 
 
-@router.post("/forget/password")
-def forget_password():
-    return {"message": "forget password Router test."}
+@router.post("/verification/account")
+async def verification_account(data: UserVerifyAccount, sqldb: Session = Depends(connect_mysql)):
+    """
+      驗證使用者帳號是否存在
+
+      login_status: 
+      > 1: Gmail 註冊
+      > 2: Line 註冊
+    """
+
+    def check_user_exists() -> bool:
+        is_user = sqldb.query(User).filter(
+            or_(User.username == data.username, User.email == data.email)
+        ).first()
+
+        return bool(is_user)
+
+    if data.login_status == 1:
+        if check_user_exists():
+            return JSONResponse(status_code=409, content={"success": False, "message": "該信箱或使用者名稱已被使用過"})
+
+        await send_email(to_email=data.email)
+        return JSONResponse(status_code=200, content={"success": True, "message": "已向使用者發送信件"})
+
+    elif data.login_status == 2:
+        # TODO: Line login 邏輯
+        return JSONResponse(status_code=501, content={"success": True, "message": "尚未實作 line 註冊功能"})
+
+    else:
+        return JSONResponse(status_code=500, content={"success": False, "message": "登入參數錯誤"})
+
+
+@router.post("/supports")
+async def supports():
+    """
+      放忘記密碼, 收不到驗證碼等功能
+    """
+    return {"message": "supports Router test."}
+
+
+@router.post("/delete/account")
+async def delect_account():
+    pass

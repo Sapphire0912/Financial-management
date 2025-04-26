@@ -13,7 +13,7 @@ class User(Base):
       username: 使用者名稱
       email: 使用者Email
       password: 使用者密碼
-      is_active: 是否啟用
+      is_active: 是否綁定
       line_user_name: 使用者Line名稱
       line_user_id: 使用者LineID
       created_at: 建立時間
@@ -25,7 +25,7 @@ class User(Base):
     username = Column(String(50), unique=True, nullable=False)
     email = Column(String(100), unique=True, nullable=False)
     password = Column(String(255), nullable=False)
-    is_active = Column(Boolean, default=True)
+    is_active = Column(Boolean, default=False)
     line_user_name = Column(String(100), nullable=True)
     line_user_id = Column(String(100), unique=True, nullable=True)
     created_at = Column(DateTime, default=datetime.now)

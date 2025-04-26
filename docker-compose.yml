@@ -13,9 +13,12 @@ services:
     env_file:
       - financial.env
     depends_on:
-      - mysql-financial
-      - mongo-financial
-      - redis-financial
+      mysql-financial:
+        condition: service_healthy # 避免 mysql 尚未準備好就開始連線
+      mongo-financial:
+        condition: service_started
+      redis-financial:
+        condition: service_started
   frontend-financial:
     container_name: frontend-financial
     build:
@@ -44,6 +47,11 @@ services:
       - "32221:3306"
     volumes:
       - ./financial-mysql:/var/lib/mysql
+    healthcheck: # 確保 mysql 已經啟動再啟動後端容器
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   mongo-financial:
     container_name: mongo-financial
