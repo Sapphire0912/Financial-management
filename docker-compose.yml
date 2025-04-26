@@ -15,6 +15,7 @@ services:
     depends_on:
       - mysql-financial
       - mongo-financial
+      - redis-financial
   frontend-financial:
     container_name: frontend-financial
     build:
