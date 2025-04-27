@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
 
 # Databases
-from sqlalchemy import or_
+from sqlalchemy import or_, and_
 from sqlalchemy.orm import Session
 from app.databases.mysql_setting import connect_mysql
 from app.models.sql_model import User
@@ -13,7 +13,7 @@ from app.utils.jwt_verification import create_jwt_token
 from passlib.context import CryptContext
 
 # User api schema
-from app.schemas.users_data import UserLogin, UserVerifyAccount, UserSignUp
+from app.schemas.users_data import UserLogin, UserVerifyAccount, UserSignUp, UserAccountSupports, UserResetPassword, UserDeleteAccount
 
 # Gmail SMTP services
 from app.services.smtp_services import send_email, verify_digital_code
@@ -30,8 +30,8 @@ async def login(data: UserLogin, sqldb: Session = Depends(connect_mysql)):
     user = sqldb.query(User).filter(User.email == data.email).first()
 
     if not user or not pwd_context.verify(data.password, user.password):
-        raise JSONResponse(status_code=401, content={
-                           "success": False, "message": "帳號或密碼錯誤"})
+        return JSONResponse(status_code=401, content={
+            "success": False, "message": "帳號或密碼錯誤"})
 
     jwt_token = create_jwt_token(data={"sub": user.username})
     return JSONResponse(status_code=200, content={"success": True, "token": jwt_token, "token_type": "bearer"})
@@ -75,7 +75,8 @@ async def signup(data: UserSignUp, sqldb: Session = Depends(connect_mysql)):
 @router.post("/verification/account")
 async def verification_account(data: UserVerifyAccount, sqldb: Session = Depends(connect_mysql)):
     """
-      驗證使用者帳號是否存在
+      驗證使用者帳號以及發送驗證信
+      註: 收不到驗證碼可以再打一次此 api
 
       login_status: 
       > 1: Gmail 註冊
@@ -105,13 +106,50 @@ async def verification_account(data: UserVerifyAccount, sqldb: Session = Depends
 
 
 @router.post("/supports")
-async def supports():
+async def supports(data: UserAccountSupports, sqldb: Session = Depends(connect_mysql)):
     """
-      放忘記密碼, 收不到驗證碼等功能
+      帳號支援功能
+
+      status:
+      > 1: 忘記密碼
+      > 2: 更改 username
     """
-    return {"message": "supports Router test."}
+    if data.status == 1:
+        # TODO: 實作忘記密碼發送驗證信 -> 再打重設密碼的 api
+        pass
+
+    elif data.status == 2:
+        user = sqldb.query(User).filter(User.email == data.email).first()
+        if not user or not pwd_context.verify(data.password, user.password):
+            return JSONResponse(status_code=401, content={"success": False, "message": "帳號或密碼錯誤"})
+
+        user.username = data.new_username
+        sqldb.commit()
+
+        return JSONResponse(status_code=200, content={"success": True, "message": "已更新使用者名稱"})
+
+    return JSONResponse(status_code=501, content={"success": False, "message": "尚未實作帳號支援功能"})
+
+
+@router.post("/reset/password")
+async def reset_password(data: UserResetPassword, sqldb: Session = Depends(connect_mysql)):
+    pass
 
 
 @router.post("/delete/account")
-async def delect_account():
-    pass
+async def delete_account(data: UserDeleteAccount, sqldb: Session = Depends(connect_mysql)):
+    """
+      刪除帳號
+    """
+    user = sqldb.query(User).filter(
+        and_(User.username == data.username, User.email == data.email)).first()
+    if not user:
+        return JSONResponse(status_code=403, content={"success": False, "message": "查無此使用者"})
+
+    if not pwd_context.verify(data.password, user.password):
+        return JSONResponse(status_code=401, content={"success": False, "message": "密碼錯誤"})
+
+    sqldb.delete(user)
+    sqldb.commit()
+
+    return JSONResponse(status_code=200, content={"success": True, "message": "使用者帳號刪除成功"})

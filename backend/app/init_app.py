@@ -20,5 +20,5 @@ def init_app() -> FastAPI:
         return {"message": "Hello from FastAPI in Docker!"}
 
     app.include_router(users_accounting.router, prefix="/app")
-    app.include_router(auth.router, prefix="/auth")
+    app.include_router(auth.router, prefix="/app")
     return app

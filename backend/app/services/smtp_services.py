@@ -92,4 +92,5 @@ async def verify_digital_code(to_email: str, code: str) -> bool:
 
 if __name__ == "__main__":
     gmail_test = os.environ.get("TEST_EMAIL")
+    # gmail_test = "rouroubetty1205@gmail.com"
     asyncio.run(send_email(to_email=gmail_test))
