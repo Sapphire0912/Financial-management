@@ -29,11 +29,11 @@ class UserSignUp(BaseModel):
 class UserResetPassword(BaseModel):
     email: str
     new_password: str
-    verification_code: str
 
 
 class UserAccountSupports(BaseModel):
     email: str     # 忘記密碼的信箱
+    verification_code: Optional[str]  # 忘記密碼驗證碼
     password: Optional[str]  # 修改使用者名稱
     new_username: Optional[str]  # 新使用者名稱
     status: int

@@ -113,27 +113,48 @@ async def supports(data: UserAccountSupports, sqldb: Session = Depends(connect_m
       status:
       > 1: 忘記密碼
       > 2: 更改 username
+      > 3: 忘記密碼的信箱驗證碼
     """
     if data.status == 1:
-        # TODO: 實作忘記密碼發送驗證信 -> 再打重設密碼的 api
-        pass
+        # TODO: 再打重設密碼的 api
+        user = sqldb.quert(User).filter(User.email == data.email).first()
+        if not user:
+            return JSONResponse(status_code=401, content={"success": False, "message": "使用者信箱錯誤"})
+        await send_email(to_email=data.email)
+        return JSONResponse(status_code=200, content={"success": True, "message": "已向使用者發送信件"})
 
     elif data.status == 2:
         user = sqldb.query(User).filter(User.email == data.email).first()
         if not user or not pwd_context.verify(data.password, user.password):
-            return JSONResponse(status_code=401, content={"success": False, "message": "帳號或密碼錯誤"})
+            return JSONResponse(status_code=401, content={"success": False, "message": "使用者信箱或密碼錯誤"})
 
         user.username = data.new_username
         sqldb.commit()
 
         return JSONResponse(status_code=200, content={"success": True, "message": "已更新使用者名稱"})
 
-    return JSONResponse(status_code=501, content={"success": False, "message": "尚未實作帳號支援功能"})
+    elif data.status == 3:
+        if not verify_digital_code(to_email=data.email, code=data.verification_code):
+            return JSONResponse(status_code=401, content={"success": False, "message": "Gmail 驗證碼錯誤"})
+        return JSONResponse(status_code=200, content={"success": True, "message": "驗證成功, 請重新修改密碼"})
+
+    return JSONResponse(status_code=501, content={"success": False, "message": "帳號支援參數錯誤"})
 
 
 @router.post("/reset/password")
 async def reset_password(data: UserResetPassword, sqldb: Session = Depends(connect_mysql)):
-    pass
+    """
+      修改使用者密碼
+    """
+    try:
+        user = sqldb.query(User).filter(User.email == data.email).first()
+        user.password = pwd_context.hash(data.new_password)
+        sqldb.commit()
+
+        return JSONResponse(status_code=201, content={"success": True, "message": "修改密碼成功"})
+    except Exception as e:
+        sqldb.rollback()
+        return JSONResponse(status_code=500, content={"success": False, "message": f"伺服器錯誤: {str(e)}"})
 
 
 @router.post("/delete/account")
