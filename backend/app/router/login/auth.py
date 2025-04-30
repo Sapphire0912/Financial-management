@@ -18,6 +18,9 @@ from app.schemas.users_data import UserLogin, UserVerifyAccount, UserSignUp, Use
 # Gmail SMTP services
 from app.services.smtp_services import send_email, verify_digital_code
 
+# other tools
+from datetime import datetime
+
 router = APIRouter(prefix="/auth", tags=["Auth"])
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")  # 使用者密碼加密方式
 
@@ -32,6 +35,10 @@ async def login(data: UserLogin, sqldb: Session = Depends(connect_mysql)):
     if not user or not pwd_context.verify(data.password, user.password):
         return JSONResponse(status_code=401, content={
             "success": False, "message": "帳號或密碼錯誤"})
+
+    # 更新最後登入時間
+    user.last_login_at = datetime.now()
+    sqldb.commit()
 
     jwt_token = create_jwt_token(data={"sub": user.username})
     return JSONResponse(status_code=200, content={"success": True, "token": jwt_token, "token_type": "bearer"})
@@ -117,7 +124,7 @@ async def supports(data: UserAccountSupports, sqldb: Session = Depends(connect_m
     """
     if data.status == 1:
         # TODO: 再打重設密碼的 api
-        user = sqldb.quert(User).filter(User.email == data.email).first()
+        user = sqldb.query(User).filter(User.email == data.email).first()
         if not user:
             return JSONResponse(status_code=401, content={"success": False, "message": "使用者信箱錯誤"})
         await send_email(to_email=data.email)
