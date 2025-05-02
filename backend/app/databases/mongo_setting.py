@@ -14,4 +14,4 @@ def connect_mongo():
         db=MONGO_DB,
         alias="default",
     )
-    print("connecting mongo server successfully.")
+    print("<===== connecting mongo server successfully. =====>")

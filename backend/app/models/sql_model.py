@@ -51,7 +51,7 @@ class UserLoginLog(Base):
     __tablename__ = "users_login_log"
     id = Column(Integer, primary_key=True, autoincrement=True)
     ip = Column(String(30))
-    email = Column(String(100), unique=True, nullable=False)
+    email = Column(String(100), nullable=False)
     line_user_name = Column(String(100), nullable=True)
     line_user_id = Column(String(100), unique=True, nullable=True)
     method = Column(String(10), nullable=True)

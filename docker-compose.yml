@@ -49,7 +49,7 @@ services:
     volumes:
       - ./frontend:/app
       - /app/node_modules # 避免本地 node_modules 覆蓋容器內的
-    command: npm run dev
+    # command: npm run dev
     environment:
       - NODE_ENV=development
     env_file:
