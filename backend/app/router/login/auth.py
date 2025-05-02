@@ -47,15 +47,16 @@ async def login(data: UserLogin, sqldb: Session = Depends(connect_mysql), ip: st
     now = datetime.now()
 
     if data.login_status == 1:
+        _log_data["method"] = "gmail"
         user = sqldb.query(User).filter(User.email == data.email).first()
+
         if not user or not pwd_context.verify(data.password, user.password):
+            log_user_login.delay(data=_log_data, status=False)   # 紀錄登入失敗內容
             return JSONResponse(status_code=401, content={
                 "success": False, "message": "帳號或密碼錯誤"})
 
         # 更新最後登入時間 & 登入日誌
-        _log_data["method"] = "gmail"
         log_user_login.delay(data=_log_data, status=True)
-
         user.last_login_at = now
         sqldb.commit()
 
