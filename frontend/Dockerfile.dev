@@ -1,0 +1,23 @@
+# 使用 Node 開發映像版本
+FROM node:20-slim
+
+# 設定工作目錄
+WORKDIR /app
+
+# 安裝 git（有些依賴可能需要），以及清理套件列表
+RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+
+# 複製 package.json 和 lock 檔先行安裝依賴（加速建構）
+COPY package*.json ./
+
+# 安裝依賴，並避免 peer deps 錯誤
+RUN npm install --legacy-peer-deps
+
+# 複製其餘程式碼
+COPY . .
+
+# 開放 Vite 開發伺服器的 port（通常是 5173）
+EXPOSE 5173
+
+# 啟動 Vite 開發伺服器
+CMD ["npm", "run", "dev"]
