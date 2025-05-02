@@ -1,8 +1,12 @@
+# FastAPI
 from fastapi import FastAPI
+
+# database setting
 from app.databases.mongo_setting import connect_mongo
 from app.databases.mysql_setting import engine
 from app.models.sql_model import Base
 
+# router setting
 from app.router import users_accounting
 from app.router.login import auth
 

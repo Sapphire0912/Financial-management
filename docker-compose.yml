@@ -19,6 +19,25 @@ services:
         condition: service_started
       redis-financial:
         condition: service_started
+
+  celery-worker:
+    container_name: celery-worker
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: celery -A app.celery worker --loglevel=info
+    depends_on:
+      mysql-financial:
+        condition: service_healthy # 避免 mysql 尚未準備好就開始連線
+      mongo-financial:
+        condition: service_started
+      redis-financial:
+        condition: service_started
+    volumes:
+      - ./backend:/app
+    env_file:
+      - financial.env
+
   frontend-financial:
     container_name: frontend-financial
     build:

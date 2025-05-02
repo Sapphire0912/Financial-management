@@ -26,8 +26,8 @@ def create_jwt_token(data: dict):
     expire_time = datetime.utcnow() + timedelta(minutes=TOKEN_EXPIRES)
     encode_data.update({"exp": expire_time})
 
-    jwt = jwt.encode(encode_data, JWT_SECRET_KEY, algorithm=ALGORITHM)
-    return jwt
+    jwt_token = jwt.encode(encode_data, JWT_SECRET_KEY, algorithm=ALGORITHM)
+    return jwt_token
 
 
 def verify_jwt_token(token: str):

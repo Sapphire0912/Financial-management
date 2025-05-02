@@ -12,6 +12,10 @@ from app.models.sql_model import User
 from app.utils.jwt_verification import create_jwt_token
 from passlib.context import CryptContext
 
+# request information & celery task
+from app.utils.request_info import get_client_ip
+from app.tasks.tasks import log_user_login
+
 # User api schema
 from app.schemas.users_data import UserLogin, UserVerifyAccount, UserSignUp, UserAccountSupports, UserResetPassword, UserDeleteAccount
 
@@ -26,22 +30,44 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")  # 使用者�
 
 
 @router.post("/login")
-async def login(data: UserLogin, sqldb: Session = Depends(connect_mysql)):
+async def login(data: UserLogin, sqldb: Session = Depends(connect_mysql), ip: str = Depends(get_client_ip)):
     """
       使用者登入驗證
+
+      login_status:
+      > 1: Gmail 登入
+      > 2: line 登入
     """
-    user = sqldb.query(User).filter(User.email == data.email).first()
+    _log_data = {
+        "ip": ip,
+        "email": data.email,
+        "line_user_name": data.line_user_name,
+        "line_user_id": data.line_user_id
+    }
+    now = datetime.now()
 
-    if not user or not pwd_context.verify(data.password, user.password):
-        return JSONResponse(status_code=401, content={
-            "success": False, "message": "帳號或密碼錯誤"})
+    if data.login_status == 1:
+        user = sqldb.query(User).filter(User.email == data.email).first()
+        if not user or not pwd_context.verify(data.password, user.password):
+            return JSONResponse(status_code=401, content={
+                "success": False, "message": "帳號或密碼錯誤"})
 
-    # 更新最後登入時間
-    user.last_login_at = datetime.now()
-    sqldb.commit()
+        # 更新最後登入時間 & 登入日誌
+        _log_data["method"] = "gmail"
+        log_user_login.delay(data=_log_data, status=True)
 
-    jwt_token = create_jwt_token(data={"sub": user.username})
-    return JSONResponse(status_code=200, content={"success": True, "token": jwt_token, "token_type": "bearer"})
+        user.last_login_at = now
+        sqldb.commit()
+
+        jwt_token = create_jwt_token(data={"sub": user.username})
+        return JSONResponse(status_code=200, content={"success": True, "token": jwt_token, "token_type": "bearer"})
+
+    elif data.login_status == 2:
+        # TODO: Line 登入
+        pass
+
+    else:
+        return JSONResponse(status_code=500, content={"success": False, "message": "登入參數錯誤"})
 
 
 @router.post("/signup")
