@@ -7,7 +7,10 @@ export default defineConfig({
   server: {
     port: 5173,
     host: "0.0.0.0", // allow access from outside of contaner
-    open: true,
+    open: false,
     strictPort: true,
+    watch: {
+      usePolling: true,
+    },
   },
 });

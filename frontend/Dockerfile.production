@@ -8,7 +8,7 @@ COPY . .
 RUN npm install --legacy-peer-deps
 RUN npm run build
 
-create nginx container
+# create nginx container
 FROM nginx:alpine
 
 COPY --from=builder /app/dist /usr/share/nginx/html

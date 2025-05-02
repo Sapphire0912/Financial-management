@@ -42,11 +42,14 @@ services:
     container_name: frontend-financial
     build:
       context: ./frontend
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev # 生產環境要換另一份 dockerfile
     ports:
-      - "5173:80"
+      # - "5173:80" # 此 port 設定是生產環境的設定 (nginx 會監聽 port 80)
+      - "5173:5173"
     volumes:
       - ./frontend:/app
+      - /app/node_modules # 避免本地 node_modules 覆蓋容器內的
+    command: npm run dev
     environment:
       - NODE_ENV=development
     env_file:
