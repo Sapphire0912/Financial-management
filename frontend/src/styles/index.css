@@ -1,0 +1,9 @@
+/* index.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 可加上自訂全域樣式 */
+body {
+  font-family: "Inter", sans-serif;
+}
