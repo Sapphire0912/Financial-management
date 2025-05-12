@@ -13,7 +13,7 @@
 
 /* LoginPage */
 .login-card {
-  @apply backdrop-blur-md border-2 border-blue-500 rounded-xl shadow-2xl;
+  @apply backdrop-blur-md border-2 border-blue-300 rounded-xl shadow-2xl;
   height: 100%;
   color: black;
 

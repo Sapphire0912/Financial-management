@@ -60,7 +60,14 @@ async def login(data: UserLogin, sqldb: Session = Depends(connect_mysql), ip: st
         user.last_login_at = now
         sqldb.commit()
 
-        jwt_token = create_jwt_token(data={"sub": user.username})
+        jwt_token = create_jwt_token(data={
+            "username": user.username,
+            "email": user.email,
+            "line_user_name": user.line_user_name,
+            "line_user_id": user.line_user_id,
+            "is_active": user.is_active
+        })
+
         return JSONResponse(status_code=200, content={"success": True, "token": jwt_token, "token_type": "bearer"})
 
     elif data.login_status == 2:

@@ -27,6 +27,30 @@ const user_login = async (
   }
 };
 
+type IconInputProps = {
+  type: string;
+  placeholder: string;
+  iconSrc: string;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+};
+
+const IconInput = ({
+  type,
+  placeholder,
+  iconSrc,
+  onChange,
+}: IconInputProps) => (
+  <div className="w-full flex items-center bg-gray-300 rounded-lg px-3 py-2">
+    <img src={iconSrc} alt="icon" className="w-6 h-6 mr-2" />
+    <input
+      type={type}
+      placeholder={placeholder}
+      className="w-full bg-transparent text-black placeholder-gray-500 focus:outline-none pl-1"
+      onChange={onChange}
+    />
+  </div>
+);
+
 const login_form_ui = () => {
   const [email, setEmail] = useState<string | null>("");
   const [password, setPassword] = useState<string | null>("");
@@ -40,33 +64,18 @@ const login_form_ui = () => {
         user_login(e, email, password, line_user_name, line_user_id, 1)
       }
     >
-      <div className="w-full flex items-center bg-gray-300 rounded-lg px-3 py-2 ">
-        <img
-          src="/email-dark.png"
-          alt="email icon"
-          className="w-6 h-6 mr-2"
-        ></img>
-        <input
-          type="email"
-          placeholder="請輸入Email"
-          className="flex-1 bg-transparent text-black placeholder-gray-500 focus:outline-none"
-          onChange={(e) => setEmail(e.target.value)}
-        />
-      </div>
-      <div className="w-full flex items-center bg-gray-300 rounded-lg px-3 py-2 ">
-        <img
-          src="/password-dark.png"
-          alt="password icon"
-          className="w-6 h-6 mr-2"
-        ></img>
-        <input
-          type="password"
-          placeholder="請輸入密碼"
-          className="flex-1 bg-transparent text-black placeholder-gray-500 focus:outline-none"
-          onChange={(e) => setPassword(e.target.value)}
-        />
-      </div>
-
+      <IconInput
+        type="email"
+        placeholder="請輸入Email"
+        iconSrc="/email-dark.png"
+        onChange={(e) => setEmail(e.target.value)}
+      />
+      <IconInput
+        type="password"
+        placeholder="請輸入密碼"
+        iconSrc="/password-dark.png"
+        onChange={(e) => setPassword(e.target.value)}
+      />
       <div className="base-flex-column">
         <button
           type="submit"
@@ -78,7 +87,7 @@ const login_form_ui = () => {
           type="button"
           className="button-hover w-full bg-green-700 text-white py-2 rounded-2xl font-semibold mt-2"
         >
-          Line 登入
+          使用 Line 登入
         </button>
       </div>
     </form>
@@ -89,7 +98,7 @@ const LoginPage = () => {
   return (
     <div className="background base-flex-column">
       <div className="login-card base-flex-column">
-        <div className="border border-slate-300 rounded-3xl shadow-2xl bg-slate-100 base-flex-row px-2 py-2">
+        <div className="bg-transparent base-flex-row px-2 py-2">
           <img src="/dollar_bag-dark.png" alt="dollar bag icon" />
         </div>
         <div className="base-flex-column">
