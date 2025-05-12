@@ -1,0 +1,30 @@
+/* 背景設定樣式 */
+.background {
+  @apply min-h-screen bg-cover bg-center;
+  /* background-image: url("/paul-volkmer-qVotvbsuM_c-unsplash.jpg"); */
+  color: white;
+  z-index: -1;
+
+  /* 需要動畫使用原生的 CSS */
+}
+
+/* icon-dark: #4A4A4A */
+/* icon-bright: #3F51F3 */
+
+/* LoginPage */
+.login-card {
+  @apply backdrop-blur-md border-2 border-blue-500 rounded-xl shadow-2xl;
+  height: 100%;
+  color: black;
+
+  /* 需要 RWD 設定的樣式*/
+  background-image: linear-gradient(to bottom, #d7ebf5, #f0eaea);
+  width: 25%;
+  height: 60%;
+  padding: 1.5rem;
+}
+
+.login-form {
+  @apply p-2;
+  width: 100%;
+}
