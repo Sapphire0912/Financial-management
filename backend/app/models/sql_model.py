@@ -28,9 +28,10 @@ class User(Base):
     is_active = Column(Boolean, default=False)
     line_user_name = Column(String(100), nullable=True)
     line_user_id = Column(String(100), unique=True, nullable=True)
-    created_at = Column(DateTime, default=datetime.now)
-    updated_at = Column(DateTime, default=datetime.now, onupdate=datetime.now)
-    last_login_at = Column(DateTime, default=datetime.now)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow,
+                        onupdate=datetime.utcnow)
+    last_login_at = Column(DateTime, default=datetime.utcnow)
 
     def __repr__(self):
         return f"<User (id={self.id}, username='{self.username}')>"
@@ -56,7 +57,7 @@ class UserLoginLog(Base):
     line_user_id = Column(String(100), unique=True, nullable=True)
     method = Column(String(10), nullable=True)
     success_status = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.now)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
     def __repr__(self):
         return f"<UserLoginLog (id={self.id}, status={self.success_status})"

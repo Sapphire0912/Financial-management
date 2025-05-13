@@ -11,13 +11,13 @@ class BaseModel(me.Document):
     """
     meta = {'abstract': True}  # 抽象類別, 不會建立資料庫
     description = me.StringField(default="")
-    created_at = me.DateTimeField(default=datetime.now)
-    updated_at = me.DateTimeField(default=datetime.now)
+    created_at = me.DateTimeField(default=datetime.utcnow)
+    updated_at = me.DateTimeField(default=datetime.utcnow)
 
     def save(self, *args, **kwargs):
         if not self.created_at:
-            self.created_at = datetime.now()
-        self.updated_at = datetime.now()
+            self.created_at = datetime.utcnow()
+        self.updated_at = datetime.utcnow()
         super().save(*args, **kwargs)
 
 
@@ -30,9 +30,11 @@ class Accounting(BaseModel):
         user_name: 使用者名稱
         user_id: 使用者ID
         cost_name: 花費名稱
+        cost_status: 花費狀態, 是否為必要花費(必要: 0, 想要: 1, 臨時必要: 2, 臨時想要: 3)
         unit: 單位
         cost: 花費金額
         store_name: 店家名稱
+
     """
     statistics_kind = me.StringField(required=True, default="其他")
     category = me.StringField(default="其他")
@@ -40,6 +42,7 @@ class Accounting(BaseModel):
     user_name = me.StringField(required=True)
     user_id = me.StringField(required=True)
     cost_name = me.StringField(required=True)
+    cost_status = me.IntField(required=True)
     unit = me.StringField(required=True, default="TWD")
     cost = me.IntField(required=True)
     store_name = me.StringField(default="")
@@ -49,7 +52,7 @@ class Accounting(BaseModel):
         "indexes": [
             {
                 "fields": [
-                    "user_name", "user_id", "statistics_kind",
+                    "user_name", "user_id", "statistics_kind", "cost_status",
                     "category", "cost_name", "store_name"
                 ],
                 "sparse": True

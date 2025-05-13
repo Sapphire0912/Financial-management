@@ -1,8 +1,22 @@
+/* React & components */
 import { useState } from "react";
+import IconInput from "../components/componentProps";
+
+/* API */
 import userLogin from "../services/userAuth";
+
+/* CSS */
 import "../styles/page.css";
 import "../styles/component.css";
 
+// Global Variable
+/* 判斷顯示 登入, 註冊, 忘記密碼的 UI */
+const FORM_LOGIN = 0;
+const FORM_REGISTER = 1;
+const FORM_FORGOT = 2;
+//
+
+// Call API
 const user_login = async (
   e: React.FormEvent,
   email: string | null,
@@ -26,43 +40,17 @@ const user_login = async (
     alert(`❌ 登入失敗：${err instanceof Error ? err.message : "未知錯誤"}`);
   }
 };
+//
 
-type IconInputProps = {
-  type: string;
-  placeholder: string;
-  iconSrc: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-};
-
-const IconInput = ({
-  type,
-  placeholder,
-  iconSrc,
-  onChange,
-}: IconInputProps) => (
-  <div className="w-full flex items-center bg-gray-300 rounded-lg px-3 py-2">
-    <img src={iconSrc} alt="icon" className="w-6 h-6 mr-2" />
-    <input
-      type={type}
-      placeholder={placeholder}
-      className="w-full bg-transparent text-black placeholder-gray-500 focus:outline-none pl-1"
-      onChange={onChange}
-    />
-  </div>
-);
-
-const login_form_ui = () => {
+// UI Design
+const LoginFormUI = () => {
   const [email, setEmail] = useState<string | null>("");
   const [password, setPassword] = useState<string | null>("");
-  const [line_user_name, setLineUsername] = useState<string | null>(null);
-  const [line_user_id, setLineUserId] = useState<string | null>(null);
 
   return (
     <form
       className="space-y-4"
-      onSubmit={(e) =>
-        user_login(e, email, password, line_user_name, line_user_id, 1)
-      }
+      onSubmit={(e) => user_login(e, email, password, null, null, 1)}
     >
       <IconInput
         type="email"
@@ -79,22 +67,89 @@ const login_form_ui = () => {
       <div className="base-flex-column">
         <button
           type="submit"
-          className="button-hover w-full bg-gray-800 text-white py-2 rounded-2xl font-semibold mt-2 mb-4"
+          className="button-hover w-full bg-gray-800 text-white py-2 rounded-2xl font-semibold mt-2"
         >
           登入
-        </button>
-        <button
-          type="button"
-          className="button-hover w-full bg-green-700 text-white py-2 rounded-2xl font-semibold mt-2"
-        >
-          使用 Line 登入
         </button>
       </div>
     </form>
   );
 };
 
+const RegisterFormUI = () => {
+  // 待設計
+  const [email, setEmail] = useState<string | null>("");
+  const [password, setPassword] = useState<string | null>("");
+
+  return (
+    <form
+      className="space-y-4"
+      onSubmit={(e) => user_login(e, email, password, null, null, 1)}
+    >
+      <IconInput
+        type="email"
+        placeholder="請輸入Email"
+        iconSrc="/email-dark.png"
+        onChange={(e) => setEmail(e.target.value)}
+      />
+      <IconInput
+        type="password"
+        placeholder="請輸入密碼"
+        iconSrc="/password-dark.png"
+        onChange={(e) => setPassword(e.target.value)}
+      />
+      <div className="base-flex-column">
+        <button
+          type="submit"
+          className="button-hover w-full bg-gray-800 text-white py-2 rounded-2xl font-semibold mt-2"
+        >
+          登入2
+        </button>
+      </div>
+    </form>
+  );
+};
+
+const ForgetFormUI = () => {
+  // 待設計
+
+  const [email, setEmail] = useState<string | null>("");
+  const [password, setPassword] = useState<string | null>("");
+
+  return (
+    <form
+      className="space-y-4"
+      onSubmit={(e) => user_login(e, email, password, null, null, 1)}
+    >
+      <IconInput
+        type="email"
+        placeholder="請輸入Email"
+        iconSrc="/email-dark.png"
+        onChange={(e) => setEmail(e.target.value)}
+      />
+      <IconInput
+        type="password"
+        placeholder="請輸入密碼"
+        iconSrc="/password-dark.png"
+        onChange={(e) => setPassword(e.target.value)}
+      />
+      <div className="base-flex-column">
+        <button
+          type="submit"
+          className="button-hover w-full bg-gray-800 text-white py-2 rounded-2xl font-semibold mt-2"
+        >
+          登入3
+        </button>
+      </div>
+    </form>
+  );
+};
+//
+
+// Page
 const LoginPage = () => {
+  const [showFormUI, setShowFormUI] = useState<number>(FORM_LOGIN);
+
   return (
     <div className="background base-flex-column">
       <div className="login-card base-flex-column">
@@ -109,7 +164,35 @@ const LoginPage = () => {
             讓智慧助手協助你做更聰明的財務決策！
           </p>
         </div>
-        <div className="login-form">{login_form_ui()}</div>
+        <div className="login-form">
+          {showFormUI == 0 && LoginFormUI()}
+          {showFormUI == 1 && RegisterFormUI()}
+          {showFormUI == 2 && ForgetFormUI()}
+        </div>
+        <div className="flex justify-between text-sm text-gray-600 w-full mt-1 mb-2 my-2 px-2">
+          <button
+            type="button"
+            onClick={() => setShowFormUI(FORM_REGISTER)}
+            className="hover:underline hover:text-blue-600"
+          >
+            註冊帳號
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowFormUI(FORM_FORGOT)}
+            className="hover:underline hover:text-blue-600"
+          >
+            忘記密碼？
+          </button>
+        </div>
+        <div className="base-flex-column login-form mt-4">
+          <button
+            type="button"
+            className="button-hover w-full bg-green-700 text-white py-2 rounded-2xl font-semibold"
+          >
+            使用 Line 登入
+          </button>
+        </div>
       </div>
     </div>
   );
