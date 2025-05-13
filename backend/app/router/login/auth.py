@@ -44,7 +44,7 @@ async def login(data: UserLogin, sqldb: Session = Depends(connect_mysql), ip: st
         "line_user_name": data.line_user_name,
         "line_user_id": data.line_user_id
     }
-    now = datetime.now()
+    now = datetime.utcnow()
 
     if data.login_status == 1:
         _log_data["method"] = "gmail"

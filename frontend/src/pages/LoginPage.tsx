@@ -3,7 +3,13 @@ import { useState } from "react";
 import IconInput from "../components/componentProps";
 
 /* API */
-import userLogin from "../services/userAuth";
+import {
+  userLogin,
+  verificationAccount,
+  userRegister,
+  userSupports,
+  userResetPassword,
+} from "../services/userAuth";
 
 /* CSS */
 import "../styles/page.css";
@@ -39,6 +45,10 @@ const user_login = async (
   } catch (err: unknown) {
     alert(`❌ 登入失敗：${err instanceof Error ? err.message : "未知錯誤"}`);
   }
+};
+
+const verification_account = async (e: React.FormEvent) => {
+  e.preventDefault();
 };
 //
 
@@ -77,9 +87,11 @@ const LoginFormUI = () => {
 };
 
 const RegisterFormUI = () => {
-  // 待設計
-  const [email, setEmail] = useState<string | null>("");
-  const [password, setPassword] = useState<string | null>("");
+  // 待設計 (api 順序 verification_account -> signup)
+  const [username, setUsername] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [code, setCode] = useState<string>("");
 
   return (
     <form
@@ -111,7 +123,7 @@ const RegisterFormUI = () => {
 };
 
 const ForgetFormUI = () => {
-  // 待設計
+  // 待設計 (需打 supports api)
 
   const [email, setEmail] = useState<string | null>("");
   const [password, setPassword] = useState<string | null>("");
