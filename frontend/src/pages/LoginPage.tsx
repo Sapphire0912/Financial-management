@@ -1,5 +1,5 @@
 /* React & components */
-import { useState } from "react";
+import React, { useState } from "react";
 import IconInput from "../components/componentProps";
 
 /* API */
@@ -21,6 +21,8 @@ const FORM_LOGIN = 0;
 const FORM_REGISTER = 1;
 const FORM_FORGOT = 2;
 //
+
+/* UI form 內部先檢查資料的完整性後再 Call API */
 
 // Call API
 const user_login = async (
@@ -47,8 +49,78 @@ const user_login = async (
   }
 };
 
-const verification_account = async (e: React.FormEvent) => {
+const verification_account = async (
+  e: React.FormEvent,
+  username: string,
+  email: string,
+  password: string,
+  login_status: number
+) => {
   e.preventDefault();
+  try {
+    const result = await verificationAccount(
+      username,
+      email,
+      password,
+      login_status
+    );
+    alert("✅ 驗證成功");
+    console.log(result);
+  } catch (err: unknown) {
+    alert(
+      `❌ 驗證帳號失敗：${err instanceof Error ? err.message : "未知錯誤"}`
+    );
+  }
+};
+
+const user_register = async (
+  e: React.FormEvent,
+  username: string,
+  email: string,
+  password: string,
+  verification_code: string,
+  login_status: number
+) => {
+  e.preventDefault();
+  try {
+    const result = await userRegister(
+      username,
+      email,
+      password,
+      verification_code,
+      login_status
+    );
+    alert("✅ 註冊成功");
+    console.log(result);
+  } catch (err: unknown) {
+    alert(`❌ 註冊失敗：${err instanceof Error ? err.message : "未知錯誤"}`);
+  }
+};
+
+const account_supports = async (
+  e: React.FormEvent,
+  email: string,
+  password: string,
+  verification_code: string | null,
+  new_username: string | null,
+  status: number
+) => {
+  e.preventDefault();
+  try {
+    const result = await userSupports(
+      email,
+      password,
+      verification_code,
+      new_username,
+      status
+    );
+    alert("✅ 帳號支援成功");
+    console.log(result);
+  } catch (err: unknown) {
+    alert(
+      `❌ 帳號支援失敗：${err instanceof Error ? err.message : "未知錯誤"}`
+    );
+  }
 };
 //
 
@@ -96,8 +168,14 @@ const RegisterFormUI = () => {
   return (
     <form
       className="space-y-4"
-      onSubmit={(e) => user_login(e, email, password, null, null, 1)}
+      onSubmit={(e) => user_register(e, username, email, password, code, 1)}
     >
+      <IconInput
+        type="text"
+        placeholder="請輸入使用者名稱"
+        iconSrc="/user-dark.png"
+        onChange={(e) => setUsername(e.target.value)}
+      />
       <IconInput
         type="email"
         placeholder="請輸入Email"
@@ -110,12 +188,28 @@ const RegisterFormUI = () => {
         iconSrc="/password-dark.png"
         onChange={(e) => setPassword(e.target.value)}
       />
+      <div className="w-full flex items-center bg-gray-300 rounded-lg px-3 py-2">
+        <input
+          type="text"
+          placeholder="請輸入驗證碼"
+          className="flex-1 bg-transparent text-black placeholder-gray-500 focus:outline-none pl-1"
+          onChange={(e) => setCode(e.target.value)}
+        />
+        <button
+          type="button"
+          className="ml-2 px-3 py-1 bg-slate-200 text-black font-semibold text-sm border border-black rounded-lg whitespace-nowrap hover:brightness-105 transition"
+          onClick={(e) => verification_account(e, username, email, password, 1)}
+        >
+          發送驗證碼
+        </button>
+      </div>
+
       <div className="base-flex-column">
         <button
           type="submit"
           className="button-hover w-full bg-gray-800 text-white py-2 rounded-2xl font-semibold mt-2"
         >
-          登入2
+          註冊
         </button>
       </div>
     </form>
@@ -123,16 +217,21 @@ const RegisterFormUI = () => {
 };
 
 const ForgetFormUI = () => {
-  // 待設計 (需打 supports api)
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [rePassword, setRePassword] = useState<string>("");
+  const [code, setCode] = useState<string>("");
 
-  const [email, setEmail] = useState<string | null>("");
-  const [password, setPassword] = useState<string | null>("");
+  const check_password = (e: React.FormEvent, status: number) => {
+    if (password === rePassword) {
+      account_supports(e, email, password, code, null, status);
+    } else {
+      alert("❌密碼兩次不一致");
+    }
+  };
 
   return (
-    <form
-      className="space-y-4"
-      onSubmit={(e) => user_login(e, email, password, null, null, 1)}
-    >
+    <form className="space-y-4" onSubmit={(e) => check_password(e, 3)}>
       <IconInput
         type="email"
         placeholder="請輸入Email"
@@ -141,16 +240,37 @@ const ForgetFormUI = () => {
       />
       <IconInput
         type="password"
-        placeholder="請輸入密碼"
+        placeholder="請輸入新密碼"
         iconSrc="/password-dark.png"
         onChange={(e) => setPassword(e.target.value)}
       />
+      <IconInput
+        type="password"
+        placeholder="請再次輸入密碼"
+        iconSrc="/password_check-dark.png"
+        onChange={(e) => setRePassword(e.target.value)}
+      />
+      <div className="w-full flex items-center bg-gray-300 rounded-lg px-3 py-2">
+        <input
+          type="text"
+          placeholder="請輸入驗證碼"
+          className="flex-1 bg-transparent text-black placeholder-gray-500 focus:outline-none pl-1"
+          onChange={(e) => setCode(e.target.value)}
+        />
+        <button
+          type="button"
+          className="ml-2 px-3 py-1 bg-slate-200 text-black font-semibold text-sm border border-black rounded-lg whitespace-nowrap hover:brightness-105 transition"
+          onClick={(e) => check_password(e, 1)}
+        >
+          發送驗證碼
+        </button>
+      </div>
       <div className="base-flex-column">
         <button
           type="submit"
           className="button-hover w-full bg-gray-800 text-white py-2 rounded-2xl font-semibold mt-2"
         >
-          登入3
+          送出
         </button>
       </div>
     </form>
@@ -161,6 +281,42 @@ const ForgetFormUI = () => {
 // Page
 const LoginPage = () => {
   const [showFormUI, setShowFormUI] = useState<number>(FORM_LOGIN);
+
+  const ShowToLoginButton = () => {
+    return (
+      <button
+        type="button"
+        onClick={() => setShowFormUI(FORM_LOGIN)}
+        className="hover:underline hover:text-blue-600"
+      >
+        返回登入
+      </button>
+    );
+  };
+
+  const ShowToRegisterButton = () => {
+    return (
+      <button
+        type="button"
+        onClick={() => setShowFormUI(FORM_REGISTER)}
+        className="hover:underline hover:text-blue-600"
+      >
+        註冊帳號
+      </button>
+    );
+  };
+
+  const ShowToForgetButton = () => {
+    return (
+      <button
+        type="button"
+        onClick={() => setShowFormUI(FORM_FORGOT)}
+        className="hover:underline hover:text-blue-600"
+      >
+        忘記密碼？
+      </button>
+    );
+  };
 
   return (
     <div className="background base-flex-column">
@@ -177,26 +333,28 @@ const LoginPage = () => {
           </p>
         </div>
         <div className="login-form">
-          {showFormUI == 0 && LoginFormUI()}
-          {showFormUI == 1 && RegisterFormUI()}
-          {showFormUI == 2 && ForgetFormUI()}
+          {showFormUI === 0 && <LoginFormUI />}
+          {showFormUI === 1 && <RegisterFormUI />}
+          {showFormUI === 2 && <ForgetFormUI />}
         </div>
-        <div className="flex justify-between text-sm text-gray-600 w-full mt-1 mb-2 my-2 px-2">
-          <button
-            type="button"
-            onClick={() => setShowFormUI(FORM_REGISTER)}
-            className="hover:underline hover:text-blue-600"
-          >
-            註冊帳號
-          </button>
-          <button
-            type="button"
-            onClick={() => setShowFormUI(FORM_FORGOT)}
-            className="hover:underline hover:text-blue-600"
-          >
-            忘記密碼？
-          </button>
-        </div>
+        {showFormUI === 0 && (
+          <div className="flex justify-between text-sm text-gray-600 w-full mt-1 mb-2 my-2 px-2">
+            <ShowToRegisterButton />
+            <ShowToForgetButton />
+          </div>
+        )}
+        {showFormUI === 1 && (
+          <div className="flex justify-between text-sm text-gray-600 w-full mt-1 mb-2 my-2 px-2">
+            <ShowToLoginButton />
+            <ShowToForgetButton />
+          </div>
+        )}
+        {showFormUI === 2 && (
+          <div className="flex justify-between text-sm text-gray-600 w-full mt-1 mb-2 my-2 px-2">
+            <ShowToLoginButton />
+            <ShowToRegisterButton />
+          </div>
+        )}
         <div className="base-flex-column login-form mt-4">
           <button
             type="button"

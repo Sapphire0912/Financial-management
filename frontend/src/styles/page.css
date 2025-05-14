@@ -1,7 +1,7 @@
 /* 背景設定樣式 */
 .background {
   @apply min-h-screen bg-cover bg-center;
-  /* background-image: url("/paul-volkmer-qVotvbsuM_c-unsplash.jpg"); */
+  background-image: url("/paul-volkmer-qVotvbsuM_c-unsplash.jpg");
   color: white;
   z-index: -1;
 

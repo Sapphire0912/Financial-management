@@ -132,6 +132,9 @@ async def verification_account(data: UserVerifyAccount, sqldb: Session = Depends
         return bool(is_user)
 
     if data.login_status == 1:
+        if not (data.email and data.username and data.password):
+            return JSONResponse(status_code=403, content={"success": False, "message": "使用者名稱、信箱或密碼不可為空"})
+
         if check_user_exists():
             return JSONResponse(status_code=409, content={"success": False, "message": "該信箱或使用者名稱已被使用過"})
 
@@ -175,6 +178,7 @@ async def supports(data: UserAccountSupports, sqldb: Session = Depends(connect_m
         return JSONResponse(status_code=200, content={"success": True, "message": "已更新使用者名稱"})
 
     elif data.status == 3:
+        # 寫在重設密碼內部
         if not verify_digital_code(to_email=data.email, code=data.verification_code):
             return JSONResponse(status_code=401, content={"success": False, "message": "Gmail 驗證碼錯誤"})
         return JSONResponse(status_code=200, content={"success": True, "message": "驗證成功, 請重新修改密碼"})

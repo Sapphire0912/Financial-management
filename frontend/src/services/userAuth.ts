@@ -88,8 +88,8 @@ export async function userRegister(
 
 export async function userSupports(
   email: string,
-  verification_code: string | null,
   password: string | null,
+  verification_code: string | null,
   new_username: string | null,
   status: number
 ) {
