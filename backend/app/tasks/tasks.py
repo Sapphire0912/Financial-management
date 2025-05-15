@@ -12,17 +12,18 @@ __all__ = ['log_user_login']
 @celery.task(bind=True)
 def log_user_login(task, data: Dict[str, str | None], status: bool):
     """
-      log_user_login(data: Dict[str, any]): 排程, 使用者登入日誌紀錄
+    排程任務：記錄使用者登入日誌。
 
-      :params
-        data:
-            ip: 使用者 ip 位置
-            email: 使用者信箱
-            line_user_name: 使用者 line 名稱
-            line_user_id: 使用者 line id
-            method: 登入方式
+    Args:
+        task: 任務物件，通常為背景排程傳入的任務上下文。
+        data (Dict[str, str | None]): 使用者登入相關資料，包括：
+            - ip (str | None): 使用者 IP 位置。
+            - email (str | None): 使用者信箱。
+            - line_user_name (str | None): 使用者 Line 名稱。
+            - line_user_id (str | None): 使用者 Line ID。
+            - method (str | None): 登入方式（如 password、line 等）。
 
-        status: 登入狀態
+        status (bool): 登入是否成功。
     """
     sqldb = SessionLocal()
     try:

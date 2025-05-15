@@ -4,11 +4,14 @@ from datetime import datetime
 
 class BaseModel(me.Document):
     """
-      欄位名稱:
-      description: 備註
-      created_at: 建立時間
-      updated_at: 更新時間
+    欄位描述：
+
+    Attributes:
+        description (str): 備註。
+        created_at (datetime): 建立時間。
+        updated_at (datetime): 更新時間。
     """
+
     meta = {'abstract': True}  # 抽象類別, 不會建立資料庫
     description = me.StringField(default="")
     created_at = me.DateTimeField(default=datetime.utcnow)
@@ -23,19 +26,27 @@ class BaseModel(me.Document):
 
 class Accounting(BaseModel):
     """
-      使用者記帳資料庫
-        statistics_kind: 統計類型, 食, 衣, 住, 行, 育, 樂, 生活, 其他等
-        category: 花費細項類別 (例如: 食 -> 早餐, 午餐, 晚餐, 宵夜, 零食等)
+    使用者記帳資料表模型。
 
-        user_name: 使用者名稱
-        user_id: 使用者ID
-        cost_name: 花費名稱
-        cost_status: 花費狀態, 是否為必要花費(必要: 0, 想要: 1, 臨時必要: 2, 臨時想要: 3)
-        unit: 單位
-        cost: 花費金額
-        store_name: 店家名稱
+    Attributes:
+        statistics_kind (str): 統計類型，例如：食、衣、住、行、育、樂、生活、其他。
+        category (str): 花費細項類別，例如：早餐、午餐、晚餐、宵夜、零食等。
 
+        user_name (str): 使用者名稱。
+        user_id (int): 使用者 ID。
+
+        cost_name (str): 花費名稱。
+        cost_status (int): 花費狀態，代表是否為必要花費：
+            - 0: 必要
+            - 1: 想要
+            - 2: 臨時必要
+            - 3: 臨時想要
+
+        unit (str): 單位（例如：份、個、杯等）。
+        cost (float): 花費金額。
+        store_name (str): 店家名稱。
     """
+
     statistics_kind = me.StringField(required=True, default="其他")
     category = me.StringField(default="其他")
 

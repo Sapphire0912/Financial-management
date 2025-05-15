@@ -7,19 +7,21 @@ Base = declarative_base()
 
 class User(Base):
     """
-      使用者資料表
+    使用者資料表模型
 
-      id: 使用者ID
-      username: 使用者名稱
-      email: 使用者Email
-      password: 使用者密碼
-      is_active: 是否綁定
-      line_user_name: 使用者Line名稱
-      line_user_id: 使用者LineID
-      created_at: 建立時間
-      updated_at: 更新時間
-      last_login_at: 最後登入時間
+    資料欄位：
+        id (int): 使用者 ID。
+        username (str): 使用者名稱。
+        email (str): 使用者 Email。
+        password (str): 使用者密碼（加密後）。
+        is_active (bool): 是否已啟用 / 綁定。
+        line_user_name (str): 使用者 Line 名稱。
+        line_user_id (str): 使用者 Line ID。
+        created_at (datetime): 建立時間。
+        updated_at (datetime): 更新時間。
+        last_login_at (datetime): 最後登入時間。
     """
+
     __tablename__ = "users"
     id = Column(Integer, primary_key=True)
     username = Column(String(50), unique=True, nullable=False)
@@ -39,15 +41,16 @@ class User(Base):
 
 class UserLoginLog(Base):
     """
-      使用者登入日誌
+    使用者登入日誌
 
-      id: 日誌紀錄id
-      email: 使用者Email
-      line_user_name: 使用者Line名稱
-      line_user_id: 使用者LineID
-      method: 登入方式
-      success_status: 登入是否成功
-      created_at: 建立時間
+    資料欄位：
+        id (int): 日誌紀錄 ID。
+        email (str): 使用者 Email。
+        line_user_name (str): 使用者 Line 名稱。
+        line_user_id (str): 使用者 Line ID。
+        method (str): 登入方式（如 password, line）。
+        success_status (bool): 是否成功登入。
+        created_at (datetime): 建立時間。
     """
     __tablename__ = "users_login_log"
     id = Column(Integer, primary_key=True, autoincrement=True)

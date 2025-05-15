@@ -398,7 +398,7 @@ const ForgetFormUI = ({
         setShowFormUI,
       });
     } else {
-      showToast("❌密碼兩次不一致", "error");
+      showToast("密碼兩次不一致", "error");
     }
   };
 

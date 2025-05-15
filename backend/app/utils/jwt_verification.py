@@ -1,5 +1,9 @@
+from fastapi import Request
+
 from datetime import datetime, timedelta
 from jose import JWTError, jwt
+from functools import wraps
+from typing import Callable
 import os
 
 ALGORITHM = "HS256"
@@ -9,14 +13,13 @@ JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
 
 def create_jwt_token(data: dict):
     """
-      create_jwt_token(data: dict): 建立 JWT token
-      註: 若需要新增使用者的資料, 可以在此處理
+    建立 JWT token。
 
-      :param
-        data: 使用者需要加密的資料
+    Args:
+        data (dict): 使用者需要加密的資料，例如 user_id、email 等。
 
-      :return
-        jwt: JWT token 或 None.
+    Returns:
+        str: JWT token 字串。若失敗則回傳 None。
     """
     if not JWT_SECRET_KEY:
         print("check JWT_SECRET_KEY environment value!")
@@ -30,16 +33,30 @@ def create_jwt_token(data: dict):
     return jwt_token
 
 
-def verify_jwt_token(token: str):
+def verify_jwt_token(func: Callable) -> Callable:
     """
-      verify_jwt_token(token: str): 驗證 jwt token
+    JWT 驗證裝飾器，用來驗證 HTTP 請求中的 JWT token 並將解碼後的 payload 存入 request.state。
 
-      :return
-        payload: 使用者加密的資料
+    Args:
+        func (Callable): 被裝飾的 FastAPI 路由處理函式。
+
+    Returns:
+        Callable: 包裝後的處理函式。若驗證成功，payload 會儲存在 request.state.payload 中。
     """
-    try:
-        paylaod = jwt.encode(token, JWT_SECRET_KEY, algorithms=ALGORITHM)
-        return paylaod
-    except JWTError:
-        print("JWT token error.")
-        return None
+    @wraps(func)
+    async def _jwt_authiorization(request: Request, *args, **kwargs):
+        auth_headers = request.headers.get("Authorization")
+        if not auth_headers or not auth_headers.startswith("Bearer "):
+            pass
+
+        token = auth_headers.split(' ')[1]
+        try:
+            payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[ALGORITHM])
+        except JWTError:
+            pass
+
+        # 設定 request.state 將使用者訊息帶到 api (類似 flask.g)
+        request.state.payload = payload
+        return await func(request, *args, **kwargs)
+
+    return _jwt_authiorization

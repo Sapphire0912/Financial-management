@@ -27,7 +27,10 @@ __all__ = ['send_email', 'verify_digital_code']
 
 def set_digital_code(to_email: str) -> str:
     """
-      set_digital_code(to_email: str): 生成 6 位數字驗證碼
+    生成並儲存 6 位數字驗證碼，用於信箱驗證。
+
+    Args:
+        to_email (str): 目標使用者信箱。
     """
 
     digits = "0123456789"
@@ -43,10 +46,10 @@ def set_digital_code(to_email: str) -> str:
 
 async def send_email(to_email: str):
     """
-      send_email(to_email: str): 發送 Gmail 驗證信
+    發送 Gmail 驗證信。
 
-      :params
-        to_email: 目標使用者信箱
+    Args:
+        to_email (str): 目標使用者信箱。
     """
     # python 3.10+ 官方建議使用 get_running_loop(), 非 get_event_loop()
     loop = asyncio.get_running_loop()
@@ -74,11 +77,14 @@ async def send_email(to_email: str):
 
 async def verify_digital_code(to_email: str, code: str) -> bool:
     """
-      verify_digital_code(to_email: str, code: str): 驗證數字驗證碼是否正確
+    驗證數字驗證碼是否正確。
 
-      :params
-        to_email: 使用者信箱
-        code: 數字驗證碼
+    Args:
+        to_email (str): 使用者信箱。
+        code (str): 數字驗證碼。
+
+    Returns:
+        bool: 若驗證成功回傳 True，否則回傳 False。
     """
     if not code:
         return False
@@ -92,5 +98,4 @@ async def verify_digital_code(to_email: str, code: str) -> bool:
 
 if __name__ == "__main__":
     gmail_test = os.environ.get("TEST_EMAIL")
-    # gmail_test = "rouroubetty1205@gmail.com"
     asyncio.run(send_email(to_email=gmail_test))
