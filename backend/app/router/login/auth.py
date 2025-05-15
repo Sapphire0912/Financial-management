@@ -178,7 +178,6 @@ async def supports(data: UserAccountSupports, sqldb: Session = Depends(connect_m
         return JSONResponse(status_code=200, content={"success": True, "message": "已更新使用者名稱"})
 
     elif data.status == 3:
-        # 寫在重設密碼內部
         if not verify_digital_code(to_email=data.email, code=data.verification_code):
             return JSONResponse(status_code=401, content={"success": False, "message": "Gmail 驗證碼錯誤"})
         return JSONResponse(status_code=200, content={"success": True, "message": "驗證成功, 請重新修改密碼"})

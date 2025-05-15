@@ -1,6 +1,6 @@
 /* React & components */
 import React, { useState } from "react";
-import IconInput from "../components/componentProps";
+import { IconInput, ToastBox } from "../components/componentProps";
 
 /* API */
 import {
@@ -22,8 +22,6 @@ const FORM_REGISTER = 1;
 const FORM_FORGOT = 2;
 //
 
-/* UI form 內部先檢查資料的完整性後再 Call API */
-
 // Call API
 const user_login = async (
   e: React.FormEvent,
@@ -31,21 +29,42 @@ const user_login = async (
   password: string | null,
   line_user_name: string | null,
   line_user_id: string | null,
-  login_status: number = 1
+  login_status: number = 1,
+  showToast: (msg: string, kind: "success" | "error" | "info") => void
 ) => {
   e.preventDefault();
-  try {
-    const result = await userLogin(
-      email,
-      password,
-      line_user_name,
-      line_user_id,
-      login_status
-    );
-    alert("✅ 登入成功");
-    console.log(result);
-  } catch (err: unknown) {
-    alert(`❌ 登入失敗：${err instanceof Error ? err.message : "未知錯誤"}`);
+
+  if (login_status === 3) {
+    showToast("尚未實作 Line 登入功能", "info");
+    return;
+  }
+
+  if (login_status === 1) {
+    const missingFields = [];
+    if (!email) missingFields.push("帳號");
+    if (!password) missingFields.push("密碼");
+
+    if (missingFields.length > 0) {
+      showToast(`❌ ${missingFields.join("、")}不可為空`, "error");
+      return;
+    }
+
+    try {
+      const result = await userLogin(
+        email,
+        password,
+        line_user_name,
+        line_user_id,
+        login_status
+      );
+      showToast("✅ 登入成功", "info");
+      console.log(result);
+    } catch (err: unknown) {
+      showToast(
+        `❌ 登入失敗：${err instanceof Error ? err.message : "未知錯誤"}`,
+        "error"
+      );
+    }
   }
 };
 
@@ -54,22 +73,42 @@ const verification_account = async (
   username: string,
   email: string,
   password: string,
-  login_status: number
+  login_status: number,
+  showToast: (msg: string, kind: "success" | "error" | "info") => void
 ) => {
   e.preventDefault();
-  try {
-    const result = await verificationAccount(
-      username,
-      email,
-      password,
-      login_status
-    );
-    alert("✅ 驗證成功");
-    console.log(result);
-  } catch (err: unknown) {
-    alert(
-      `❌ 驗證帳號失敗：${err instanceof Error ? err.message : "未知錯誤"}`
-    );
+
+  if (login_status === 2) {
+    showToast("❌ 尚未實作 Line 登入功能", "info");
+    return;
+  }
+
+  if (login_status === 1) {
+    const missingFields: string[] = [];
+    if (!username) missingFields.push("使用者名稱");
+    if (!email) missingFields.push("帳號");
+    if (!password) missingFields.push("密碼");
+
+    if (missingFields.length > 0) {
+      showToast(`❌ ${missingFields.join("、")}不可為空`, "error");
+      return;
+    }
+
+    try {
+      const result = await verificationAccount(
+        username,
+        email,
+        password,
+        login_status
+      );
+      alert("✅ 驗證成功");
+      console.log(result);
+    } catch (err: unknown) {
+      showToast(
+        `❌ 驗證帳號失敗：${err instanceof Error ? err.message : "未知錯誤"}`,
+        "error"
+      );
+    }
   }
 };
 
@@ -79,21 +118,38 @@ const user_register = async (
   email: string,
   password: string,
   verification_code: string,
-  login_status: number
+  login_status: number,
+  showToast: (msg: string, kind: "success" | "error" | "info") => void
 ) => {
   e.preventDefault();
-  try {
-    const result = await userRegister(
-      username,
-      email,
-      password,
-      verification_code,
-      login_status
-    );
-    alert("✅ 註冊成功");
-    console.log(result);
-  } catch (err: unknown) {
-    alert(`❌ 註冊失敗：${err instanceof Error ? err.message : "未知錯誤"}`);
+  if (login_status === 1) {
+    const missingFields: string[] = [];
+    if (!username) missingFields.push("使用者名稱");
+    if (!email) missingFields.push("帳號");
+    if (!password) missingFields.push("密碼");
+    if (!verification_code) missingFields.push("驗證碼");
+
+    if (missingFields.length > 0) {
+      showToast(`❌ ${missingFields.join("、")}不可為空`, "error");
+      return;
+    }
+
+    try {
+      const result = await userRegister(
+        username,
+        email,
+        password,
+        verification_code,
+        login_status
+      );
+      showToast("✅ 註冊成功", "info");
+      console.log(result);
+    } catch (err: unknown) {
+      showToast(
+        `❌ 註冊失敗：${err instanceof Error ? err.message : "未知錯誤"}`,
+        "error"
+      );
+    }
   }
 };
 
@@ -103,9 +159,22 @@ const account_supports = async (
   password: string,
   verification_code: string | null,
   new_username: string | null,
-  status: number
+  status: number,
+  showToast: (msg: string, kind: "success" | "error" | "info") => void
 ) => {
   e.preventDefault();
+
+  // 驗證欄位是否齊全
+  const missingFields: string[] = [];
+  if (!email) missingFields.push("帳號");
+  if (!password) missingFields.push("密碼");
+  if (status === 3 && !verification_code) missingFields.push("驗證碼");
+
+  if (missingFields.length > 0) {
+    showToast(`❌ ${missingFields.join("、")}不可為空`, "error");
+    return;
+  }
+
   try {
     const result = await userSupports(
       email,
@@ -114,11 +183,21 @@ const account_supports = async (
       new_username,
       status
     );
-    alert("✅ 帳號支援成功");
-    console.log(result);
-  } catch (err: unknown) {
-    alert(
-      `❌ 帳號支援失敗：${err instanceof Error ? err.message : "未知錯誤"}`
+
+    if (status === 3) {
+      if (!result.success) {
+        showToast("❌ 驗證碼錯誤", "error");
+        return;
+      }
+
+      const resetResult = await userResetPassword(email, password);
+      showToast("✅ 重設密碼成功", "info");
+      console.log(resetResult);
+    }
+  } catch (err) {
+    showToast(
+      `❌ 操作失敗：${err instanceof Error ? err.message : "未知錯誤"}`,
+      "error"
     );
   }
 };
@@ -126,13 +205,24 @@ const account_supports = async (
 
 // UI Design
 const LoginFormUI = () => {
-  const [email, setEmail] = useState<string | null>("");
-  const [password, setPassword] = useState<string | null>("");
+  const [email, setEmail] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+
+  // 彈跳視窗提示
+  const [toast, setToast] = useState({
+    show: false,
+    message: "",
+    kind: "info" as "success" | "error" | "info",
+  });
+
+  const showToast = (msg: string, kind: typeof toast.kind) => {
+    setToast({ show: true, message: msg, kind });
+  };
 
   return (
     <form
       className="space-y-4"
-      onSubmit={(e) => user_login(e, email, password, null, null, 1)}
+      onSubmit={(e) => user_login(e, email, password, null, null, 1, showToast)}
     >
       <IconInput
         type="email"
@@ -142,7 +232,7 @@ const LoginFormUI = () => {
       />
       <IconInput
         type="password"
-        placeholder="請輸入密碼"
+        placeholder="請輸入密碼(最少8個字元)"
         iconSrc="/password-dark.png"
         onChange={(e) => setPassword(e.target.value)}
       />
@@ -154,21 +244,40 @@ const LoginFormUI = () => {
           登入
         </button>
       </div>
+      {toast.show && (
+        <ToastBox
+          message={toast.message}
+          kind={toast.kind}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
+      )}
     </form>
   );
 };
 
 const RegisterFormUI = () => {
-  // 待設計 (api 順序 verification_account -> signup)
   const [username, setUsername] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [code, setCode] = useState<string>("");
 
+  // 彈跳視窗提示
+  const [toast, setToast] = useState({
+    show: false,
+    message: "",
+    kind: "info" as "success" | "error" | "info",
+  });
+
+  const showToast = (msg: string, kind: typeof toast.kind) => {
+    setToast({ show: true, message: msg, kind });
+  };
+
   return (
     <form
       className="space-y-4"
-      onSubmit={(e) => user_register(e, username, email, password, code, 1)}
+      onSubmit={(e) =>
+        user_register(e, username, email, password, code, 1, showToast)
+      }
     >
       <IconInput
         type="text"
@@ -184,7 +293,7 @@ const RegisterFormUI = () => {
       />
       <IconInput
         type="password"
-        placeholder="請輸入密碼"
+        placeholder="請輸入密碼(最少8個字元)"
         iconSrc="/password-dark.png"
         onChange={(e) => setPassword(e.target.value)}
       />
@@ -198,7 +307,9 @@ const RegisterFormUI = () => {
         <button
           type="button"
           className="ml-2 px-3 py-1 bg-slate-200 text-black font-semibold text-sm border border-black rounded-lg whitespace-nowrap hover:brightness-105 transition"
-          onClick={(e) => verification_account(e, username, email, password, 1)}
+          onClick={(e) =>
+            verification_account(e, username, email, password, 1, showToast)
+          }
         >
           發送驗證碼
         </button>
@@ -212,6 +323,13 @@ const RegisterFormUI = () => {
           註冊
         </button>
       </div>
+      {toast.show && (
+        <ToastBox
+          message={toast.message}
+          kind={toast.kind}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
+      )}
     </form>
   );
 };
@@ -222,11 +340,22 @@ const ForgetFormUI = () => {
   const [rePassword, setRePassword] = useState<string>("");
   const [code, setCode] = useState<string>("");
 
+  // 彈跳視窗提示
+  const [toast, setToast] = useState({
+    show: false,
+    message: "",
+    kind: "info" as "success" | "error" | "info",
+  });
+
+  const showToast = (msg: string, kind: typeof toast.kind) => {
+    setToast({ show: true, message: msg, kind });
+  };
+
   const check_password = (e: React.FormEvent, status: number) => {
     if (password === rePassword) {
-      account_supports(e, email, password, code, null, status);
+      account_supports(e, email, password, code, null, status, showToast);
     } else {
-      alert("❌密碼兩次不一致");
+      showToast("❌密碼兩次不一致", "error");
     }
   };
 
@@ -273,6 +402,13 @@ const ForgetFormUI = () => {
           送出
         </button>
       </div>
+      {toast.show && (
+        <ToastBox
+          message={toast.message}
+          kind={toast.kind}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
+      )}
     </form>
   );
 };

@@ -109,6 +109,7 @@ export async function userSupports(
   });
 
   const data = await response.json();
+  console.log(data);
 
   if (!response.ok) {
     throw new Error(data.message || "帳號支援失敗");
