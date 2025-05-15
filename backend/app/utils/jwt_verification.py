@@ -35,6 +35,44 @@ def create_jwt_token(data: dict):
     return jwt_token
 
 
+def create_refresh_token(data: dict, expired_days: int = 7):
+    """
+    建立 JWT Refresh Token。
+
+    Args:
+        data (dict): 使用者需要加密的資料，例如 user_id、email 等。
+        expired_days (int): Refresh Token 過期時間，預設 7 天。
+
+    Returns:
+        str: Refresh Token 字串。若失敗則回傳 None。
+    """
+    encode_data = data.copy()
+    expire_time = datetime.utcnow() + timedelta(days=expired_days)
+    encode_data.update({"exp": expire_time})
+
+    jwt_refresh_token = jwt.encode(
+        encode_data, JWT_SECRET_KEY, algorithm=ALGORITHM)
+    return jwt_refresh_token
+
+
+def verify_refresh_token(token: str) -> str | None:
+    """
+    驗證使用者的 Refresh Token 並重新簽發新的 Access Token。
+
+    Args:
+        token (str): 用戶端提供的 Refresh Token。
+
+    Returns:
+        str | None: 若驗證成功則回傳新的 Access Token，否則回傳 None。
+    """
+    try:
+        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[ALGORITHM])
+        new_token = create_jwt_token(payload)
+        return new_token
+    except JWTError:
+        return None
+
+
 def verify_jwt_token(func: Callable) -> Callable:
     """
     JWT 驗證裝飾器，用來驗證 HTTP 請求中的 JWT token 並將解碼後的 payload 存入 request.state。

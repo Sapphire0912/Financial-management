@@ -9,7 +9,7 @@ from app.databases.mysql_setting import connect_mysql
 from app.models.sql_model import User
 
 # JWT
-from app.utils.jwt_verification import create_jwt_token
+from app.utils.jwt_verification import create_jwt_token, create_refresh_token, verify_refresh_token
 from passlib.context import CryptContext
 
 # request information & celery task
@@ -60,6 +60,7 @@ async def login(data: UserLogin, sqldb: Session = Depends(connect_mysql), ip: st
         user.last_login_at = now
         sqldb.commit()
 
+        # - 新增 refresh token 來更新 access token -
         jwt_token = create_jwt_token(data={
             "username": user.username,
             "email": user.email,
@@ -68,7 +69,15 @@ async def login(data: UserLogin, sqldb: Session = Depends(connect_mysql), ip: st
             "is_active": user.is_active
         })
 
-        return JSONResponse(status_code=200, content={"success": True, "token": jwt_token, "token_type": "bearer"})
+        jwt_refresh_token = create_refresh_token(data={
+            "username": user.username,
+            "email": user.email,
+            "line_user_name": user.line_user_name,
+            "line_user_id": user.line_user_id,
+            "is_active": user.is_active
+        })
+
+        return JSONResponse(status_code=200, content={"success": True, "token": jwt_token, "token_type": "bearer", "refresh_token": jwt_refresh_token})
 
     elif data.login_status == 2:
         # TODO: Line 登入
@@ -217,3 +226,15 @@ async def delete_account(data: UserDeleteAccount, sqldb: Session = Depends(conne
     sqldb.commit()
 
     return JSONResponse(status_code=200, content={"success": True, "message": "使用者帳號刪除成功"})
+
+
+@router.post("/verification/token")
+async def refresh_token(refresh_token: str):
+    """
+      更新 access token
+    """
+    new_token = create_refresh_token(refresh_token)
+    if new_token:
+        return JSONResponse(status_code=200, content={"success": True, "token": new_token})
+    else:
+        return JSONResponse(status_code=401, content={"success": True, "message": "無效的 Token"})
