@@ -1,5 +1,7 @@
 # FastAPI
 from fastapi import FastAPI
+from fastapi.request import Request
+from fastapi.responses import JSONResponse
 
 # CORS
 from fastapi.middleware.cors import CORSMiddleware
@@ -12,6 +14,10 @@ from app.models.sql_model import Base
 # router setting
 from app.router import users_accounting
 from app.router.login import auth
+
+# error handling
+from app.utils.error_handle import AuthorizationError
+from app.tasks.tasks import jwt_exception_log
 
 
 def init_app() -> FastAPI:
@@ -40,6 +46,11 @@ def init_app() -> FastAPI:
     def root():
         return {"message": "Hello from FastAPI in Docker!"}
 
-    app.include_router(users_accounting.router, prefix="/app")
+    @app.exception_handler(AuthorizationError)
+    async def authorization_exception_handler(request: Request, exc: AuthorizationError):
+        jwt_exception_log.delay(exc.client_ip, exc.user_agent, exc.token)
+        return JSONResponse(status_code=401, content={"message": "Unauthorized"})
+
+    # app.include_router(users_accounting.router, prefix="/app")
     app.include_router(auth.router, prefix="/app")
     return app

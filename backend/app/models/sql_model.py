@@ -5,12 +5,29 @@ from datetime import datetime, date
 Base = declarative_base()
 
 
+class JwtTokenLog(Base):
+    """
+    JWT token 日誌紀錄
+
+    資料欄位：
+        id (int): 資料庫自增屬性。
+        ip (str): 使用者 ip。
+        ua (str): 使用者代理。
+        created_at (datetime): 建立時間。
+    """
+    __tablename__ = "jwt_token_log"
+    id = Column(Integer, primary_key=True)
+    ip = Column(String(50), nullable=False)
+    ua = Column(String(255), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
 class User(Base):
     """
     使用者資料表模型
 
     資料欄位：
-        id (int): 使用者 ID。
+        id (int): 資料庫自增屬性。
         username (str): 使用者名稱。
         email (str): 使用者 Email。
         password (str): 使用者密碼（加密後）。

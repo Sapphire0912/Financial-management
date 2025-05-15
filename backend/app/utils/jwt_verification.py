@@ -1,13 +1,15 @@
 from fastapi import Request
 
 from datetime import datetime, timedelta
-from jose import JWTError, jwt
+from jose import ExpiredSignatureError, JWTError, jwt
 from functools import wraps
 from typing import Callable
 import os
 
+from error_handle import AuthorizationError
+
 ALGORITHM = "HS256"
-TOKEN_EXPIRES = 60  # 1 hr
+TOKEN_EXPIRES = 15  # 15 minute
 JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
 
 
@@ -47,13 +49,13 @@ def verify_jwt_token(func: Callable) -> Callable:
     async def _jwt_authiorization(request: Request, *args, **kwargs):
         auth_headers = request.headers.get("Authorization")
         if not auth_headers or not auth_headers.startswith("Bearer "):
-            pass
+            raise AuthorizationError(request)
 
         token = auth_headers.split(' ')[1]
         try:
             payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[ALGORITHM])
         except JWTError:
-            pass
+            raise AuthorizationError(request)
 
         # 設定 request.state 將使用者訊息帶到 api (類似 flask.g)
         request.state.payload = payload
