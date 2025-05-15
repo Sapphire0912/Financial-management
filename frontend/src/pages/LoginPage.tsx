@@ -45,7 +45,7 @@ const user_login = async (
     if (!password) missingFields.push("密碼");
 
     if (missingFields.length > 0) {
-      showToast(`❌ ${missingFields.join("、")}不可為空`, "error");
+      showToast(`${missingFields.join("、")}不可為空`, "error");
       return;
     }
 
@@ -57,11 +57,15 @@ const user_login = async (
         line_user_id,
         login_status
       );
-      showToast("✅ 登入成功", "info");
-      console.log(result);
+      showToast(
+        `${result.success ? "登入成功" : result.message}`,
+        `${result.success ? "success" : "error"}`
+      );
+
+      // Token 在此處接收
     } catch (err: unknown) {
       showToast(
-        `❌ 登入失敗：${err instanceof Error ? err.message : "未知錯誤"}`,
+        `登入失敗：${err instanceof Error ? err.message : "未知錯誤"}`,
         "error"
       );
     }
@@ -79,7 +83,7 @@ const verification_account = async (
   e.preventDefault();
 
   if (login_status === 2) {
-    showToast("❌ 尚未實作 Line 登入功能", "info");
+    showToast("尚未實作 Line 登入功能", "info");
     return;
   }
 
@@ -90,7 +94,7 @@ const verification_account = async (
     if (!password) missingFields.push("密碼");
 
     if (missingFields.length > 0) {
-      showToast(`❌ ${missingFields.join("、")}不可為空`, "error");
+      showToast(`${missingFields.join("、")}不可為空`, "error");
       return;
     }
 
@@ -101,11 +105,10 @@ const verification_account = async (
         password,
         login_status
       );
-      alert("✅ 驗證成功");
-      console.log(result);
+      showToast(`${result.message}`, `${result.success ? "success" : "error"}`);
     } catch (err: unknown) {
       showToast(
-        `❌ 驗證帳號失敗：${err instanceof Error ? err.message : "未知錯誤"}`,
+        `驗證帳號失敗：${err instanceof Error ? err.message : "未知錯誤"}`,
         "error"
       );
     }
@@ -119,7 +122,8 @@ const user_register = async (
   password: string,
   verification_code: string,
   login_status: number,
-  showToast: (msg: string, kind: "success" | "error" | "info") => void
+  showToast: (msg: string, kind: "success" | "error" | "info") => void,
+  { setShowFormUI }: { setShowFormUI: (v: number) => void }
 ) => {
   e.preventDefault();
   if (login_status === 1) {
@@ -130,7 +134,7 @@ const user_register = async (
     if (!verification_code) missingFields.push("驗證碼");
 
     if (missingFields.length > 0) {
-      showToast(`❌ ${missingFields.join("、")}不可為空`, "error");
+      showToast(`${missingFields.join("、")}不可為空`, "error");
       return;
     }
 
@@ -142,11 +146,20 @@ const user_register = async (
         verification_code,
         login_status
       );
-      showToast("✅ 註冊成功", "info");
-      console.log(result);
+
+      showToast(
+        `${result.success ? "註冊成功，即將返回登入畫面" : result.message}`,
+        `${result.success ? "success" : "error"}`
+      );
+
+      if (result.success) {
+        setTimeout(() => {
+          setShowFormUI(FORM_LOGIN); // 設定回登入畫面
+        }, 2000);
+      }
     } catch (err: unknown) {
       showToast(
-        `❌ 註冊失敗：${err instanceof Error ? err.message : "未知錯誤"}`,
+        `註冊失敗：${err instanceof Error ? err.message : "未知錯誤"}`,
         "error"
       );
     }
@@ -160,7 +173,8 @@ const account_supports = async (
   verification_code: string | null,
   new_username: string | null,
   status: number,
-  showToast: (msg: string, kind: "success" | "error" | "info") => void
+  showToast: (msg: string, kind: "success" | "error" | "info") => void,
+  { setShowFormUI }: { setShowFormUI: (v: number) => void }
 ) => {
   e.preventDefault();
 
@@ -171,7 +185,7 @@ const account_supports = async (
   if (status === 3 && !verification_code) missingFields.push("驗證碼");
 
   if (missingFields.length > 0) {
-    showToast(`❌ ${missingFields.join("、")}不可為空`, "error");
+    showToast(`${missingFields.join("、")}不可為空`, "error");
     return;
   }
 
@@ -184,19 +198,36 @@ const account_supports = async (
       status
     );
 
+    if (status === 1) {
+      showToast(`${result.message}`, `${result.success ? "success" : "error"}`);
+      return;
+    }
+
     if (status === 3) {
       if (!result.success) {
-        showToast("❌ 驗證碼錯誤", "error");
+        showToast("驗證碼錯誤", "error");
         return;
       }
 
       const resetResult = await userResetPassword(email, password);
-      showToast("✅ 重設密碼成功", "info");
-      console.log(resetResult);
+      showToast(
+        `${
+          resetResult.success
+            ? "重設密碼成功，即將返回登入畫面"
+            : resetResult.message
+        }`,
+        `${resetResult.success ? "success" : "error"}`
+      );
+
+      if (resetResult.success) {
+        setTimeout(() => {
+          setShowFormUI(FORM_LOGIN); // 設定回登入畫面
+        }, 2000);
+      }
     }
   } catch (err) {
     showToast(
-      `❌ 操作失敗：${err instanceof Error ? err.message : "未知錯誤"}`,
+      `操作失敗：${err instanceof Error ? err.message : "未知錯誤"}`,
       "error"
     );
   }
@@ -255,7 +286,11 @@ const LoginFormUI = () => {
   );
 };
 
-const RegisterFormUI = () => {
+const RegisterFormUI = ({
+  setShowFormUI,
+}: {
+  setShowFormUI: (v: number) => void;
+}) => {
   const [username, setUsername] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
@@ -276,7 +311,9 @@ const RegisterFormUI = () => {
     <form
       className="space-y-4"
       onSubmit={(e) =>
-        user_register(e, username, email, password, code, 1, showToast)
+        user_register(e, username, email, password, code, 1, showToast, {
+          setShowFormUI,
+        })
       }
     >
       <IconInput
@@ -334,7 +371,11 @@ const RegisterFormUI = () => {
   );
 };
 
-const ForgetFormUI = () => {
+const ForgetFormUI = ({
+  setShowFormUI,
+}: {
+  setShowFormUI: (v: number) => void;
+}) => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [rePassword, setRePassword] = useState<string>("");
@@ -353,7 +394,9 @@ const ForgetFormUI = () => {
 
   const check_password = (e: React.FormEvent, status: number) => {
     if (password === rePassword) {
-      account_supports(e, email, password, code, null, status, showToast);
+      account_supports(e, email, password, code, null, status, showToast, {
+        setShowFormUI,
+      });
     } else {
       showToast("❌密碼兩次不一致", "error");
     }
@@ -470,8 +513,8 @@ const LoginPage = () => {
         </div>
         <div className="login-form">
           {showFormUI === 0 && <LoginFormUI />}
-          {showFormUI === 1 && <RegisterFormUI />}
-          {showFormUI === 2 && <ForgetFormUI />}
+          {showFormUI === 1 && <RegisterFormUI setShowFormUI={setShowFormUI} />}
+          {showFormUI === 2 && <ForgetFormUI setShowFormUI={setShowFormUI} />}
         </div>
         {showFormUI === 0 && (
           <div className="flex justify-between text-sm text-gray-600 w-full mt-1 mb-2 my-2 px-2">

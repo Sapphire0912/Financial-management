@@ -160,7 +160,6 @@ async def supports(data: UserAccountSupports, sqldb: Session = Depends(connect_m
       > 3: 忘記密碼的信箱驗證碼
     """
     if data.status == 1:
-        # TODO: 再打重設密碼的 api
         user = sqldb.query(User).filter(User.email == data.email).first()
         if not user:
             return JSONResponse(status_code=401, content={"success": False, "message": "使用者信箱錯誤"})

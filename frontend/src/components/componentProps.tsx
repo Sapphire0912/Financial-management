@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 
 /* 元件 Props */
 
@@ -36,28 +36,40 @@ type ToastBoxProps = {
 };
 
 export const ToastBox = ({ message, kind, onClose }: ToastBoxProps) => {
-  // 設定 3 秒自動關閉
+  const [visible, setVisible] = useState(false);
+
   useEffect(() => {
-    const timer = setTimeout(onClose, 3000);
-    return () => clearTimeout(timer);
+    setVisible(true); // 觸發淡入動畫
+
+    const hideTimer = setTimeout(() => {
+      setVisible(false); // 觸發淡出動畫
+      setTimeout(onClose, 500); // 等動畫完再呼叫 onClose
+    }, 2000);
+
+    return () => clearTimeout(hideTimer);
   }, [onClose]);
 
   const bgColor =
     kind === "success"
-      ? "bg-green-600"
+      ? "bg-green-400"
       : kind === "error"
-      ? "bg-red-600"
-      : "bg-gray-700";
+      ? "bg-red-400"
+      : "bg-gray-600";
 
   return (
     <div
-      className={`fixed top-4 right-4 z-50 px-4 py-2 text-white rounded shadow-lg ${bgColor}`}
+      className={`
+          fixed left-1/2 top-[75%] transform -translate-x-1/2 z-50
+          px-4 py-2 text-white rounded shadow-lg ${bgColor}
+          transition-all duration-500 ease-in-out
+          ${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}
+        `}
     >
       <div className="flex justify-between items-center gap-4">
         <span>{message}</span>
         <button
           type="button"
-          onClick={onClose}
+          onClick={() => setVisible(false)}
           className="text-white font-bold"
         >
           ×
