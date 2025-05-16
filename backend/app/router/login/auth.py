@@ -30,7 +30,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")  # 使用者�
 
 
 @router.post("/login")
-async def login(data: UserLogin, sqldb: Session = Depends(connect_mysql), ip: str = Depends(get_client_ip), response: Response):
+async def login(response: Response, data: UserLogin, sqldb: Session = Depends(connect_mysql), ip: str = Depends(get_client_ip)):
     """
       使用者登入驗證
 
@@ -76,10 +76,14 @@ async def login(data: UserLogin, sqldb: Session = Depends(connect_mysql), ip: st
             "line_user_id": user.line_user_id,
             "is_active": user.is_active
         })
-        set_cookies(response=Response, token=jwt_refresh_token, expired_days=7)
+
+        response = JSONResponse(
+            status_code=200,
+            content={"success": True, "token": jwt_token, "token_type": "bearer"})
+        set_cookies(response, token=jwt_refresh_token, expired_days=7)
         # - End. -
 
-        return JSONResponse(status_code=200, content={"success": True, "token": jwt_token, "token_type": "bearer"})
+        return response
 
     elif data.login_status == 2:
         # TODO: Line 登入

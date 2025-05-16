@@ -9,6 +9,7 @@ export async function userLogin(
 ) {
   const response = await fetch("/app/auth/login", {
     method: "POST",
+    credentials: "include", // 允許接收 set-cookies
     headers: {
       "Content-Type": "application/json",
     },
