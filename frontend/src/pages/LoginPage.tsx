@@ -1,5 +1,6 @@
 /* React & components */
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { IconInput, ToastBox } from "../components/componentProps";
 
 /* API */
@@ -32,12 +33,12 @@ const user_login = async (
   line_user_id: string | null,
   login_status: number = 1,
   showToast: (msg: string, kind: "success" | "error" | "info") => void
-) => {
+): Promise<boolean> => {
   e.preventDefault();
 
   if (login_status === 3) {
     showToast("尚未實作 Line 登入功能", "info");
-    return;
+    return false;
   }
 
   if (login_status === 1) {
@@ -47,7 +48,7 @@ const user_login = async (
 
     if (missingFields.length > 0) {
       showToast(`${missingFields.join("、")}不可為空`, "error");
-      return;
+      return false; // ✅ 中斷流程
     }
 
     try {
@@ -58,12 +59,16 @@ const user_login = async (
         line_user_id,
         login_status
       );
+
       showToast(
-        `${result.success ? "登入成功" : result.message}`,
-        `${result.success ? "success" : "error"}`
+        result.success ? "登入成功" : result.message,
+        result.success ? "success" : "error"
       );
 
-      if (result.success) setToken(result.token);
+      if (result.success) {
+        setToken(result.token);
+        return true;
+      }
     } catch (err: unknown) {
       showToast(
         `登入失敗：${err instanceof Error ? err.message : "未知錯誤"}`,
@@ -71,6 +76,8 @@ const user_login = async (
       );
     }
   }
+
+  return false; // ✅ 最終保底 return
 };
 
 const verification_account = async (
@@ -251,11 +258,25 @@ const LoginFormUI = () => {
     setToast({ show: true, message: msg, kind });
   };
 
+  // 登入成功後跳轉到 Dashboard 頁面
+  const navigate = useNavigate();
+  const handle_login = async (e: React.FormEvent) => {
+    const login_status = await user_login(
+      e,
+      email,
+      password,
+      null,
+      null,
+      1,
+      showToast
+    );
+    if (login_status) {
+      navigate("/dashboard");
+    }
+  };
+
   return (
-    <form
-      className="space-y-4"
-      onSubmit={(e) => user_login(e, email, password, null, null, 1, showToast)}
-    >
+    <form className="space-y-4" onSubmit={(e) => handle_login(e)}>
       <IconInput
         type="email"
         placeholder="請輸入Email"
