@@ -6,7 +6,7 @@ from functools import wraps
 from typing import Callable
 import os
 
-from error_handle import AuthorizationError
+from app.utils.error_handle import AuthorizationError
 
 ALGORITHM = "HS256"
 TOKEN_EXPIRES = 15  # 15 minute

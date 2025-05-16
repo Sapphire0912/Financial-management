@@ -136,3 +136,8 @@ export async function userResetPassword(email: string, new_password: string) {
   }
   return data;
 }
+
+export const setToken = (token: string) => {
+  /* access token: 放於 localStorage */
+  localStorage.setItem("token", token);
+};

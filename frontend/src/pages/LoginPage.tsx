@@ -9,6 +9,7 @@ import {
   userRegister,
   userSupports,
   userResetPassword,
+  setToken,
 } from "../services/userAuth";
 
 /* CSS */
@@ -62,7 +63,7 @@ const user_login = async (
         `${result.success ? "success" : "error"}`
       );
 
-      // Token 在此處接收
+      if (result.success) setToken(result.token);
     } catch (err: unknown) {
       showToast(
         `登入失敗：${err instanceof Error ? err.message : "未知錯誤"}`,

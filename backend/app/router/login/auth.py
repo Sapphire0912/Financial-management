@@ -1,5 +1,5 @@
 # Fastapi
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 from fastapi.responses import JSONResponse
 
 # Databases
@@ -12,8 +12,8 @@ from app.models.sql_model import User
 from app.utils.jwt_verification import create_jwt_token, create_refresh_token, verify_refresh_token
 from passlib.context import CryptContext
 
-# request information & celery task
-from app.utils.request_info import get_client_ip
+# request/response information & celery task
+from app.utils.attach_info import get_client_ip, set_cookies
 from app.tasks.tasks import log_user_login
 
 # User api schema
@@ -30,7 +30,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")  # 使用者�
 
 
 @router.post("/login")
-async def login(data: UserLogin, sqldb: Session = Depends(connect_mysql), ip: str = Depends(get_client_ip)):
+async def login(data: UserLogin, sqldb: Session = Depends(connect_mysql), ip: str = Depends(get_client_ip), response: Response):
     """
       使用者登入驗證
 
@@ -76,8 +76,10 @@ async def login(data: UserLogin, sqldb: Session = Depends(connect_mysql), ip: st
             "line_user_id": user.line_user_id,
             "is_active": user.is_active
         })
+        set_cookies(response=Response, token=jwt_refresh_token, expired_days=7)
+        # - End. -
 
-        return JSONResponse(status_code=200, content={"success": True, "token": jwt_token, "token_type": "bearer", "refresh_token": jwt_refresh_token})
+        return JSONResponse(status_code=200, content={"success": True, "token": jwt_token, "token_type": "bearer"})
 
     elif data.login_status == 2:
         # TODO: Line 登入
