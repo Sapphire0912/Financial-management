@@ -1,5 +1,4 @@
 import { useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 
 import "../styles/page.css";
 import "../styles/component.css";
@@ -10,11 +9,13 @@ type userInfoProp = {
     username: string;
     email: string;
   };
-  logout: () => void;
+  dropdownEvent: {
+    logout: () => void;
+  };
 };
 
 /* 使用者個人資料選單 Component */
-const UserDropDownUI = ({ userInfo, logout }: userInfoProp) => {
+const UserDropDownUI = ({ userInfo, dropdownEvent }: userInfoProp) => {
   // 使用者選單控制
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -50,10 +51,10 @@ const UserDropDownUI = ({ userInfo, logout }: userInfoProp) => {
 
         <div className="flex-1 text-left">
           <p className="font-semibold text-base text-black leading-none mb-1">
-            {userInfo.username || "unknown"}
+            {userInfo.username || "loading..."}
           </p>
           <p className="text-xs text-gray-500 leading-none">
-            {userInfo.email || "unknown"}
+            {userInfo.email || "loading..."}
           </p>
         </div>
 
@@ -79,7 +80,11 @@ const UserDropDownUI = ({ userInfo, logout }: userInfoProp) => {
             <span className="text-gray-800">設定</span>
           </button>
 
-          <button type="button" className="dropdown-item" onClick={logout}>
+          <button
+            type="button"
+            className="dropdown-item"
+            onClick={dropdownEvent.logout}
+          >
             <img
               src="/logout-dark.png"
               alt="登出"
@@ -107,7 +112,7 @@ const MenuUI = () => {
   );
 };
 
-const TitleSection = ({ userInfo, logout }: userInfoProp) => {
+const TitleSection = ({ userInfo, dropdownEvent }: userInfoProp) => {
   return (
     <div className="flex items-center py-3 border border-red-400">
       <MenuUI />
@@ -117,7 +122,7 @@ const TitleSection = ({ userInfo, logout }: userInfoProp) => {
         <p>即時追蹤收支、設定目標，掌握每一筆開銷。</p>
       </div>
 
-      <UserDropDownUI userInfo={userInfo} logout={logout} />
+      <UserDropDownUI userInfo={userInfo} dropdownEvent={dropdownEvent} />
     </div>
   );
 };

@@ -1,8 +1,10 @@
+import fetchWithRefresh from "./refresh_token";
+
 // 處理 Dashboard 首頁與使用者驗證資訊相關的 API
 export async function userData(token: string | null) {
   if (!token) throw new Error("Token 不可為空");
 
-  const response = await fetch("/app/dashboard/", {
+  const response = await fetchWithRefresh("/app/dashboard/", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -22,7 +24,7 @@ export async function userLogout() {
   // Cookie 由後端清除
   localStorage.removeItem("token");
 
-  const response = await fetch("/app/auth/logout", {
+  const response = await fetchWithRefresh("/app/auth/logout", {
     method: "POST",
     credentials: "include",
   });

@@ -41,7 +41,10 @@ const DashBoardPage = () => {
 
   return (
     <div className="dashboard-base">
-      <TitleSection userInfo={userInfo} logout={handleLogout} />
+      <TitleSection
+        userInfo={userInfo}
+        dropdownEvent={{ logout: handleLogout }}
+      />
       DashBoardPage Enter~!
     </div>
   );
