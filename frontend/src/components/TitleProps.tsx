@@ -4,15 +4,17 @@ import { useNavigate } from "react-router-dom";
 import "../styles/page.css";
 import "../styles/component.css";
 
-// Call api
-const handleLogout = () => {};
-//
+/* args data type */
+type userInfoProp = {
+  userInfo: {
+    username: string;
+    email: string;
+  };
+  logout: () => void;
+};
 
 /* 使用者個人資料選單 Component */
-const UserDropDownUI = () => {
-  // 跳轉頁面控制
-  const navigate = useNavigate();
-
+const UserDropDownUI = ({ userInfo, logout }: userInfoProp) => {
   // 使用者選單控制
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -48,9 +50,11 @@ const UserDropDownUI = () => {
 
         <div className="flex-1 text-left">
           <p className="font-semibold text-base text-black leading-none mb-1">
-            username
+            {userInfo.username || "unknown"}
           </p>
-          <p className="text-xs text-gray-500 leading-none">email</p>
+          <p className="text-xs text-gray-500 leading-none">
+            {userInfo.email || "unknown"}
+          </p>
         </div>
 
         <img src="/triangle-dark.png" alt="toggle" className="w-4 h-4" />
@@ -75,7 +79,7 @@ const UserDropDownUI = () => {
             <span className="text-gray-800">設定</span>
           </button>
 
-          <button type="button" className="dropdown-item">
+          <button type="button" className="dropdown-item" onClick={logout}>
             <img
               src="/logout-dark.png"
               alt="登出"
@@ -103,7 +107,7 @@ const MenuUI = () => {
   );
 };
 
-const TitleSection = () => {
+const TitleSection = ({ userInfo, logout }: userInfoProp) => {
   return (
     <div className="flex items-center py-3 border border-red-400">
       <MenuUI />
@@ -113,7 +117,7 @@ const TitleSection = () => {
         <p>即時追蹤收支、設定目標，掌握每一筆開銷。</p>
       </div>
 
-      <UserDropDownUI />
+      <UserDropDownUI userInfo={userInfo} logout={logout} />
     </div>
   );
 };

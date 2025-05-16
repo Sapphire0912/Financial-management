@@ -13,7 +13,7 @@ from app.utils.jwt_verification import create_jwt_token, create_refresh_token, v
 from passlib.context import CryptContext
 
 # request/response information & celery task
-from app.utils.attach_info import get_client_ip, set_cookies
+from app.utils.attach_info import get_client_ip, set_cookies, clear_cookies
 from app.tasks.tasks import log_user_login
 
 # User api schema
@@ -244,3 +244,23 @@ async def refresh_token(refresh_token: str):
         return JSONResponse(status_code=200, content={"success": True, "token": new_token})
     else:
         return JSONResponse(status_code=401, content={"success": True, "message": "無效的 Token"})
+
+
+@router.post("/logout")
+async def logout(response: Response):
+    """
+      使用者登出 (須清除 cookies)
+    """
+    try:
+        response = JSONResponse(status_code=200, content={
+            "success": True,
+            "message": "登出成功"
+        })
+        clear_cookies(response)
+        return response
+
+    except Exception:
+        return JSONResponse(status_code=500, content={
+            "success": False,
+            "message": "登出失敗"
+        })
