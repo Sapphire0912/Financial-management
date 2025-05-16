@@ -17,7 +17,7 @@ const fetchWithRefresh = async (url: string, options: RequestInit = {}) => {
     });
 
     if (!refreshRes.ok) {
-      throw new Error("無法刷新 token，請重新登入");
+      throw new Error("Token 已過期請重新登入。");
     }
 
     const data = await refreshRes.json();

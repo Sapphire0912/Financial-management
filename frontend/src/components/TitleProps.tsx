@@ -98,28 +98,14 @@ const UserDropDownUI = ({ userInfo, dropdownEvent }: userInfoProp) => {
   );
 };
 
-/* 儀錶板左側選單 */
-const MenuUI = () => {
-  const [isOpen, setIsOpen] = useState<boolean>(false);
-  const toggleMenu = () => setIsOpen((prev) => !prev);
-
-  return (
-    <div>
-      <button type="button" onClick={toggleMenu}>
-        <img src="/menu-dark.png" alt="menu" />
-      </button>
-    </div>
-  );
-};
-
 const TitleSection = ({ userInfo, dropdownEvent }: userInfoProp) => {
   return (
-    <div className="flex items-center py-3 border border-red-400">
-      <MenuUI />
-
+    <div className="flex items-center py-3 justify-between">
       <div>
-        <h3 className="font-semibold text-xl">財務總覽</h3>
-        <p>即時追蹤收支、設定目標，掌握每一筆開銷。</p>
+        <h3 className="font-semibold text-xl mb-2">財務總覽</h3>
+        <p className="text-gray-800 text-sm">
+          即時追蹤收支、設定目標，掌握每一筆開銷。
+        </p>
       </div>
 
       <UserDropDownUI userInfo={userInfo} dropdownEvent={dropdownEvent} />

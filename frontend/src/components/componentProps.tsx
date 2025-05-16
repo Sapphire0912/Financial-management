@@ -78,3 +78,42 @@ export const ToastBox = ({ message, kind, onClose }: ToastBoxProps) => {
     </div>
   );
 };
+
+/* 側邊選單物件 */
+type SideMenuItemProp = {
+  img: string;
+  text: string;
+  amount?: number;
+  isActive?: boolean;
+  onClick: () => void;
+};
+
+export const MenuIcons = ({
+  img,
+  text,
+  amount,
+  isActive,
+  onClick,
+}: SideMenuItemProp) => {
+  return (
+    <button
+      type="button"
+      className={`w-full flex items-center justify-between px-3 py-4 rounded-lg cursor-pointer transition ${
+        isActive
+          ? "bg-gray-200 font-semibold text-black"
+          : "hover:bg-gray-100 text-gray-800"
+      }`}
+      onClick={onClick}
+    >
+      <div className="flex items-center gap-2 text-left">
+        <img src={img} alt={text} className="w-5 h-5 object-contain" />
+        <span className="text-base">{text}</span>
+      </div>
+      {amount !== undefined && (
+        <span className="bg-gray-200 text-xs text-gray-700 px-2 py-0.5 rounded-full">
+          {amount}
+        </span>
+      )}
+    </button>
+  );
+};

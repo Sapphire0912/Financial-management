@@ -7,6 +7,7 @@ import { userData, userLogout } from "../services/dashboardUser";
 
 /* Components */
 import TitleSection from "../components/TitleProps";
+import Sidebar from "../components/Sidebar";
 
 /* CSS */
 import "../styles/page.css";
@@ -40,12 +41,16 @@ const DashBoardPage = () => {
   }, []);
 
   return (
-    <div className="dashboard-base">
-      <TitleSection
-        userInfo={userInfo}
-        dropdownEvent={{ logout: handleLogout }}
-      />
-      DashBoardPage Enter~!
+    <div className="dashboard-full">
+      <Sidebar />
+
+      <div className="dashboard-base">
+        <TitleSection
+          userInfo={userInfo}
+          dropdownEvent={{ logout: handleLogout }}
+        />
+        DashBoardPage Enter~!
+      </div>
     </div>
   );
 };

@@ -248,7 +248,7 @@ async def refresh_token(request: Request):
     if new_token:
         return JSONResponse(status_code=200, content={"success": True, "token": new_token})
     else:
-        return JSONResponse(status_code=401, content={"success": False, "message": "無效的 Token"})
+        return JSONResponse(status_code=401, content={"success": False, "message": "Token 已過期，請重新登入"})
 
 
 @router.post("/logout")

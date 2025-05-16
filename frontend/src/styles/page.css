@@ -8,8 +8,13 @@
   /* 需要動畫使用原生的 CSS */
 }
 
+/* Dashboard Page */
+.dashboard-full {
+  @apply min-h-screen flex;
+}
+
 .dashboard-base {
-  @apply min-h-screen px-4 py-2;
+  @apply min-h-screen px-4 py-2 flex-row;
   background-color: rgb(255, 255, 255);
   color: black;
   width: 100%;
@@ -22,7 +27,7 @@
 /* icon-dark: #4A4A4A */
 /* icon-bright: #3F51F3 */
 
-/* LoginPage */
+/* Login Page */
 .login-card {
   @apply backdrop-blur-md border-2 border-blue-300 rounded-xl shadow-2xl;
   height: 100%;
