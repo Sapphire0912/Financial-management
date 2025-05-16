@@ -14,6 +14,28 @@ type userInfoProp = {
   };
 };
 
+type PageContentProp = {
+  title: string;
+  description?: string;
+};
+
+type TitleSectionProps = {
+  userInfo: userInfoProp["userInfo"];
+  dropdownEvent: userInfoProp["dropdownEvent"];
+  title: PageContentProp["title"];
+  description?: PageContentProp["description"];
+};
+
+export const PageContent = ({ title, description }: PageContentProp) => {
+  /* 不同頁面標題與敘述文字 */
+  return (
+    <div>
+      <h3 className="font-semibold text-xl mb-2">{title}</h3>
+      <p className="text-gray-800 text-sm">{description}</p>
+    </div>
+  );
+};
+
 /* 使用者個人資料選單 Component */
 const UserDropDownUI = ({ userInfo, dropdownEvent }: userInfoProp) => {
   // 使用者選單控制
@@ -98,16 +120,15 @@ const UserDropDownUI = ({ userInfo, dropdownEvent }: userInfoProp) => {
   );
 };
 
-const TitleSection = ({ userInfo, dropdownEvent }: userInfoProp) => {
+const TitleSection = ({
+  userInfo,
+  dropdownEvent,
+  title,
+  description,
+}: TitleSectionProps) => {
   return (
     <div className="flex items-center py-3 justify-between">
-      <div>
-        <h3 className="font-semibold text-xl mb-2">財務總覽</h3>
-        <p className="text-gray-800 text-sm">
-          即時追蹤收支、設定目標，掌握每一筆開銷。
-        </p>
-      </div>
-
+      <PageContent title={title} description={description} />
       <UserDropDownUI userInfo={userInfo} dropdownEvent={dropdownEvent} />
     </div>
   );

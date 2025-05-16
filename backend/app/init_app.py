@@ -12,7 +12,7 @@ from app.databases.mysql_setting import engine
 from app.models.sql_model import Base
 
 # router setting
-# from app.router import users_accounting
+from app.router.accounting import users_accounting
 from app.router.login import auth
 from app.router.dashboard import dashboard_api
 
@@ -52,8 +52,8 @@ def init_app() -> FastAPI:
         jwt_exception_log.delay(exc.client_ip, exc.user_agent, exc.token)
         return JSONResponse(status_code=401, content={"message": "Unauthorized"})
 
-    # app.include_router(users_accounting.router, prefix="/app")
     app.include_router(auth.router, prefix="/app")
     app.include_router(dashboard_api.router, prefix="/app")
+    app.include_router(users_accounting.router, prefix="/app")
 
     return app

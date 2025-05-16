@@ -12,11 +12,7 @@ import Sidebar from "../components/Sidebar";
 /* CSS */
 import "../styles/page.css";
 
-// Call API
-
-//
-
-const DashBoardPage = () => {
+const AccountingPage = () => {
   const [userInfo, setUserInfo] = useState({ username: "", email: "" });
 
   // 使用者登出
@@ -39,7 +35,6 @@ const DashBoardPage = () => {
 
     fetchData();
   }, []);
-
   return (
     <div className="dashboard-full">
       <Sidebar />
@@ -48,13 +43,13 @@ const DashBoardPage = () => {
         <TitleSection
           userInfo={userInfo}
           dropdownEvent={{ logout: handleLogout }}
-          title="財務總覽"
-          description="即時追蹤收支、設定目標，掌握每一筆開銷。"
+          title="我的記帳本"
+          description="隨手記下每一筆花費，讓每一塊錢都不白花！"
         />
-        DashBoardPage Enter~!
+        Accounting Page Enter~!
       </div>
     </div>
   );
 };
 
-export default DashBoardPage;
+export default AccountingPage;

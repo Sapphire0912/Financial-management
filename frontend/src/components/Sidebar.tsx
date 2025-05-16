@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 /* Components */
@@ -53,7 +52,7 @@ const Sidebar = () => {
         <img
           src="/sidebar-logo-dark.png"
           alt="finanical"
-          className="w-8 h-8 mr-2 "
+          className="w-8 h-8 mr-2"
         />
         <h3 className="font-semibold text-2xl text-bold">Financial</h3>
       </div>

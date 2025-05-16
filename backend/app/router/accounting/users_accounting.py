@@ -6,7 +6,7 @@ from datetime import date, datetime
 from bson import ObjectId
 
 # tags 是在 swagger UI 中的分區名稱資料
-router = APIRouter(prefix="/users_accounting", tags=["users_accounting"])
+router = APIRouter(prefix="/accounting", tags=["accounting"])
 
 
 @router.get("/search")
