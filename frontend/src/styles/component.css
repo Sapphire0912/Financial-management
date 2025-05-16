@@ -22,3 +22,32 @@
   filter: brightness(1.2);
   transform: scale(1.02);
 }
+
+/* TitleProps */
+.dropdown-item {
+  @apply flex items-center gap-4 w-full px-4 py-2 text-base;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.dropdown-item-img {
+  @apply w-6 h-6 object-contain;
+}
+
+.dropdown-item:hover {
+  @apply bg-gray-200;
+}
+
+@keyframes dropdown-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-item-animation-in {
+  animation: dropdown-fade-in 0.2s ease-in-out;
+}
