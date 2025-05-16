@@ -36,6 +36,11 @@ const menuItems = [
     amount: 0,
   },
   {
+    img: "/investing-dark.png",
+    text: "投資&存錢計畫",
+    path: "/investing",
+  },
+  {
     img: "/setting-dark.png",
     text: "設定",
     path: "/setting",

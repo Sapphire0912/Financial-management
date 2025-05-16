@@ -7,6 +7,7 @@ import AccountingPage from "./pages/Accounting";
 import AnalyzePage from "./pages/Analyze";
 import TransactionPage from "./pages/Transaction";
 import NotificationPage from "./pages/Notification";
+import InvestingPage from "./pages/Investing";
 import SettingPage from "./pages/Setting";
 
 /* CSS */
@@ -22,6 +23,7 @@ function App() {
         <Route path="/analyze" element={<AnalyzePage />} />
         <Route path="/history" element={<TransactionPage />} />
         <Route path="/notification" element={<NotificationPage />} />
+        <Route path="/investing" element={<InvestingPage />} />
         <Route path="/setting" element={<SettingPage />} />
       </Routes>
     </BrowserRouter>
