@@ -1,5 +1,5 @@
 # Fastapi
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import JSONResponse
 
 # Databases
@@ -235,15 +235,20 @@ async def delete_account(data: UserDeleteAccount, sqldb: Session = Depends(conne
 
 
 @router.post("/verification/token")
-async def refresh_token(refresh_token: str):
+async def refresh_token(request: Request):
     """
       更新 access token
     """
-    new_token = create_refresh_token(refresh_token)
+    refresh_token = request.cookies.get("refresh_token")
+
+    if not refresh_token:
+        return JSONResponse(status_code=400, content={"success": False, "message": "缺少 Token"})
+
+    new_token = verify_refresh_token(refresh_token)
     if new_token:
         return JSONResponse(status_code=200, content={"success": True, "token": new_token})
     else:
-        return JSONResponse(status_code=401, content={"success": True, "message": "無效的 Token"})
+        return JSONResponse(status_code=401, content={"success": False, "message": "無效的 Token"})
 
 
 @router.post("/logout")
