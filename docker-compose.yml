@@ -19,6 +19,7 @@ services:
         condition: service_started
       redis-financial:
         condition: service_started
+    restart: on-failure
 
   celery-worker:
     container_name: celery-worker

@@ -11,7 +11,7 @@ MAX_RETRIES = 10  # mysql 重新連線次數
 
 for i in range(MAX_RETRIES):
     try:
-        engine = create_engine(MYSQL_URI)
+        engine = create_engine(MYSQL_URI, pool_pre_ping=True)
         SessionLocal = sessionmaker(
             autocommit=False, autoflush=False, bind=engine)
         break
