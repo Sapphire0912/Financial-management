@@ -142,3 +142,23 @@ export const setToken = (token: string) => {
   /* access token: 放於 localStorage */
   localStorage.setItem("token", token);
 };
+
+export function parsePayload() {
+  /* 解析 jwt token payload */
+  const token = localStorage.getItem("token");
+  if (!token) return null;
+
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch (e: unknown) {
+    return null;
+  }
+}

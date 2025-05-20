@@ -117,3 +117,55 @@ export const MenuIcons = ({
     </button>
   );
 };
+
+/* 儀錶板 CRUD 使用者操作元件 */
+type BoardItemsProp = {
+  img: string;
+  text: string;
+  isActive?: boolean;
+  onClick: () => void;
+};
+
+export const BoardButtonItems = ({
+  img,
+  text,
+  isActive,
+  onClick,
+}: BoardItemsProp) => {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`relative flex items-center gap-2 pr-8 py-2 transition 
+        ${
+          isActive
+            ? "text-blue-600 font-semibold"
+            : "text-gray-500 hover:text-blue-600"
+        }
+      `}
+    >
+      <img src={img} alt={text} className="w-5 h-5 object-contain" />
+      <span className="text-base">{text}</span>
+
+      {isActive && (
+        <span className="absolute bottom-0 left-0 right-4 h-0.5 bg-blue-600 rounded-full" />
+      )}
+    </button>
+  );
+};
+
+/* */
+type AccountingLabelProps = {
+  children: React.ReactNode;
+  required?: boolean;
+};
+
+export const AccountingLabelAsterisk = ({
+  children,
+  required = false,
+}: AccountingLabelProps) => (
+  <label className="block mb-1 text-sm font-medium">
+    {children}
+    {required && <span className="text-red-500 ml-1">*</span>}
+  </label>
+);

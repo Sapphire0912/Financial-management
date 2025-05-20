@@ -127,7 +127,7 @@ const TitleSection = ({
   description,
 }: TitleSectionProps) => {
   return (
-    <div className="flex items-center py-3 justify-between">
+    <div className="flex items-center py-3 justify-between border-b-slate-400 border-b">
       <PageContent title={title} description={description} />
       <UserDropDownUI userInfo={userInfo} dropdownEvent={dropdownEvent} />
     </div>

@@ -6,13 +6,34 @@ import { useNavigate } from "react-router-dom";
 import { userData, userLogout } from "../services/dashboardUser";
 
 /* Components */
-import TitleSection from "../components/TitleProps";
 import Sidebar from "../components/Sidebar";
+import TitleSection from "../components/TitleProps";
+import AddAccountingForm from "../components/AddAccountingForm";
+import { BoardButtonItems } from "../components/componentProps";
 
 /* CSS */
 import "../styles/page.css";
 
+// Board items
+const boardItems = [
+  {
+    img: "/board-add-dark.png",
+    text: "新增",
+    showStatus: 1,
+  },
+  {
+    img: "/board-edit-dark.png",
+    text: "編輯",
+    showStatus: 2,
+  },
+];
+
 const AccountingPage = () => {
+  /* 選單控制 */
+  const [userOperation, setUserOperation] = useState<number>(1); // add = 1, edit = 2
+  const [queryFilter, setQueryFilter] = useState<boolean>(false); // filter
+
+  /* 使用者資訊 */
   const [userInfo, setUserInfo] = useState({ username: "", email: "" });
 
   // 使用者登出
@@ -35,6 +56,8 @@ const AccountingPage = () => {
 
     fetchData();
   }, []);
+  /* */
+
   return (
     <div className="dashboard-full">
       <Sidebar />
@@ -46,7 +69,46 @@ const AccountingPage = () => {
           title="我的記帳本"
           description="隨手記下每一筆花費，讓每一塊錢都不白花！"
         />
-        Accounting Page Enter~!
+        <div className="dashboard-outside">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center mb-4">
+              {boardItems.map((item, idx) => (
+                <BoardButtonItems
+                  key={idx}
+                  img={item.img}
+                  text={item.text}
+                  isActive={userOperation === item.showStatus}
+                  onClick={() => setUserOperation(item.showStatus)}
+                />
+              ))}
+            </div>
+            <div className="flex items-center mb-4">
+              <BoardButtonItems
+                img="/board-filter-dark.png"
+                text="篩選"
+                isActive={queryFilter}
+                onClick={() => setQueryFilter(!queryFilter)}
+              />
+            </div>
+          </div>
+          {queryFilter && (
+            <div className="dashboard-filter">FILTER section</div>
+          )}
+          <div
+            className={`dashboard-content ${
+              userOperation === 1 ? "justify-between" : ""
+            }`}
+          >
+            {userOperation === 1 && (
+              <div className="h-full">
+                <AddAccountingForm />
+              </div>
+            )}
+            {userOperation === 1 && (
+              <div className="dashboard-right">Figure Details</div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

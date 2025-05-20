@@ -33,7 +33,7 @@ class Accounting(BaseModel):
         category (str): 花費細項類別，例如：早餐、午餐、晚餐、宵夜、零食等。
 
         user_name (str): 使用者名稱。
-        user_id (int): 使用者 ID。
+        line_user_id (str): 使用者 Line ID。
 
         cost_name (str): 花費名稱。
         cost_status (int): 花費狀態，代表是否為必要花費：
@@ -42,29 +42,30 @@ class Accounting(BaseModel):
             - 2: 臨時必要
             - 3: 臨時想要
 
-        unit (str): 單位（例如：份、個、杯等）。
-        cost (float): 花費金額。
+        unit (str): 金錢單位（例如: TWD, JPY)。
+        cost (int): 花費金額。
         store_name (str): 店家名稱。
+        invoice_number (str): 發票號碼。
     """
 
     statistics_kind = me.StringField(required=True, default="其他")
     category = me.StringField(default="其他")
 
     user_name = me.StringField(required=True)
-    user_id = me.StringField(required=True)
+    line_user_id = me.StringField(required=True)
     cost_name = me.StringField(required=True)
     cost_status = me.IntField(required=True)
     unit = me.StringField(required=True, default="TWD")
     cost = me.IntField(required=True)
     store_name = me.StringField(default="")
-    # invoice_number = me.StringField(default="")  # 發票號碼, 之後串金流可用
+    invoice_number = me.StringField(default="")  # 發票號碼, 之後串金流可用
 
     meta = {
         "indexes": [
             {
                 "fields": [
-                    "user_name", "user_id", "statistics_kind", "cost_status",
-                    "category", "cost_name", "store_name"
+                    "user_name", "line_user_id", "statistics_kind", "cost_status",
+                    "category", "cost_name", "store_name", "invoice_number"
                 ],
                 "sparse": True
             }

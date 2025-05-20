@@ -5,17 +5,23 @@ from datetime import datetime, date
 
 # -- Accounting Router 相關 --
 class AccountingCreate(BaseModel):
-    user_name: str
-    user_id: str
     statistics_kind: Optional[str] = "其他"
     category: Optional[str] = "其他"
+    user_name: str
+    user_id: Optional[str]  # 使用者 line id
     cost_name: str
+    cost_status: int = 0
     unit: str = "TWD"
     cost: int
     store_name: Optional[str] = ""
+    invoice_number: Optional[str] = ""
     description: Optional[str] = ""
-    created_at: Optional[datetime] = datetime.now()
-    updated_at: Optional[datetime] = datetime.now()
+    created_at: Optional[datetime] = datetime.utcnow()
+    updated_at: Optional[datetime] = datetime.utcnow()
+
+    # 用於處理時差與判斷時間是否合理
+    timezone: str
+    current_utc_time: str
 
 
 class AccountingUpdate(BaseModel):
@@ -29,7 +35,7 @@ class AccountingUpdate(BaseModel):
     cost: Optional[int] = None
     store_name: Optional[str] = None
     description: Optional[str] = None
-    updated_at: Optional[datetime] = datetime.now()
+    updated_at: Optional[datetime] = datetime.utcnow()
 
 
 class AccountingDelete(BaseModel):

@@ -1,7 +1,16 @@
+# fastApi
 from fastapi import APIRouter, Query
+from fastapi.responses import JSONResponse
+
+# Databases
 from app.models.mongo_model import Accounting
 from app.schemas.accounting import AccountingCreate, AccountingUpdate, AccountingDelete
-from fastapi.responses import JSONResponse
+
+# JWT
+from app.utils.jwt_verification import verify_jwt_token
+
+# Tools
+from app.utils.attach_info import verify_utc_time
 from datetime import date, datetime
 from bson import ObjectId
 
@@ -10,7 +19,7 @@ router = APIRouter(prefix="/accounting", tags=["accounting"])
 
 
 @router.get("/search")
-async def create_users_accounting(
+async def query_users_accounting(
     user_name: str = Query(..., description="使用者名稱"),
     user_id: str = Query(..., description="使用者ID"),
     statistics_kind: str = Query(None, description="統計類型"),
@@ -52,13 +61,20 @@ async def create_users_accounting(
 
 
 @router.post("/create")
+@verify_jwt_token
 async def create_users_accounting(data: AccountingCreate):
     """
       :router 新增使用者記帳資料
     """
-    record = Accounting(**data.dict())
-    record.save()
-    return JSONResponse(status_code=200, content={"success": True, "message": "Accounting created successfully"})
+    if not verify_utc_time(user_utc_time=data.current_utc_time, timezone=data.timezone, create_at=data.created_at):
+        return JSONResponse(status_code=403, content={"success": False, "message": "使用者時區或使用者本地時間有誤"})
+
+    try:
+        record = Accounting(**data.dict())
+        record.save()
+        return JSONResponse(status_code=201, content={"success": True, "message": "Accounting created successfully"})
+    except Exception as e:
+        return JSONResponse(status_code=403, content={"success": False, "message": "使用者資料缺少必填欄位"})
 
 
 @router.post("/update")
