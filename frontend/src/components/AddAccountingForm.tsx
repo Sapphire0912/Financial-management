@@ -12,6 +12,7 @@ type FormDataProps = {
   cost_name: string;
   cost_status: number;
   description: string;
+  payMethod: string;
   unit: string;
   cost: number;
   store_name: string;
@@ -34,6 +35,7 @@ const AddAccountingForm = () => {
     cost_status: 0,
     description: "",
     unit: "TWD",
+    payMethod: "",
     cost: 0,
     store_name: "",
     invoice_number: "",
@@ -124,14 +126,14 @@ const AddAccountingForm = () => {
 
       {/* 花費名稱 */}
       <div>
-        <AccountingLabelAsterisk children="花費名稱" required={true} />
+        <AccountingLabelAsterisk children="商品名稱" required={true} />
         <input
           type="text"
           name="cost_name"
           value={formData.cost_name}
           onChange={handleFormData}
           className="w-full border rounded px-3 py-2"
-          placeholder="例如：便當"
+          placeholder="例如：漢堡"
           required
         />
       </div>
@@ -195,6 +197,22 @@ const AddAccountingForm = () => {
           className="w-full border rounded px-3 py-2"
           required
         />
+      </div>
+
+      <div>
+        <AccountingLabelAsterisk children="付款方式" required={true} />
+        <select
+          name="payMethod"
+          value={formData.payMethod}
+          onChange={handleFormData}
+          aria-label="付款方式"
+          className="w-full border rounded px-3 py-2"
+        >
+          <option value="現金">現金</option>
+          <option value="LINE Pay">LINE Pay</option>
+          <option value="信用卡">信用卡</option>
+          <option value="其他">其他</option>
+        </select>
       </div>
 
       {/* 發票號碼 */}

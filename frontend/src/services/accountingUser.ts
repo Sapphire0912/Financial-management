@@ -57,4 +57,10 @@ export const addAccounting = async (formData: FormApiDataProps) => {
       current_utc_time: currentUTCTime,
     }),
   });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || "更改密碼失敗");
+  }
+  return data;
 };
