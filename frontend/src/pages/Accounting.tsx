@@ -10,6 +10,7 @@ import Sidebar from "../components/Sidebar";
 import TitleSection from "../components/TitleProps";
 import AddAccountingForm from "../components/AddAccountingForm";
 import { BoardButtonItems } from "../components/componentProps";
+import TransactionTable from "../components/TransactionTable";
 
 /* CSS */
 import "../styles/page.css";
@@ -101,7 +102,7 @@ const AccountingPage = () => {
           )}
           <div
             className={`dashboard-content ${
-              userOperation === 1 ? "justify-between" : ""
+              userOperation !== 3 ? "justify-between" : ""
             }`}
           >
             {userOperation === 1 && (
@@ -111,6 +112,11 @@ const AccountingPage = () => {
             )}
             {userOperation === 1 && (
               <div className="dashboard-right">Figure Details</div>
+            )}
+            {userOperation === 3 && (
+              <div className="h-full">
+                <TransactionTable isEdit={true} />
+              </div>
             )}
           </div>
         </div>

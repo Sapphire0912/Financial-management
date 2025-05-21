@@ -68,3 +68,30 @@ export async function addAccounting(formData: AddFormDataProps) {
   }
   return data;
 }
+
+/* 取得使用者記帳資料 */
+export async function getTransactionHistory() {
+  const response = await fetchWithRefresh(
+    "/app/accounting/transaction/history",
+    {
+      method: "GET",
+    }
+  );
+
+  const result = await response.json();
+  if (!response.ok) {
+    throw new Error(result.message || "伺服器出現未預期錯誤");
+  }
+
+  // 使用者顯示時間做時區轉換
+  const transData = result.data.map((item: Record<string, any>) => {
+    const localTime = new Date(item.created_at + "Z");
+    return {
+      ...item,
+      date: localTime.toLocaleDateString(),
+      time: localTime.toLocaleTimeString(),
+    };
+  });
+
+  return transData;
+}

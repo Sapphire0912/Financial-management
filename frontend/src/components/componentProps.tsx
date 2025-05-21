@@ -154,7 +154,7 @@ export const BoardButtonItems = ({
   );
 };
 
-/* */
+/* 記帳欄位標籤資料 */
 type AccountingLabelProps = {
   children: React.ReactNode;
   required?: boolean;
@@ -168,4 +168,32 @@ export const AccountingLabelAsterisk = ({
     {children}
     {required && <span className="text-red-500 ml-1">*</span>}
   </label>
+);
+
+/* 歷史紀錄表格欄位名稱 & 顯示狀態 */
+type TransactionTitleProps = {
+  label: string;
+  isVisible: boolean;
+  onToggle: () => void;
+};
+
+export const TransactionTitle = ({
+  label,
+  isVisible,
+  onToggle,
+}: TransactionTitleProps) => (
+  <div className="flex items-center justify-between gap-2">
+    {isVisible && <span>{label}</span>}
+    <button
+      type="button"
+      onClick={onToggle}
+      className="text-xs text-gray-500 hover:text-gray-700"
+    >
+      <img
+        src={isVisible ? "/hidden-dark.png" : "/vision-dark.png"}
+        alt={isVisible ? "隱藏欄位" : "顯示欄位"}
+        className="w-4 h-4"
+      />
+    </button>
+  </div>
 );

@@ -64,7 +64,7 @@ class Accounting(BaseModel):
     unit = me.StringField(required=True, default="TWD")
     cost = me.IntField(required=True)
     pay_method = me.IntField(required=True)
-    store_name = me.StringField(default="")
+    store_name = me.StringField(default="未知")
     invoice_number = me.StringField(default="")  # 發票號碼, 之後串金流可用
 
     meta = {
@@ -85,18 +85,20 @@ class Accounting(BaseModel):
     def __repr__(self):
         return f"Accounting(user_name={self.user_name}, statistics_kind={self.statistics_kind}, category={self.category}, store_name={self.store_name})"
 
-    def to_dict(self):
+    def to_api_format(self):
         return {
-            "id": self.id,
+            "id": str(self.id),
             "user_name": self.user_name,
             "statistics_kind": self.statistics_kind,
             "category": self.category,
-            "cost_name": self.cost_name,
-            "unit": self.unit,
-            "cost": self.cost,
             "store_name": self.store_name,
+            "cost_name": self.cost_name,
+            "cost": self.cost,
+            "unit": self.unit,
+            "pay_method": self.pay_method,
+            "cost_status": self.cost_status,
             "description": self.description,
-            "created_at": self.created_at,
+            "created_at": self.created_at.strftime("%Y-%m-%d %H:%M:%S"),
         }
 
 

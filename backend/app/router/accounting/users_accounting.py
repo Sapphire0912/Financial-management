@@ -29,7 +29,7 @@ async def query_users_accounting(
     store_name: str = Query(None, description="店家名稱"),
 ):
     """
-      :router 取得使用者查詢的記帳資料
+      :router 取得使用者查詢的記帳資料 (棄用, 在交易歷史處新增)
     """
     start_dt = datetime.combine(start_date, datetime.min.time())
     end_dt = datetime.combine(end_date, datetime.max.time())
@@ -60,6 +60,24 @@ async def query_users_accounting(
     )
 
 
+@router.get("/transaction/history")
+@verify_jwt_token
+async def get_transaction_history(request: Request):
+    """
+      :router 記帳紀錄
+    """
+    try:
+        transaction_data = Accounting.objects(
+            user_name=request.state.payload['username']).order_by('-created_at')
+
+        response_data = [data.to_api_format() for data in transaction_data]
+        return JSONResponse(status_code=200, content={"success": True, "data": response_data})
+
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"success": False, "message": "無法取得使用者交易紀錄"})
+
+
+# 記帳相關操作
 @router.post("/create")
 @verify_jwt_token
 async def create_users_accounting(request: Request, data: AccountingCreate):
