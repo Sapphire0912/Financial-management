@@ -2,8 +2,10 @@ import { useState } from "react";
 
 /* Components */
 import { AccountingLabelAsterisk } from "./componentProps";
+import { ToastBox } from "../components/componentProps";
 
 /* API */
+import { addAccounting } from "../services/accountingUser";
 
 // Call Api
 type FormDataProps = {
@@ -14,20 +16,46 @@ type FormDataProps = {
   description: string;
   payMethod: string;
   unit: string;
-  cost: number;
+  cost: number | string;
   store_name: string;
   invoice_number: string;
   accounting_date: string;
   accounting_time: string;
 };
 
-const createNewAccounting = (e: React.FormEvent, formData: FormDataProps) => {
+const createNewAccounting = async (
+  e: React.FormEvent,
+  formData: FormDataProps,
+  showToast: (msg: string, kind: "success" | "error" | "info") => void
+) => {
   e.preventDefault();
   console.log("送出資料", formData);
-  // TODO: 傳送到後端
+
+  try {
+    const result = await addAccounting(formData);
+    showToast(result.message, result.success ? "success" : "error");
+  } catch (err: unknown) {
+    showToast(
+      `登入失敗：${err instanceof Error ? err.message : "未知錯誤"}`,
+      "error"
+    );
+  }
 };
+//
 
 const AddAccountingForm = () => {
+  // 彈跳視窗提示
+  const [toast, setToast] = useState({
+    show: false,
+    message: "",
+    kind: "info" as "success" | "error" | "info",
+  });
+
+  const showToast = (msg: string, kind: typeof toast.kind) => {
+    setToast({ show: true, message: msg, kind });
+  };
+
+  // 表格資料
   const [formData, setFormData] = useState<FormDataProps>({
     statistics_kind: "",
     category: "",
@@ -36,7 +64,7 @@ const AddAccountingForm = () => {
     description: "",
     unit: "TWD",
     payMethod: "",
-    cost: 0,
+    cost: "",
     store_name: "",
     invoice_number: "",
     accounting_date: "",
@@ -49,6 +77,7 @@ const AddAccountingForm = () => {
     >
   ) => {
     const { name, value } = e.target;
+    if (name === "cost" && Number(value) < 0) alert("花費金額不可少於 0");
 
     setFormData((prev) => ({
       ...prev,
@@ -58,10 +87,9 @@ const AddAccountingForm = () => {
 
   return (
     <form
-      className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 p-4 max-w-4xl mx-auto bg-white shadow-md rounded-lg"
-      onSubmit={(e) => createNewAccounting(e, formData)}
+      className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4 p-4 max-w-4xl mx-auto bg-white shadow-md rounded-lg"
+      onSubmit={(e) => createNewAccounting(e, formData, showToast)}
     >
-      {/* 記帳日期 */}
       <div>
         <AccountingLabelAsterisk children="記帳日期" required={true} />
         <input
@@ -75,7 +103,6 @@ const AddAccountingForm = () => {
         />
       </div>
 
-      {/* 記帳時間 */}
       <div>
         <AccountingLabelAsterisk children="記帳時間" required={false} />
         <input
@@ -88,7 +115,6 @@ const AddAccountingForm = () => {
         />
       </div>
 
-      {/* 統計類型 */}
       <div>
         <AccountingLabelAsterisk children="統計類型" required={true} />
         <select
@@ -107,11 +133,11 @@ const AddAccountingForm = () => {
           <option value="育">育</option>
           <option value="樂">樂</option>
           <option value="生活">生活</option>
+          <option value="貸款">貸款</option>
           <option value="其他">其他</option>
         </select>
       </div>
 
-      {/* 細項分類 */}
       <div>
         <AccountingLabelAsterisk children="花費細項分類" required={false} />
         <input
@@ -124,7 +150,6 @@ const AddAccountingForm = () => {
         />
       </div>
 
-      {/* 花費名稱 */}
       <div>
         <AccountingLabelAsterisk children="商品名稱" required={true} />
         <input
@@ -138,7 +163,6 @@ const AddAccountingForm = () => {
         />
       </div>
 
-      {/* 花費狀態 */}
       <div>
         <AccountingLabelAsterisk children="花費狀態" required={true} />
         <select
@@ -147,6 +171,7 @@ const AddAccountingForm = () => {
           onChange={handleFormData}
           aria-label="花費狀態"
           className="w-full border rounded px-3 py-2"
+          required
         >
           <option value={0}>必要</option>
           <option value={1}>想要</option>
@@ -155,7 +180,6 @@ const AddAccountingForm = () => {
         </select>
       </div>
 
-      {/* 單位 */}
       <div>
         <AccountingLabelAsterisk children="金錢單位" required={true} />
         <select
@@ -164,6 +188,7 @@ const AddAccountingForm = () => {
           onChange={handleFormData}
           aria-label="金錢單位"
           className="w-full border rounded px-3 py-2"
+          required
         >
           <option value="TWD">TWD</option>
           <option value="JPY">JPY</option>
@@ -171,7 +196,6 @@ const AddAccountingForm = () => {
         </select>
       </div>
 
-      {/* 金額 */}
       <div>
         <AccountingLabelAsterisk children="花費金額" required={true} />
         <input
@@ -185,7 +209,6 @@ const AddAccountingForm = () => {
         />
       </div>
 
-      {/* 店家 */}
       <div>
         <AccountingLabelAsterisk children="店家名稱" required={true} />
         <input
@@ -208,14 +231,14 @@ const AddAccountingForm = () => {
           aria-label="付款方式"
           className="w-full border rounded px-3 py-2"
         >
-          <option value="現金">現金</option>
-          <option value="LINE Pay">LINE Pay</option>
-          <option value="信用卡">信用卡</option>
-          <option value="其他">其他</option>
+          <option value={0}>現金</option>
+          <option value={1}>LINE Pay</option>
+          <option value={2}>信用卡</option>
+          <option value={3}>銀行轉帳</option>
+          <option value={4}>其他</option>
         </select>
       </div>
 
-      {/* 發票號碼 */}
       <div>
         <AccountingLabelAsterisk children="發票號碼" required={false} />
         <input
@@ -228,7 +251,7 @@ const AddAccountingForm = () => {
         />
       </div>
 
-      <div className="md:col-span-2">
+      <div className="md:col-span-3">
         <AccountingLabelAsterisk children="備註說明" required={false} />
         <textarea
           name="description"
@@ -240,8 +263,7 @@ const AddAccountingForm = () => {
         />
       </div>
 
-      {/* 送出按鈕 (跨欄) */}
-      <div className="md:col-span-2 text-right">
+      <div className="md:col-span-3 text-right">
         <button
           type="submit"
           className="px-6 py-2 bg-blue-600 text-white font-semibold rounded hover:bg-blue-700 transition"
@@ -249,6 +271,13 @@ const AddAccountingForm = () => {
           送出
         </button>
       </div>
+      {toast.show && (
+        <ToastBox
+          message={toast.message}
+          kind={toast.kind}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
+      )}
     </form>
   );
 };

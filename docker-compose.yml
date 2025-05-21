@@ -10,6 +10,7 @@ services:
       - ./backend:/app
     environment:
       - PYTHONPATH=/app
+      - PYTHONUNBUFFERED=1 # 讓 docker logs 輸出 print 內容
     env_file:
       - financial.env
     depends_on:

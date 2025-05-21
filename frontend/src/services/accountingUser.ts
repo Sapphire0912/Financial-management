@@ -1,29 +1,28 @@
 import fetchWithRefresh from "./refresh_token";
 import { parsePayload } from "./userAuth";
 
-/* 新增記帳內容 */
-type FormApiDataProps = {
+/* 新增記帳內容(支出) */
+type AddFormDataProps = {
   statistics_kind: string;
   category: string;
   cost_name: string;
   cost_status: number;
   description: string;
+  payMethod: string;
   unit: string;
-  cost: number;
+  cost: number | string;
   store_name: string;
   invoice_number: string;
   accounting_date: string;
   accounting_time: string;
 };
 
-export const addAccounting = async (formData: FormApiDataProps) => {
+export async function addAccounting(formData: AddFormDataProps) {
   /* 處理使用者時間資訊 */
-  const create_at: Date = new Date(
-    `${formData.accounting_date}T${formData.accounting_time}`
-  );
+  const user_time_data: string = `${formData.accounting_date}T${formData.accounting_time}`;
 
   // 使用者時區
-  const userTimezone: number = new Date().getTimezoneOffset() / 60;
+  const userTimezone: number = -(new Date().getTimezoneOffset() / 60);
   const timezoneString: string = `UTC${
     userTimezone >= 0 ? "+" : ""
   }${userTimezone}`;
@@ -33,7 +32,11 @@ export const addAccounting = async (formData: FormApiDataProps) => {
   /* */
 
   // 使用者 payload 資訊
-  const payload = parsePayload();
+  const payload = await parsePayload();
+
+  // console.log("使用者時間資訊: ", user_time_data);
+  // console.log("使用者時區: ", timezoneString);
+  // console.log("使用者 utc 時間: ", currentUTCTime);
 
   const response = await fetchWithRefresh("/app/accounting/create", {
     method: "POST",
@@ -48,11 +51,12 @@ export const addAccounting = async (formData: FormApiDataProps) => {
       cost_name: formData.cost_name,
       cost_status: formData.cost_status,
       unit: formData.unit,
-      cost: formData.cost,
+      cost: Number(formData.cost),
+      pay_method: formData.payMethod,
       store_name: formData.store_name,
       invoice_number: formData.invoice_number,
       description: formData.description,
-      create_at: create_at,
+      user_time_data: user_time_data,
       timezone: timezoneString,
       current_utc_time: currentUTCTime,
     }),
@@ -60,7 +64,7 @@ export const addAccounting = async (formData: FormApiDataProps) => {
 
   const data = await response.json();
   if (!response.ok) {
-    throw new Error(data.message || "更改密碼失敗");
+    throw new Error(data.message || "伺服器出現未預期錯誤");
   }
   return data;
-};
+}

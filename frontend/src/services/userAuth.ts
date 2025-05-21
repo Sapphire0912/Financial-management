@@ -143,7 +143,7 @@ export const setToken = (token: string) => {
   localStorage.setItem("token", token);
 };
 
-export function parsePayload() {
+export async function parsePayload() {
   /* 解析 jwt token payload */
   const token = localStorage.getItem("token");
   if (!token) return null;

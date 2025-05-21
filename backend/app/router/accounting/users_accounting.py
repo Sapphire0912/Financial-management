@@ -1,5 +1,5 @@
 # fastApi
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Request, Response
 from fastapi.responses import JSONResponse
 
 # Databases
@@ -10,7 +10,7 @@ from app.schemas.accounting import AccountingCreate, AccountingUpdate, Accountin
 from app.utils.jwt_verification import verify_jwt_token
 
 # Tools
-from app.utils.attach_info import verify_utc_time
+from app.utils.attach_info import verify_utc_time, convert_to_utc_time
 from datetime import date, datetime
 from bson import ObjectId
 
@@ -62,18 +62,37 @@ async def query_users_accounting(
 
 @router.post("/create")
 @verify_jwt_token
-async def create_users_accounting(data: AccountingCreate):
+async def create_users_accounting(request: Request, data: AccountingCreate):
     """
       :router 新增使用者記帳資料
     """
-    if not verify_utc_time(user_utc_time=data.current_utc_time, timezone=data.timezone, create_at=data.created_at):
+    if not verify_utc_time(user_utc_time=data.current_utc_time):
         return JSONResponse(status_code=403, content={"success": False, "message": "使用者時區或使用者本地時間有誤"})
 
     try:
-        record = Accounting(**data.dict())
+        utc_time = convert_to_utc_time(data.user_time_data, data.timezone)
+
+        # 以後可以做序列化的方式處理
+        record = Accounting(
+            statistics_kind=data.statistics_kind,
+            category=data.category,
+            user_name=data.user_name,
+            line_user_id=data.user_id,
+            cost_name=data.cost_name,
+            cost_status=data.cost_status,
+            unit=data.unit,
+            cost=data.cost,
+            pay_method=data.pay_method,
+            store_name=data.store_name,
+            invoice_number=data.invoice_number,
+            created_at=utc_time,
+            updated_at=utc_time
+        )
+
         record.save()
-        return JSONResponse(status_code=201, content={"success": True, "message": "Accounting created successfully"})
+        return JSONResponse(status_code=201, content={"success": True, "message": "新增資料成功"})
     except Exception as e:
+        print(f'error: {e}')
         return JSONResponse(status_code=403, content={"success": False, "message": "使用者資料缺少必填欄位"})
 
 

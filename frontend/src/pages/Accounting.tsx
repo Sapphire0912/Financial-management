@@ -18,19 +18,24 @@ import "../styles/page.css";
 const boardItems = [
   {
     img: "/board-add-dark.png",
-    text: "新增",
+    text: "支出",
     showStatus: 1,
+  },
+  {
+    img: "/board-income-dark.png",
+    text: "收入",
+    showStatus: 2,
   },
   {
     img: "/board-edit-dark.png",
     text: "編輯",
-    showStatus: 2,
+    showStatus: 3,
   },
 ];
 
 const AccountingPage = () => {
   /* 選單控制 */
-  const [userOperation, setUserOperation] = useState<number>(1); // add = 1, edit = 2
+  const [userOperation, setUserOperation] = useState<number>(1); // add = 1, income = 2, edit = 3
   const [queryFilter, setQueryFilter] = useState<boolean>(false); // filter
 
   /* 使用者資訊 */

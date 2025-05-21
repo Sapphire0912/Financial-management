@@ -1,6 +1,6 @@
 from fastapi import Request, Response
 from dotenv import load_dotenv
-from datetimr import datetime, timedelta, timezone as dt_timezone
+from datetime import datetime, timedelta, timezone
 import os
 import re
 
@@ -8,42 +8,51 @@ load_dotenv()
 DEVELOP_ENV = os.getenv("DEVELOP_ENV", "True")
 
 
-def verify_utc_time(user_utc_time: str, timezone: str, create_at: str) -> bool:
+def verify_utc_time(user_utc_time: str) -> bool:
     """
     驗證使用者提交的 UTC 時間是否合理，依據其時區與建立時間進行比對。
     (允許誤差 10 分鐘)
 
     Args:
-        user_utc_time (str): 使用者端根據其時區轉換後的 UTC 時間（ISO 8601 格式）。
-        timezone (str): 使用者所在的時區名稱（如 'UTC+8'）。
-        create_at (str): 用戶原始操作當地時間（ISO 格式，例如 '2025-05-20T14:00'）。
+        user_utc_time (str): 使用者端當前的 UTC 時間（ISO 8601 格式）。
 
     Returns:
-        bool: 若使用者時間與伺服器時間差異在合理範圍內（例如 ±5 分鐘），則回傳 True，否則回傳 False。
+        bool: 若使用者時間與伺服器時間差異在合理範圍內（例如 ±10 分鐘），則回傳 True，否則回傳 False。
     """
-    try:
-        user_utc_dt = datetime.fromisoformat(user_utc_time)
-        local_dt = datetime.fromisoformat(create_at)
+    user_utc_at = datetime.fromisoformat(
+        user_utc_time.replace("Z", "+00:00")).replace(tzinfo=None)
 
-        # 處理 timezone（如 'UTC+8' -> +08:00）
-        match = re.match(r"UTC([+-])(\d{1,2})", timezone)
-        if not match:
-            return False
+    server_utc_time = datetime.utcnow()
+    delta = abs((server_utc_time - user_utc_at).total_seconds())
 
-        sign, hours = match.groups()
-        offset = int(hours)
-        if sign == "-":
-            offset = -offset
+    return delta <= 600
 
-        offset_tz = dt_timezone(timedelta(hours=offset))
-        local_dt = local_dt.replace(tzinfo=offset_tz)
-        local_utc_dt = local_dt.astimezone(dt_timezone.utc)
 
-        delta = abs((user_utc_dt - local_utc_dt).total_seconds())
-        return delta <= 600
+def convert_to_utc_time(user_time: str, user_timezone: str) -> datetime:
+    """
+    轉換使用者表單時間為資料庫 UTC 時間。
 
-    except Exception:
-        return False
+    Args:
+        user_time (str): 使用者表單輸入時間 (例如: "2025-04-01T08:00")
+        user_timezone (str): 使用者時區 (例如: "UTC+8")
+
+    Returns:
+        datetime: 對應資料庫的時間
+    """
+    user_local_time = datetime.fromisoformat(user_time)
+
+    match = re.match(r"UTC([+-])(\d{1,2})", user_timezone)
+    if not match:
+        raise ValueError("無效的時區格式")
+
+    sign, hours = match.groups()
+    offset_hours = int(hours) * (-1 if sign == "-" else 1)
+
+    aware_local_time = user_local_time.replace(
+        tzinfo=timezone(timedelta(hours=offset_hours)))
+
+    utc_time = aware_local_time.astimezone(timezone.utc).replace(tzinfo=None)
+    return utc_time
 
 
 def get_client_ip(request: Request) -> str:

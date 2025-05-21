@@ -44,6 +44,12 @@ class Accounting(BaseModel):
 
         unit (str): 金錢單位（例如: TWD, JPY)。
         cost (int): 花費金額。
+        pay_method (int): 付費方式 
+            - 0: 現金
+            - 1: Line Pay
+            - 2: 信用卡
+            - 3: 銀行轉帳
+            - 4: 其他
         store_name (str): 店家名稱。
         invoice_number (str): 發票號碼。
     """
@@ -52,11 +58,12 @@ class Accounting(BaseModel):
     category = me.StringField(default="其他")
 
     user_name = me.StringField(required=True)
-    line_user_id = me.StringField(required=True)
+    line_user_id = me.StringField(default="")
     cost_name = me.StringField(required=True)
     cost_status = me.IntField(required=True)
     unit = me.StringField(required=True, default="TWD")
     cost = me.IntField(required=True)
+    pay_method = me.IntField(required=True)
     store_name = me.StringField(default="")
     invoice_number = me.StringField(default="")  # 發票號碼, 之後串金流可用
 
@@ -91,3 +98,7 @@ class Accounting(BaseModel):
             "description": self.description,
             "created_at": self.created_at,
         }
+
+
+class IncomeAccounting(BaseModel):
+    pass
