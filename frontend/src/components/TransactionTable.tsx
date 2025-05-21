@@ -56,7 +56,11 @@ const getTransactionHistoryData = async () => {
 };
 //
 
-const TransactionTable = ({ isEdit }: boolean) => {
+type TransactionTableProps = {
+  isEdit: boolean;
+};
+
+const TransactionTable = ({ isEdit }: TransactionTableProps) => {
   // 表格資料
   const [transactionHistory, setTransactionHistory] = useState<
     TransactionHistoryData[]
