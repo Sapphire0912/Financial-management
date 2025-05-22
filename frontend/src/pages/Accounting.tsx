@@ -114,7 +114,7 @@ const AccountingPage = () => {
               <div className="dashboard-right">Figure Details</div>
             )}
             {userOperation === 3 && (
-              <div className="h-full">
+              <div className="h-full min-w-full overflow-x-auto">
                 <TransactionTable isEdit={true} />
               </div>
             )}

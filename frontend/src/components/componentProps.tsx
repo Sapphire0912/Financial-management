@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 
 /* 元件 Props */
-
 type IconInputProps = {
   type: string;
   placeholder: string;
@@ -27,6 +26,20 @@ export const IconInput = ({
     />
   </div>
 );
+
+/* 按鈕 Icon */
+type IconButtonProps = {
+  iconSrc: string;
+  onclick: () => void;
+};
+
+export const IconButton = ({ iconSrc, onclick }: IconButtonProps) => {
+  return (
+    <button type="button" onClick={onclick}>
+      <img src={iconSrc} alt="icon" className="w-6 h-6 my-1 mx-2" />
+    </button>
+  );
+};
 
 // 提示訊息視窗
 type ToastBoxProps = {
@@ -169,6 +182,81 @@ export const AccountingLabelAsterisk = ({
     {required && <span className="text-red-500 ml-1">*</span>}
   </label>
 );
+
+/* 記帳欄位 Input/select 的 Components */
+type AccountingFormFieldProps = {
+  name: string;
+  value: string | number;
+  required?: boolean;
+  placeholder?: string;
+  type?: "text" | "number" | "date" | "time" | "select" | "textarea";
+  options?: { label: string; value: string | number }[]; // select 用
+  disabled?: boolean;
+  onChange: (e: React.ChangeEvent<any>) => void;
+};
+
+export const AccountingFormField = ({
+  name,
+  value,
+  required = false,
+  placeholder = "",
+  type = "text",
+  options = [],
+  disabled = false,
+  onChange,
+}: AccountingFormFieldProps) => {
+  return type === "select" ? (
+    <select
+      name={name}
+      value={value}
+      onChange={onChange}
+      className={`w-full rounded px-3 py-2 ${
+        disabled
+          ? "bg-transparent border-none text-gray-900 cursor-default"
+          : "border"
+      }`}
+      required={required}
+      disabled={disabled}
+    >
+      <option value="">請選擇</option>
+      {options.map((opt) => (
+        <option key={opt.value} value={opt.value}>
+          {opt.label}
+        </option>
+      ))}
+    </select>
+  ) : type === "textarea" ? (
+    <textarea
+      name={name}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      required={required}
+      rows={3}
+      className={`w-full rounded px-3 py-2 ${
+        disabled
+          ? "bg-transparent border-none text-gray-900 cursor-default"
+          : "border"
+      }`}
+      disabled={disabled}
+    />
+  ) : (
+    <input
+      name={name}
+      type={type}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      required={required}
+      className={`w-full rounded px-3 py-1 ${
+        disabled
+          ? "bg-transparent border-none text-gray-900 cursor-default"
+          : "border"
+      }`}
+      disabled={disabled}
+    />
+  );
+};
 
 /* 歷史紀錄表格欄位名稱 & 顯示狀態 */
 type TransactionTitleProps = {

@@ -89,7 +89,12 @@ export async function getTransactionHistory() {
     return {
       ...item,
       date: localTime.toLocaleDateString(),
-      time: localTime.toLocaleTimeString(),
+      time: localTime.toLocaleTimeString(undefined, {
+        hour12: false,
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+      }),
     };
   });
 

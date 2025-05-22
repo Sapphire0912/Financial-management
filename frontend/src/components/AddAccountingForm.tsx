@@ -1,7 +1,7 @@
 import { useState } from "react";
 
 /* Components */
-import { AccountingLabelAsterisk } from "./componentProps";
+import { AccountingLabelAsterisk, AccountingFormField } from "./componentProps";
 import { ToastBox } from "../components/componentProps";
 
 /* API */
@@ -36,15 +36,13 @@ const createNewAccounting = async (
     showToast(result.message, result.success ? "success" : "error");
   } catch (err: unknown) {
     showToast(
-      `登入失敗：${err instanceof Error ? err.message : "未知錯誤"}`,
+      `新增失敗: ${err instanceof Error ? err.message : "未知錯誤"}`,
       "error"
     );
   }
 };
-//
 
 const AddAccountingForm = () => {
-  // 彈跳視窗提示
   const [toast, setToast] = useState({
     show: false,
     message: "",
@@ -55,7 +53,6 @@ const AddAccountingForm = () => {
     setToast({ show: true, message: msg, kind });
   };
 
-  // 表格資料
   const [formData, setFormData] = useState<FormDataProps>({
     statistics_kind: "",
     category: "",
@@ -91,174 +88,163 @@ const AddAccountingForm = () => {
       onSubmit={(e) => createNewAccounting(e, formData, showToast)}
     >
       <div>
-        <AccountingLabelAsterisk children="記帳日期" required={true} />
-        <input
-          type="date"
+        <AccountingLabelAsterisk required={true}>
+          記帳日期
+        </AccountingLabelAsterisk>
+        <AccountingFormField
           name="accounting_date"
           value={formData.accounting_date}
           onChange={handleFormData}
-          aria-label="記帳日期"
-          className="w-full border rounded px-3 py-2"
           required
+          type="date"
         />
       </div>
 
       <div>
-        <AccountingLabelAsterisk children="記帳時間" required={false} />
-        <input
-          type="time"
+        <AccountingLabelAsterisk>記帳時間</AccountingLabelAsterisk>
+        <AccountingFormField
           name="accounting_time"
           value={formData.accounting_time}
           onChange={handleFormData}
-          aria-label="記帳時間"
-          className="w-full border rounded px-3 py-2"
+          type="time"
         />
       </div>
 
       <div>
-        <AccountingLabelAsterisk children="統計類型" required={true} />
-        <select
+        <AccountingLabelAsterisk required={true}>
+          統計類型
+        </AccountingLabelAsterisk>
+        <AccountingFormField
           name="statistics_kind"
           value={formData.statistics_kind}
           onChange={handleFormData}
-          aria-label="統計類型"
-          className="w-full border rounded px-3 py-2"
           required
-        >
-          <option value="">請選擇</option>
-          <option value="食">食</option>
-          <option value="衣">衣</option>
-          <option value="住">住</option>
-          <option value="行">行</option>
-          <option value="育">育</option>
-          <option value="樂">樂</option>
-          <option value="生活">生活</option>
-          <option value="貸款">貸款</option>
-          <option value="其他">其他</option>
-        </select>
+          type="select"
+          options={[
+            "食",
+            "衣",
+            "住",
+            "行",
+            "育",
+            "樂",
+            "生活",
+            "貸款",
+            "其他",
+          ].map((v) => ({ label: v, value: v }))}
+        />
       </div>
 
       <div>
-        <AccountingLabelAsterisk children="花費細項分類" required={false} />
-        <input
-          type="text"
+        <AccountingLabelAsterisk>花費細項分類</AccountingLabelAsterisk>
+        <AccountingFormField
           name="category"
           value={formData.category}
           onChange={handleFormData}
-          className="w-full border rounded px-3 py-2"
           placeholder="例如：午餐、飲料"
         />
       </div>
 
       <div>
-        <AccountingLabelAsterisk children="商品名稱" required={true} />
-        <input
-          type="text"
+        <AccountingLabelAsterisk required={true}>
+          商品名稱
+        </AccountingLabelAsterisk>
+        <AccountingFormField
           name="cost_name"
           value={formData.cost_name}
           onChange={handleFormData}
-          className="w-full border rounded px-3 py-2"
-          placeholder="例如：漢堡"
           required
+          placeholder="例如：漢堡"
         />
       </div>
 
       <div>
-        <AccountingLabelAsterisk children="花費狀態" required={true} />
-        <select
+        <AccountingLabelAsterisk required={true}>
+          花費狀態
+        </AccountingLabelAsterisk>
+        <AccountingFormField
           name="cost_status"
           value={formData.cost_status}
           onChange={handleFormData}
-          aria-label="花費狀態"
-          className="w-full border rounded px-3 py-2"
           required
-        >
-          <option value={0}>必要</option>
-          <option value={1}>想要</option>
-          <option value={2}>臨時必要</option>
-          <option value={3}>臨時想要</option>
-        </select>
+          type="select"
+          options={["必要", "想要", "臨時必要", "臨時想要"].map((v, i) => ({
+            label: v,
+            value: i,
+          }))}
+        />
       </div>
 
       <div>
-        <AccountingLabelAsterisk children="金錢單位" required={true} />
-        <select
+        <AccountingLabelAsterisk required={true}>
+          金錢單位
+        </AccountingLabelAsterisk>
+        <AccountingFormField
           name="unit"
           value={formData.unit}
           onChange={handleFormData}
-          aria-label="金錢單位"
-          className="w-full border rounded px-3 py-2"
           required
-        >
-          <option value="TWD">TWD</option>
-          <option value="JPY">JPY</option>
-          <option value="USD">USD</option>
-        </select>
+          type="select"
+          options={["TWD", "JPY", "USD"].map((v) => ({ label: v, value: v }))}
+        />
       </div>
 
       <div>
-        <AccountingLabelAsterisk children="花費金額" required={true} />
-        <input
-          type="number"
+        <AccountingLabelAsterisk required={true}>
+          花費金額
+        </AccountingLabelAsterisk>
+        <AccountingFormField
           name="cost"
           value={formData.cost}
           onChange={handleFormData}
-          aria-label="花費金額"
-          className="w-full border rounded px-3 py-2"
           required
+          type="number"
         />
       </div>
 
       <div>
-        <AccountingLabelAsterisk children="店家名稱" required={true} />
-        <input
-          type="text"
+        <AccountingLabelAsterisk required={true}>
+          店家名稱
+        </AccountingLabelAsterisk>
+        <AccountingFormField
           name="store_name"
           value={formData.store_name}
           onChange={handleFormData}
-          aria-label="店家名稱"
-          className="w-full border rounded px-3 py-2"
           required
         />
       </div>
 
       <div>
-        <AccountingLabelAsterisk children="付款方式" required={true} />
-        <select
+        <AccountingLabelAsterisk required={true}>
+          付款方式
+        </AccountingLabelAsterisk>
+        <AccountingFormField
           name="payMethod"
           value={formData.payMethod}
           onChange={handleFormData}
-          aria-label="付款方式"
-          className="w-full border rounded px-3 py-2"
-        >
-          <option value={0}>現金</option>
-          <option value={1}>LINE Pay</option>
-          <option value={2}>信用卡</option>
-          <option value={3}>銀行轉帳</option>
-          <option value={4}>其他</option>
-        </select>
+          required
+          type="select"
+          options={["現金", "LINE Pay", "信用卡", "銀行轉帳", "其他"].map(
+            (v, i) => ({ label: v, value: i })
+          )}
+        />
       </div>
 
       <div>
-        <AccountingLabelAsterisk children="發票號碼" required={false} />
-        <input
-          type="text"
+        <AccountingLabelAsterisk>發票號碼</AccountingLabelAsterisk>
+        <AccountingFormField
           name="invoice_number"
           value={formData.invoice_number}
           onChange={handleFormData}
-          aria-label="發票號碼"
-          className="w-full border rounded px-3 py-2"
         />
       </div>
 
       <div className="md:col-span-3">
-        <AccountingLabelAsterisk children="備註說明" required={false} />
-        <textarea
+        <AccountingLabelAsterisk>備註說明</AccountingLabelAsterisk>
+        <AccountingFormField
           name="description"
           value={formData.description}
           onChange={handleFormData}
-          rows={3}
-          className="w-full border rounded px-3 py-2"
+          type="textarea"
           placeholder="可填寫使用目的、細節等備註"
         />
       </div>
@@ -271,6 +257,7 @@ const AddAccountingForm = () => {
           送出
         </button>
       </div>
+
       {toast.show && (
         <ToastBox
           message={toast.message}
