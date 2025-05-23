@@ -139,6 +139,7 @@ async def update_users_accounting(request: Request, data: AccountingUpdate):
             "pay_method": data.pay_method,
             "store_name": data.store_name,
             "invoice_number": data.invoice_number,
+            "description": data.description,
             "created_at": utc_time
         }
         record.update(**{f"set__{k}": v for k, v in update_fields.items()})
@@ -152,13 +153,24 @@ async def update_users_accounting(request: Request, data: AccountingUpdate):
 
 
 @router.post("/delete")
-async def delete_users_accounting(data: AccountingDelete):
+@verify_jwt_token
+async def delete_users_accounting(request: Request, data: AccountingDelete):
     """
       :router 刪除使用者記帳資料
     """
+    print(data)
+
+    if not verify_utc_time(user_utc_time=data.current_utc_time):
+        return JSONResponse(status_code=403, content={"success": False, "message": "使用者時區或使用者本地時間有誤"})
+
     try:
-        record = Accounting.objects.get(id=ObjectId(data.id))
-        record.delete()
+        # 先判斷只有使用者本人才可以做刪除操作
+        record = Accounting.objects(id=ObjectId(
+            data.id), user_name=data.user_name, line_user_id=data.user_id).first()
+        if record:
+            record.delete()
+        else:
+            return JSONResponse(status_code=404, content={"success": False, "message": "找不到對應的刪除資料或是非使用者本人操作"})
     except Accounting.DoesNotExist:
         return JSONResponse(status_code=404, content={"success": False, "message": "Data not found"})
     return JSONResponse(status_code=200, content={"success": True, "message": "Accounting deleted successfully"})

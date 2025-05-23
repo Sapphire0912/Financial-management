@@ -11,6 +11,7 @@ import {
 import {
   getTransactionHistory,
   updateTransactionData as updateTransactionDataAPI,
+  deleteTransactionData as deleteTransactionDataAPI,
 } from "../services/accountingUser";
 
 /* CSS */
@@ -127,6 +128,7 @@ type TransactionHistoryData = {
   invoice_number: string;
   description: string;
   created_at: string;
+  [key: string]: string;
 };
 
 const getTransactionHistoryData = async () => {
@@ -138,6 +140,12 @@ const updateTransactionData = async (formData: TransactionHistoryData) => {
   const data = await updateTransactionDataAPI(formData);
   return data;
 };
+
+const deleteTransactionData = async (deleteDataId: string) => {
+  const data = await deleteTransactionDataAPI(deleteDataId);
+  return data;
+};
+//
 
 const TransactionTable = ({ isEdit }: { isEdit: boolean }) => {
   const [transactionHistory, setTransactionHistory] = useState<
@@ -181,7 +189,10 @@ const TransactionTable = ({ isEdit }: { isEdit: boolean }) => {
               </th>
             ))}
             {isEdit && (
-              <th key="edit" className="px-4 py-2 border-b whitespace-nowrap">
+              <th
+                key="edit"
+                className="px-4 py-2 border-b whitespace-nowrap max-w-[150px]"
+              >
                 編輯
               </th>
             )}
@@ -256,8 +267,17 @@ const TransactionTable = ({ isEdit }: { isEdit: boolean }) => {
                         />
                         <IconButton
                           iconSrc="/delete-dark.png"
-                          onclick={() => {
-                            console.log("刪除", row.id);
+                          onclick={async () => {
+                            const confirmed =
+                              window.confirm("確定要刪除這筆資料嗎？");
+                            if (!confirmed) return;
+
+                            try {
+                              await deleteTransactionData(row.id);
+                              await fetchData();
+                            } catch (err) {
+                              console.error("刪除失敗：", err);
+                            }
                           }}
                         />
                       </>

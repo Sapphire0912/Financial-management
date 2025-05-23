@@ -52,12 +52,9 @@ class AccountingUpdate(BaseModel):
 
 
 class AccountingDelete(BaseModel):
-    id: Optional[str] = None  # mongo document id
+    id: str  # mongo document id
     user_name: str
-    user_id: str
-    # statistics_kind: str
-    # category: str
-    # cost_name: str
-    # cost: Optional[int] = None
-    # store_name: Optional[str] = None
+    user_id: Optional[str] = None  # 使用者 line id
+    current_utc_time: str
+
 # -- End --

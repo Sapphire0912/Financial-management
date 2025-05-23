@@ -153,7 +153,6 @@ type UpdateFormDataProps = {
 
 export async function updateTransactionData(formData: UpdateFormDataProps) {
   const userTime = await userTimeConvert(formData.date, formData.time);
-  /* */
 
   // 使用者 payload 資訊
   const payload = await parsePayload();
@@ -180,6 +179,34 @@ export async function updateTransactionData(formData: UpdateFormDataProps) {
       user_time_data: userTime.user_time_data,
       timezone: userTime.timezoneString,
       current_utc_time: userTime.currentUTCTime,
+    }),
+  });
+
+  const result = await response.json();
+  if (!response.ok) {
+    throw new Error(result.message || "伺服器出現未預期錯誤");
+  }
+  return result;
+}
+
+/* 刪除記帳資料 */
+export async function deleteTransactionData(deleteDataId: string) {
+  const currentUTCTime: string = new Date().toISOString();
+
+  // 使用者 payload 資訊
+  const payload = await parsePayload();
+
+  console.log(currentUTCTime, deleteDataId, payload);
+  const response = await fetchWithRefresh("/app/accounting/delete", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      id: deleteDataId,
+      user_name: payload.username,
+      user_id: payload.line_user_id,
+      current_utc_time: currentUTCTime,
     }),
   });
 
