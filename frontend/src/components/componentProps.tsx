@@ -36,7 +36,11 @@ type IconButtonProps = {
 export const IconButton = ({ iconSrc, onclick }: IconButtonProps) => {
   return (
     <button type="button" onClick={onclick}>
-      <img src={iconSrc} alt="icon" className="w-6 h-6 my-1 mx-2" />
+      <img
+        src={iconSrc}
+        alt="icon"
+        className="w-6 h-6 my-1 mx-2 hover:scale-110 transition-all duration-150"
+      />
     </button>
   );
 };
@@ -210,6 +214,7 @@ export const AccountingFormField = ({
       name={name}
       value={value}
       onChange={onChange}
+      aria-label={name}
       className={`w-full rounded px-3 py-2 ${
         disabled
           ? "bg-transparent border-none text-gray-900 cursor-default"

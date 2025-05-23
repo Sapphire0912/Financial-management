@@ -1,6 +1,25 @@
 import fetchWithRefresh from "./refresh_token";
 import { parsePayload } from "./userAuth";
 
+async function userTimeConvert(
+  accounting_date: string,
+  accounting_time: string
+) {
+  /* 給後端的時間資料 */
+  const user_time_data: string = `${accounting_date}T${accounting_time}`;
+
+  // 使用者時區
+  const userTimezone: number = -(new Date().getTimezoneOffset() / 60);
+  const timezoneString: string = `UTC${
+    userTimezone >= 0 ? "+" : ""
+  }${userTimezone}`;
+
+  // 當前 UTC 時間（例如：用於伺服器校時比較）
+  const currentUTCTime: string = new Date().toISOString();
+
+  return { user_time_data, timezoneString, currentUTCTime };
+}
+
 /* 新增記帳內容(支出) */
 type AddFormDataProps = {
   statistics_kind: string;
@@ -18,25 +37,14 @@ type AddFormDataProps = {
 };
 
 export async function addAccounting(formData: AddFormDataProps) {
-  /* 處理使用者時間資訊 */
-  const user_time_data: string = `${formData.accounting_date}T${formData.accounting_time}`;
-
-  // 使用者時區
-  const userTimezone: number = -(new Date().getTimezoneOffset() / 60);
-  const timezoneString: string = `UTC${
-    userTimezone >= 0 ? "+" : ""
-  }${userTimezone}`;
-
-  // 當前 utc 時間 (判斷是否與 server 時間差距過大)
-  const currentUTCTime: string = new Date().toISOString();
+  const userTime = await userTimeConvert(
+    formData.accounting_date,
+    formData.accounting_time
+  );
   /* */
 
   // 使用者 payload 資訊
   const payload = await parsePayload();
-
-  // console.log("使用者時間資訊: ", user_time_data);
-  // console.log("使用者時區: ", timezoneString);
-  // console.log("使用者 utc 時間: ", currentUTCTime);
 
   const response = await fetchWithRefresh("/app/accounting/create", {
     method: "POST",
@@ -56,9 +64,9 @@ export async function addAccounting(formData: AddFormDataProps) {
       store_name: formData.store_name,
       invoice_number: formData.invoice_number,
       description: formData.description,
-      user_time_data: user_time_data,
-      timezone: timezoneString,
-      current_utc_time: currentUTCTime,
+      user_time_data: userTime.user_time_data,
+      timezone: userTime.timezoneString,
+      current_utc_time: userTime.currentUTCTime,
     }),
   });
 
@@ -86,9 +94,13 @@ export async function getTransactionHistory() {
   // 使用者顯示時間做時區轉換
   const transData = result.data.map((item: Record<string, any>) => {
     const localTime = new Date(item.created_at + "Z");
+    const year = localTime.getFullYear();
+    const month = String(localTime.getMonth() + 1).padStart(2, "0");
+    const day = String(localTime.getDate()).padStart(2, "0");
+
     return {
       ...item,
-      date: localTime.toLocaleDateString(),
+      date: `${year}-${month}-${day}`,
       time: localTime.toLocaleTimeString(undefined, {
         hour12: false,
         hour: "2-digit",
@@ -97,6 +109,62 @@ export async function getTransactionHistory() {
       }),
     };
   });
-
   return transData;
+}
+
+/* 修改記帳資料 */
+type UpdateFormDataProps = {
+  id: string;
+  date: string;
+  time: string;
+  statistics_kind: string;
+  category: string;
+  cost_name: string;
+  cost_status: number;
+  unit: string;
+  cost: string;
+  pay_method: number;
+  description: string;
+  store_name: string;
+  invoice_number: string;
+  created_at: string;
+};
+
+export async function updateTransactionData(formData: UpdateFormDataProps) {
+  const userTime = await userTimeConvert(formData.date, formData.time);
+  /* */
+
+  // 使用者 payload 資訊
+  const payload = await parsePayload();
+
+  const response = await fetchWithRefresh("/app/accounting/update", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      id: formData.id,
+      statistics_kind: formData.statistics_kind,
+      category: formData.category,
+      user_name: payload.username,
+      user_id: payload.line_user_id,
+      cost_name: formData.cost_name,
+      cost_status: formData.cost_status,
+      cost: Number(formData.cost),
+      unit: formData.unit,
+      pay_method: formData.pay_method,
+      store_name: formData.store_name,
+      invoice_number: formData.invoice_number,
+      description: formData.description,
+      user_time_data: userTime.user_time_data,
+      timezone: userTime.timezoneString,
+      current_utc_time: userTime.currentUTCTime,
+    }),
+  });
+
+  const result = await response.json();
+  if (!response.ok) {
+    throw new Error(result.message || "伺服器出現未預期錯誤");
+  }
+  return result;
 }

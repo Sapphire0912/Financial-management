@@ -115,19 +115,38 @@ async def create_users_accounting(request: Request, data: AccountingCreate):
 
 
 @router.post("/update")
-async def update_users_accounting(data: AccountingUpdate):
+@verify_jwt_token
+async def update_users_accounting(request: Request, data: AccountingUpdate):
     """
       :router 更新使用者記帳資料
     """
+    if not verify_utc_time(user_utc_time=data.current_utc_time):
+        return JSONResponse(status_code=403, content={"success": False, "message": "使用者時區或使用者本地時間有誤"})
+
     try:
         record = Accounting.objects.get(id=ObjectId(data.id))
+        utc_time = convert_to_utc_time(data.user_time_data, data.timezone)
+
         update_fields = {
-            k: v for k, v in data.dict().items() if k != 'id' and v is not None
+            "statistics_kind": data.statistics_kind,
+            "category": data.category,
+            "user_name": data.user_name,
+            "line_user_id": data.user_id,
+            "cost_name": data.cost_name,
+            "cost_status": data.cost_status,
+            "unit": data.unit,
+            "cost": data.cost,
+            "pay_method": data.pay_method,
+            "store_name": data.store_name,
+            "invoice_number": data.invoice_number,
+            "created_at": utc_time
         }
         record.update(**{f"set__{k}": v for k, v in update_fields.items()})
+
     except Accounting.DoesNotExist:
         return JSONResponse(status_code=404, content={"success": False, "message": "Data not found"})
     except Exception as e:
+        print(f'error: {e}')
         return JSONResponse(status_code=500, content={"success": False, "message": str(e)})
     return JSONResponse(status_code=200, content={"success": True, "message": "Accounting updated successfully"})
 

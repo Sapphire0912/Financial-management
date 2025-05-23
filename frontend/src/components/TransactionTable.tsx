@@ -1,4 +1,3 @@
-/* React */
 import { useState, useEffect } from "react";
 
 /* Components */
@@ -9,7 +8,10 @@ import {
 } from "./componentProps";
 
 /* API */
-import { getTransactionHistory } from "../services/accountingUser";
+import {
+  getTransactionHistory,
+  updateTransactionData as updateTransactionDataAPI,
+} from "../services/accountingUser";
 
 /* CSS */
 import "../styles/component.css";
@@ -23,6 +25,29 @@ type Column = {
   type: ColumnType;
   required?: boolean;
   options?: { label: string; value: string | number }[];
+};
+
+const costStatusMapping: Record<number, string> = {
+  0: "必要",
+  1: "想要",
+  2: "臨時必要",
+  3: "臨時想要",
+};
+
+const payMethodMapping: Record<number, string> = {
+  0: "現金",
+  1: "Line Pay",
+  2: "信用卡",
+  3: "銀行轉帳",
+  4: "其他",
+};
+
+const getKeyFromValue = (
+  map: Record<number, string>,
+  value: string
+): number => {
+  const entry = Object.entries(map).find(([_, v]) => v === value);
+  return entry ? Number(entry[0]) : 0;
 };
 
 const initialColumns: Column[] = [
@@ -110,22 +135,6 @@ const initialColumns: Column[] = [
   { key: "description", label: "備註", isVisible: true, type: "text" },
 ];
 
-const costStatusMapping: Record<number, string> = {
-  0: "必要",
-  1: "想要",
-  2: "臨時必要",
-  3: "臨時想要",
-};
-
-const payMethodMapping: Record<number, string> = {
-  0: "現金",
-  1: "Line Pay",
-  2: "信用卡",
-  3: "銀行轉帳",
-  4: "其他",
-};
-
-// Call Api
 type TransactionHistoryData = {
   id: string;
   date: string;
@@ -133,43 +142,56 @@ type TransactionHistoryData = {
   statistics_kind: string;
   category: string;
   cost_name: string;
-  cost_status: string | number;
+  cost_status: number;
   unit: string;
   cost: string;
-  pay_method: string | number;
+  pay_method: number;
   store_name: string;
   invoice_number: string;
+  description: string;
   created_at: string;
   [key: string]: string | number;
 };
 
 const getTransactionHistoryData = async () => {
   const data = await getTransactionHistory();
+  data.forEach((row: TransactionHistoryData) => {
+    row.cost_status = getKeyFromValue(
+      costStatusMapping,
+      costStatusMapping[Number(row.cost_status)]
+    );
+    row.pay_method = getKeyFromValue(
+      payMethodMapping,
+      payMethodMapping[Number(row.pay_method)]
+    );
+  });
   return data;
 };
 
-//
-type TransactionTableProps = {
-  isEdit: boolean;
+const updateTransactionData = async (formData: TransactionHistoryData) => {
+  const data = await updateTransactionDataAPI({
+    ...formData,
+    cost_status: Number(formData.cost_status),
+    pay_method: Number(formData.pay_method),
+  });
+  return data;
 };
 
-const TransactionTable = ({ isEdit }: TransactionTableProps) => {
+const TransactionTable = ({ isEdit }: { isEdit: boolean }) => {
   const [transactionHistory, setTransactionHistory] = useState<
     TransactionHistoryData[]
   >([]);
   const [editRowId, setEditRowId] = useState<string | null>(null);
+  const [columns, setColumns] = useState(initialColumns);
+
+  const fetchData = async () => {
+    const data = await getTransactionHistoryData();
+    setTransactionHistory(data);
+  };
 
   useEffect(() => {
-    getTransactionHistoryData().then((data) => {
-      data.forEach((row: TransactionHistoryData) => {
-        row.cost_status = costStatusMapping[Number(row.cost_status)];
-        row.pay_method = payMethodMapping[Number(row.pay_method)];
-      });
-      setTransactionHistory(data);
-    });
+    fetchData();
   }, []);
-
-  const [columns, setColumns] = useState(initialColumns);
 
   const toggleColumnVisibility = (key: string) => {
     setColumns((cols) =>
@@ -220,7 +242,21 @@ const TransactionTable = ({ isEdit }: TransactionTableProps) => {
                       isEditing ? (
                         <AccountingFormField
                           name={col.key}
-                          value={row[col.key]}
+                          value={
+                            col.type === "select"
+                              ? typeof row[col.key] === "string" &&
+                                isNaN(Number(row[col.key]))
+                                ? getKeyFromValue(
+                                    col.key === "cost_status"
+                                      ? costStatusMapping
+                                      : col.key === "pay_method"
+                                      ? payMethodMapping
+                                      : {},
+                                    row[col.key] as string
+                                  )
+                                : Number(row[col.key])
+                              : row[col.key]
+                          }
                           onChange={(e) => {
                             const { value } = e.target;
                             setTransactionHistory((prev) =>
@@ -235,7 +271,11 @@ const TransactionTable = ({ isEdit }: TransactionTableProps) => {
                         />
                       ) : (
                         <span className="block px-1 text-gray-900 truncate">
-                          {row[col.key]}
+                          {col.key === "cost_status"
+                            ? costStatusMapping[Number(row[col.key])]
+                            : col.key === "pay_method"
+                            ? payMethodMapping[Number(row[col.key])]
+                            : row[col.key]}
                         </span>
                       )
                     ) : (
@@ -249,15 +289,15 @@ const TransactionTable = ({ isEdit }: TransactionTableProps) => {
                       <>
                         <IconButton
                           iconSrc="/check-dark.png"
-                          onclick={() => {
-                            console.log("儲存", row);
+                          onclick={async () => {
                             setEditRowId(null);
+                            await updateTransactionData(row);
+                            await fetchData();
                           }}
                         />
                         <IconButton
                           iconSrc="/cancel-dark.png"
                           onclick={() => {
-                            console.log("取消");
                             setEditRowId(null);
                           }}
                         />
