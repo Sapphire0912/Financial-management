@@ -24,30 +24,7 @@ type Column = {
   isVisible: boolean;
   type: ColumnType;
   required?: boolean;
-  options?: { label: string; value: string | number }[];
-};
-
-const costStatusMapping: Record<number, string> = {
-  0: "必要",
-  1: "想要",
-  2: "臨時必要",
-  3: "臨時想要",
-};
-
-const payMethodMapping: Record<number, string> = {
-  0: "現金",
-  1: "Line Pay",
-  2: "信用卡",
-  3: "銀行轉帳",
-  4: "其他",
-};
-
-const getKeyFromValue = (
-  map: Record<number, string>,
-  value: string
-): number => {
-  const entry = Object.entries(map).find(([_, v]) => v === value);
-  return entry ? Number(entry[0]) : 0;
+  options?: { label: string; value: string }[];
 };
 
 const initialColumns: Column[] = [
@@ -91,10 +68,10 @@ const initialColumns: Column[] = [
     type: "select",
     required: true,
     options: [
-      { label: "必要", value: 0 },
-      { label: "想要", value: 1 },
-      { label: "臨時必要", value: 2 },
-      { label: "臨時想要", value: 3 },
+      { label: "必要", value: "必要" },
+      { label: "想要", value: "想要" },
+      { label: "臨時必要", value: "臨時必要" },
+      { label: "臨時想要", value: "臨時想要" },
     ],
   },
   {
@@ -123,11 +100,11 @@ const initialColumns: Column[] = [
     type: "select",
     required: true,
     options: [
-      { label: "現金", value: 0 },
-      { label: "Line Pay", value: 1 },
-      { label: "信用卡", value: 2 },
-      { label: "銀行轉帳", value: 3 },
-      { label: "其他", value: 4 },
+      { label: "現金", value: "現金" },
+      { label: "Line Pay", value: "Line Pay" },
+      { label: "信用卡", value: "信用卡" },
+      { label: "銀行轉帳", value: "銀行轉帳" },
+      { label: "其他", value: "其他" },
     ],
   },
   { key: "store_name", label: "店家", isVisible: true, type: "text" },
@@ -142,38 +119,23 @@ type TransactionHistoryData = {
   statistics_kind: string;
   category: string;
   cost_name: string;
-  cost_status: number;
+  cost_status: string;
   unit: string;
   cost: string;
-  pay_method: number;
+  pay_method: string;
   store_name: string;
   invoice_number: string;
   description: string;
   created_at: string;
-  [key: string]: string | number;
 };
 
 const getTransactionHistoryData = async () => {
   const data = await getTransactionHistory();
-  data.forEach((row: TransactionHistoryData) => {
-    row.cost_status = getKeyFromValue(
-      costStatusMapping,
-      costStatusMapping[Number(row.cost_status)]
-    );
-    row.pay_method = getKeyFromValue(
-      payMethodMapping,
-      payMethodMapping[Number(row.pay_method)]
-    );
-  });
   return data;
 };
 
 const updateTransactionData = async (formData: TransactionHistoryData) => {
-  const data = await updateTransactionDataAPI({
-    ...formData,
-    cost_status: Number(formData.cost_status),
-    pay_method: Number(formData.pay_method),
-  });
+  const data = await updateTransactionDataAPI(formData);
   return data;
 };
 
@@ -242,21 +204,7 @@ const TransactionTable = ({ isEdit }: { isEdit: boolean }) => {
                       isEditing ? (
                         <AccountingFormField
                           name={col.key}
-                          value={
-                            col.type === "select"
-                              ? typeof row[col.key] === "string" &&
-                                isNaN(Number(row[col.key]))
-                                ? getKeyFromValue(
-                                    col.key === "cost_status"
-                                      ? costStatusMapping
-                                      : col.key === "pay_method"
-                                      ? payMethodMapping
-                                      : {},
-                                    row[col.key] as string
-                                  )
-                                : Number(row[col.key])
-                              : row[col.key]
-                          }
+                          value={row[col.key]}
                           onChange={(e) => {
                             const { value } = e.target;
                             setTransactionHistory((prev) =>
@@ -271,11 +219,7 @@ const TransactionTable = ({ isEdit }: { isEdit: boolean }) => {
                         />
                       ) : (
                         <span className="block px-1 text-gray-900 truncate">
-                          {col.key === "cost_status"
-                            ? costStatusMapping[Number(row[col.key])]
-                            : col.key === "pay_method"
-                            ? payMethodMapping[Number(row[col.key])]
-                            : row[col.key]}
+                          {row[col.key]}
                         </span>
                       )
                     ) : (

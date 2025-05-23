@@ -20,6 +20,21 @@ async function userTimeConvert(
   return { user_time_data, timezoneString, currentUTCTime };
 }
 
+const costStatusMapping: Record<string, number> = {
+  必要: 0,
+  想要: 1,
+  臨時必要: 2,
+  臨時想要: 3,
+};
+
+const payMethodMapping: Record<string, number> = {
+  現金: 0,
+  "Line Pay": 1,
+  信用卡: 2,
+  銀行轉帳: 3,
+  其他: 4,
+};
+
 /* 新增記帳內容(支出) */
 type AddFormDataProps = {
   statistics_kind: string;
@@ -91,7 +106,7 @@ export async function getTransactionHistory() {
     throw new Error(result.message || "伺服器出現未預期錯誤");
   }
 
-  // 使用者顯示時間做時區轉換
+  // 使用者顯示時間做時區轉換 & 付費方式, 花費狀態文字轉換
   const transData = result.data.map((item: Record<string, any>) => {
     const localTime = new Date(item.created_at + "Z");
     const year = localTime.getFullYear();
@@ -107,6 +122,12 @@ export async function getTransactionHistory() {
         minute: "2-digit",
         second: "2-digit",
       }),
+      pay_method: Object.entries(payMethodMapping).find(
+        ([_, v]) => v === item.pay_method
+      )?.[0],
+      cost_status: Object.entries(costStatusMapping).find(
+        ([_, v]) => v === item.cost_status
+      )?.[0],
     };
   });
   return transData;
@@ -120,10 +141,10 @@ type UpdateFormDataProps = {
   statistics_kind: string;
   category: string;
   cost_name: string;
-  cost_status: number;
+  cost_status: string;
   unit: string;
   cost: string;
-  pay_method: number;
+  pay_method: string;
   description: string;
   store_name: string;
   invoice_number: string;
@@ -149,10 +170,10 @@ export async function updateTransactionData(formData: UpdateFormDataProps) {
       user_name: payload.username,
       user_id: payload.line_user_id,
       cost_name: formData.cost_name,
-      cost_status: formData.cost_status,
+      cost_status: costStatusMapping[formData.cost_status],
       cost: Number(formData.cost),
       unit: formData.unit,
-      pay_method: formData.pay_method,
+      pay_method: payMethodMapping[formData.pay_method],
       store_name: formData.store_name,
       invoice_number: formData.invoice_number,
       description: formData.description,
