@@ -12,7 +12,9 @@ class BaseModel(me.Document):
         updated_at (datetime): 更新時間。
     """
 
-    meta = {'abstract': True}  # 抽象類別, 不會建立資料庫
+    meta = {
+        'abstract': True  # 抽象類別, 不會建立資料庫
+    }
     description = me.StringField(default="")
     created_at = me.DateTimeField(default=datetime.utcnow)
     updated_at = me.DateTimeField(default=datetime.utcnow)
@@ -26,7 +28,7 @@ class BaseModel(me.Document):
 
 class Accounting(BaseModel):
     """
-    使用者記帳資料表模型。
+    使用者記帳支出資料表模型。
 
     Attributes:
         statistics_kind (str): 統計類型，例如：食、衣、住、行、育、樂、生活、其他。
@@ -72,7 +74,7 @@ class Accounting(BaseModel):
             {
                 "fields": [
                     "user_name", "line_user_id", "statistics_kind", "cost_status",
-                    "category", "cost_name", "store_name", "invoice_number"
+                    "category", "cost_name", "store_name", "invoice_number", "created_at"
                 ],
                 "sparse": True
             }
@@ -103,4 +105,52 @@ class Accounting(BaseModel):
 
 
 class IncomeAccounting(BaseModel):
-    pass
+    """
+    使用者記帳收入資料表類型。
+
+    Attributes:
+        income_kind (str): 收入類型，例如「薪資」、「紅包」、「投資」等。預設為「其他」。
+        category (str): 收入分類，可更細分如「兼職」、「股利」、「租金」等。預設為空字串。
+        user_name (str): 使用者名稱，對應平台登入帳號或顯示名稱。
+        line_user_id (str): LINE 使用者的唯一 ID，若無綁定 LINE，則為空字串。
+        amount (int): 收入金額（整數）。必填欄位。
+        unit (str): 金錢單位，例如「TWD」、「USD」等。必填欄位。
+        payer (str): 付款人或收入來源，例如「公司」、「朋友」、「家人」。選填欄位。
+        pay_account (str): 收入方式，例如「銀行轉帳」、「現金」、「Line Pay」等。必填欄位。
+    """
+    income_kind = me.StringField(required=True, default="其他")
+    category = me.StringField(default="")
+    user_name = me.StringField(required=True)
+    line_user_id = me.StringField(default="")
+    amount = me.IntField(required=True)
+    unit = me.StringField(required=True)
+    payer = me.StringField(required=True)
+    pay_account = me.StringField(required=True)
+
+    meta = {
+        'indexes': [
+            {
+                'fields': [
+                    "income_kind", "user_name", "line_user_id", "payer", "pay_method", "created_at"
+                ],
+                "sparse": True
+            }
+        ]
+    }
+
+    def __repr__(self):
+        return f"IncomeAccounting(user_name={self.user_name}, income_kind={self.income_kind})"
+
+    def to_api_format(self):
+        return {
+            "id": str(self.id),
+            "income_kind": self.income_kind,
+            "category": self.category,
+            "user_name": self.user_name,
+            "amount": self.amount,
+            "unit": self.unit,
+            "payer": self.payer,
+            "pay_account": self.pay_account,
+            "description": self.description,
+            "created_at": self.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+        }

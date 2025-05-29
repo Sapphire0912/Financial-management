@@ -64,6 +64,7 @@ export async function addAccounting(formData: AddFormDataProps) {
       user_time_data: userTime.user_time_data,
       timezone: userTime.timezoneString,
       current_utc_time: userTime.currentUTCTime,
+      oper: 0,
     }),
   });
 
@@ -76,8 +77,12 @@ export async function addAccounting(formData: AddFormDataProps) {
 
 /* 取得使用者記帳資料 */
 export async function getTransactionHistory() {
+  const params = new URLSearchParams({
+    oper: "0",
+  });
+
   const response = await fetchWithRefresh(
-    "/app/accounting/transaction/history",
+    `/app/accounting/transaction/history?${params.toString()}`,
     {
       method: "GET",
     }
@@ -161,6 +166,7 @@ export async function updateTransactionData(formData: UpdateFormDataProps) {
       user_time_data: userTime.user_time_data,
       timezone: userTime.timezoneString,
       current_utc_time: userTime.currentUTCTime,
+      oper: 0,
     }),
   });
 
@@ -189,6 +195,7 @@ export async function deleteTransactionData(deleteDataId: string) {
       user_name: payload.username,
       user_id: payload.line_user_id,
       current_utc_time: currentUTCTime,
+      oper: 0,
     }),
   });
 

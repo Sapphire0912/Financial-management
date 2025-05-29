@@ -26,6 +26,9 @@ class AccountingCreate(BaseModel):
     timezone: str
     current_utc_time: str
 
+    # 操作類型
+    oper: int  # 0: 記帳支出, 1: 記帳收入
+
 
 class AccountingUpdate(BaseModel):
     id: str  # mongo document id
@@ -50,11 +53,17 @@ class AccountingUpdate(BaseModel):
     timezone: str
     current_utc_time: str
 
+    # 操作類型
+    oper: int  # 0: 記帳支出, 1: 記帳收入
+
 
 class AccountingDelete(BaseModel):
     id: str  # mongo document id
     user_name: str
     user_id: Optional[str] = None  # 使用者 line id
     current_utc_time: str
+
+    # 操作類型
+    oper: int  # 0: 記帳支出, 1: 記帳收入
 
 # -- End --

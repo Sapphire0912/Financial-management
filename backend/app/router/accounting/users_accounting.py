@@ -18,60 +18,28 @@ from bson import ObjectId
 router = APIRouter(prefix="/accounting", tags=["accounting"])
 
 
-@router.get("/search")
-async def query_users_accounting(
-    user_name: str = Query(..., description="使用者名稱"),
-    user_id: str = Query(..., description="使用者ID"),
-    statistics_kind: str = Query(None, description="統計類型"),
-    category: str = Query(None, description="類別"),
-    start_date: date = Query(..., description="開始日期"),
-    end_date: date = Query(..., description="結束日期"),
-    store_name: str = Query(None, description="店家名稱"),
-):
-    """
-      :router 取得使用者查詢的記帳資料 (棄用, 在交易歷史處新增)
-    """
-    start_dt = datetime.combine(start_date, datetime.min.time())
-    end_dt = datetime.combine(end_date, datetime.max.time())
-
-    if not user_name or not user_id or not start_date or not end_date:
-        return JSONResponse(status_code=400, content={"success": False, "message": "Missing required parameters"})
-
-    query = {"user_name": user_name, "user_id": user_id,
-             "created_at": {"$gte": start_dt, "$lte": end_dt}}
-
-    if statistics_kind:
-        query["statistics_kind"] = statistics_kind
-    if category:
-        query["category"] = category
-    if store_name:
-        query["store_name"] = store_name
-
-    accounting_data = Accounting.objects(**query)
-    data = [accounting.to_dict() for accounting in accounting_data]
-
-    return JSONResponse(
-        status_code=200,
-        content={
-            "success": True,
-            "data": data,
-            "total": len(data)
-        }
-    )
-
-
 @router.get("/transaction/history")
 @verify_jwt_token
-async def get_transaction_history(request: Request):
+async def get_transaction_history(request: Request, oper: int):
     """
       :router 記帳紀錄
+
+      Args:
+          oper (int): 0 代表記帳支出歷史, 1 代表記帳收入歷史
     """
     try:
-        transaction_data = Accounting.objects(
-            user_name=request.state.payload['username']).order_by('-created_at')
+        if oper == 0:
+            transaction_data = Accounting.objects(
+                user_name=request.state.payload['username']).order_by('-created_at')
 
-        response_data = [data.to_api_format() for data in transaction_data]
-        return JSONResponse(status_code=200, content={"success": True, "data": response_data})
+            response_data = [data.to_api_format() for data in transaction_data]
+            return JSONResponse(status_code=200, content={"success": True, "data": response_data})
+
+        elif oper == 1:
+            # TODO 記帳收入歷史
+            pass
+        else:
+            return JSONResponse(status_code=404, content={"success": True, "message": "找不到相應的頁面"})
 
     except Exception as e:
         return JSONResponse(status_code=500, content={"success": False, "message": "無法取得使用者交易紀錄"})
@@ -90,25 +58,32 @@ async def create_users_accounting(request: Request, data: AccountingCreate):
     try:
         utc_time = convert_to_utc_time(data.user_time_data, data.timezone)
 
-        # 以後可以做序列化的方式處理
-        record = Accounting(
-            statistics_kind=data.statistics_kind,
-            category=data.category,
-            user_name=data.user_name,
-            line_user_id=data.user_id,
-            cost_name=data.cost_name,
-            cost_status=data.cost_status,
-            unit=data.unit,
-            cost=data.cost,
-            pay_method=data.pay_method,
-            store_name=data.store_name,
-            invoice_number=data.invoice_number,
-            created_at=utc_time,
-            updated_at=utc_time
-        )
+        if data.oper == 0:
+            # 以後可以做序列化的方式處理
+            record = Accounting(
+                statistics_kind=data.statistics_kind,
+                category=data.category,
+                user_name=data.user_name,
+                line_user_id=data.user_id,
+                cost_name=data.cost_name,
+                cost_status=data.cost_status,
+                unit=data.unit,
+                cost=data.cost,
+                pay_method=data.pay_method,
+                store_name=data.store_name,
+                invoice_number=data.invoice_number,
+                created_at=utc_time,
+                updated_at=utc_time
+            )
 
-        record.save()
-        return JSONResponse(status_code=201, content={"success": True, "message": "新增資料成功"})
+            record.save()
+            return JSONResponse(status_code=201, content={"success": True, "message": "新增資料成功"})
+        elif data.oper == 1:
+            # TODO 記帳收入資料庫
+            pass
+        else:
+            return JSONResponse(status_code=404, content={"success": False, "message": "找不到相應的頁面"})
+
     except Exception as e:
         print(f'error: {e}')
         return JSONResponse(status_code=403, content={"success": False, "message": "使用者資料缺少必填欄位"})
@@ -124,25 +99,31 @@ async def update_users_accounting(request: Request, data: AccountingUpdate):
         return JSONResponse(status_code=403, content={"success": False, "message": "使用者時區或使用者本地時間有誤"})
 
     try:
-        record = Accounting.objects.get(id=ObjectId(data.id))
-        utc_time = convert_to_utc_time(data.user_time_data, data.timezone)
+        if data.oper == 0:
+            record = Accounting.objects.get(id=ObjectId(data.id))
+            utc_time = convert_to_utc_time(data.user_time_data, data.timezone)
 
-        update_fields = {
-            "statistics_kind": data.statistics_kind,
-            "category": data.category,
-            "user_name": data.user_name,
-            "line_user_id": data.user_id,
-            "cost_name": data.cost_name,
-            "cost_status": data.cost_status,
-            "unit": data.unit,
-            "cost": data.cost,
-            "pay_method": data.pay_method,
-            "store_name": data.store_name,
-            "invoice_number": data.invoice_number,
-            "description": data.description,
-            "created_at": utc_time
-        }
-        record.update(**{f"set__{k}": v for k, v in update_fields.items()})
+            update_fields = {
+                "statistics_kind": data.statistics_kind,
+                "category": data.category,
+                "user_name": data.user_name,
+                "line_user_id": data.user_id,
+                "cost_name": data.cost_name,
+                "cost_status": data.cost_status,
+                "unit": data.unit,
+                "cost": data.cost,
+                "pay_method": data.pay_method,
+                "store_name": data.store_name,
+                "invoice_number": data.invoice_number,
+                "description": data.description,
+                "created_at": utc_time
+            }
+            record.update(**{f"set__{k}": v for k, v in update_fields.items()})
+        elif data.oper == 1:
+            pass
+
+        else:
+            return JSONResponse(status_code=404, content={"success": False, "message": "Data not found"})
 
     except Accounting.DoesNotExist:
         return JSONResponse(status_code=404, content={"success": False, "message": "Data not found"})
@@ -158,19 +139,24 @@ async def delete_users_accounting(request: Request, data: AccountingDelete):
     """
       :router 刪除使用者記帳資料
     """
-    print(data)
 
     if not verify_utc_time(user_utc_time=data.current_utc_time):
         return JSONResponse(status_code=403, content={"success": False, "message": "使用者時區或使用者本地時間有誤"})
 
     try:
         # 先判斷只有使用者本人才可以做刪除操作
-        record = Accounting.objects(id=ObjectId(
-            data.id), user_name=data.user_name, line_user_id=data.user_id).first()
-        if record:
-            record.delete()
+        if data.oper == 0:
+            record = Accounting.objects(id=ObjectId(
+                data.id), user_name=data.user_name, line_user_id=data.user_id).first()
+            if record:
+                record.delete()
+            else:
+                return JSONResponse(status_code=404, content={"success": False, "message": "找不到對應的刪除資料或是非使用者本人操作"})
+        elif data.oper == 1:
+            pass
         else:
             return JSONResponse(status_code=404, content={"success": False, "message": "找不到對應的刪除資料或是非使用者本人操作"})
+
     except Accounting.DoesNotExist:
         return JSONResponse(status_code=404, content={"success": False, "message": "Data not found"})
     return JSONResponse(status_code=200, content={"success": True, "message": "Accounting deleted successfully"})
