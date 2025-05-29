@@ -1,5 +1,5 @@
 /* React */
-import { useState, useEffect } from "react";
+import { useState, useEffect, Component } from "react";
 import { useNavigate } from "react-router-dom";
 
 /* API */
@@ -9,8 +9,10 @@ import { userData, userLogout } from "../services/dashboardUser";
 import Sidebar from "../components/Sidebar";
 import TitleSection from "../components/TitleProps";
 import AddAccountingForm from "../components/AddAccountingForm";
+import IncomeAccountingForm from "../components/IncomeAccountingForm";
 import { BoardButtonItems } from "../components/componentProps";
 import TransactionTable from "../components/TransactionTable";
+import FilterForm from "../components/FilterForm";
 
 /* CSS */
 import "../styles/page.css";
@@ -38,6 +40,7 @@ const AccountingPage = () => {
   /* 選單控制 */
   const [userOperation, setUserOperation] = useState<number>(1); // add = 1, income = 2, edit = 3
   const [queryFilter, setQueryFilter] = useState<boolean>(false); // filter
+  // const [filterContent, setFilterContent] = useState<string | null>("");
 
   /* 使用者資訊 */
   const [userInfo, setUserInfo] = useState({ username: "", email: "" });
@@ -98,25 +101,26 @@ const AccountingPage = () => {
             </div>
           </div>
           {queryFilter && (
-            <div className="dashboard-filter">FILTER section</div>
+            <div className="dashboard-filter">
+              <FilterForm />
+            </div>
           )}
           <div
             className={`dashboard-content ${
               userOperation !== 3 ? "justify-between" : ""
             }`}
           >
-            {userOperation === 1 && (
-              <div className="h-full">
-                <AddAccountingForm />
-              </div>
-            )}
-            {userOperation === 1 && (
+            <div
+              className={`h-full ${
+                userOperation === 3 ? "min-w-full overflow-x-auto" : ""
+              }`}
+            >
+              {userOperation === 1 && <AddAccountingForm />}
+              {userOperation === 2 && <IncomeAccountingForm />}
+              {userOperation === 3 && <TransactionTable isEdit={true} />}
+            </div>
+            {userOperation !== 3 && (
               <div className="dashboard-right">Figure Details</div>
-            )}
-            {userOperation === 3 && (
-              <div className="h-full min-w-full overflow-x-auto">
-                <TransactionTable isEdit={true} />
-              </div>
             )}
           </div>
         </div>
