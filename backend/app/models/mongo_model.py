@@ -131,7 +131,7 @@ class IncomeAccounting(BaseModel):
         'indexes': [
             {
                 'fields': [
-                    "income_kind", "user_name", "line_user_id", "payer", "pay_method", "created_at"
+                    "income_kind", "user_name", "line_user_id", "payer", "pay_account", "created_at"
                 ],
                 "sparse": True
             }

@@ -4,6 +4,7 @@ from datetime import datetime, date
 
 
 # -- Accounting Router 相關 --
+# 使用者記帳支出相關
 class AccountingCreate(BaseModel):
     statistics_kind: Optional[str] = "其他"
     category: Optional[str] = "其他"
@@ -25,9 +26,6 @@ class AccountingCreate(BaseModel):
     user_time_data: str  # form time
     timezone: str
     current_utc_time: str
-
-    # 操作類型
-    oper: int  # 0: 記帳支出, 1: 記帳收入
 
 
 class AccountingUpdate(BaseModel):
@@ -53,9 +51,6 @@ class AccountingUpdate(BaseModel):
     timezone: str
     current_utc_time: str
 
-    # 操作類型
-    oper: int  # 0: 記帳支出, 1: 記帳收入
-
 
 class AccountingDelete(BaseModel):
     id: str  # mongo document id
@@ -63,7 +58,52 @@ class AccountingDelete(BaseModel):
     user_id: Optional[str] = None  # 使用者 line id
     current_utc_time: str
 
-    # 操作類型
-    oper: int  # 0: 記帳支出, 1: 記帳收入
 
+# 使用者記帳收入相關
+class IncomeCreate(BaseModel):
+    income_kind: str
+    category: Optional[str]
+    user_name: str
+    user_id: Optional[str]  # 使用者 line id
+    amount: int
+    unit: str
+    payer: str
+    pay_account: str
+    description: Optional[str]
+    created_at: Optional[datetime] = datetime.utcnow()
+    updated_at: Optional[datetime] = datetime.utcnow()
+
+    # 用於處理時差與判斷時間是否合理
+    # 註: (user_time_data + timezone) covert to utc time = created_at.
+    user_time_data: str  # form time
+    timezone: str
+    current_utc_time: str
+
+
+class IncomeUpdate(BaseModel):
+    id: str
+    income_kind: str
+    category: Optional[str]
+    user_name: str
+    user_id: Optional[str]  # 使用者 line id
+    amount: int
+    unit: str
+    payer: str
+    pay_account: str
+    description: Optional[str]
+    created_at: Optional[datetime] = datetime.utcnow()
+    updated_at: Optional[datetime] = datetime.utcnow()
+
+    # 用於處理時差與判斷時間是否合理
+    # 註: (user_time_data + timezone) covert to utc time = created_at.
+    user_time_data: str  # form time
+    timezone: str
+    current_utc_time: str
+
+
+class IncomeDelete(BaseModel):
+    id: str  # mongo document id
+    user_name: str
+    user_id: Optional[str] = None  # 使用者 line id
+    current_utc_time: str
 # -- End --

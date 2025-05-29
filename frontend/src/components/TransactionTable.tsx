@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { initialColumns } from "../services/constants";
+import { initialColumns, initialIncomeColumns } from "../services/constants";
 
 /* Components */
 import {
@@ -12,13 +12,15 @@ import {
 import {
   getTransactionHistory,
   updateTransactionData as updateTransactionDataAPI,
+  updateIncomeData as updateIncomeDataAPI,
   deleteTransactionData as deleteTransactionDataAPI,
+  deleteIncomeData as deleteIncomeDataAPI,
 } from "../services/accountingUser";
 
 /* CSS */
 import "../styles/component.css";
 
-type TransactionHistoryData = {
+type ExpenseHistoryData = {
   id: string;
   date: string;
   time: string;
@@ -36,37 +38,93 @@ type TransactionHistoryData = {
   [key: string]: string;
 };
 
-const getTransactionHistoryData = async () => {
-  const data = await getTransactionHistory();
+type IncomeHistoryData = {
+  id: string;
+  date: string;
+  time: string;
+  income_kind: string;
+  category: string;
+  unit: string;
+  amount: string;
+  payer: string;
+  pay_account: string;
+  description: string;
+  created_at: string;
+  [key: string]: string;
+};
+
+const boardItems = [
+  {
+    img: "/board-add-dark.png",
+    text: "支出",
+    showStatus: "0",
+  },
+  {
+    img: "/board-income-dark.png",
+    text: "收入",
+    showStatus: "1",
+  },
+];
+
+const getTransactionHistoryData = async (dataType: string) => {
+  const data = await getTransactionHistory(dataType);
   return data;
 };
 
-const updateTransactionData = async (formData: TransactionHistoryData) => {
-  const data = await updateTransactionDataAPI(formData);
-  return data;
+const updateTransactionData = async (
+  formData: ExpenseHistoryData | IncomeHistoryData,
+  dataType: string
+) => {
+  if (dataType === "0") {
+    const data = await updateTransactionDataAPI(formData as ExpenseHistoryData);
+    return data;
+  }
+  if (dataType === "1") {
+    const data = await updateIncomeDataAPI(formData as IncomeHistoryData);
+    return data;
+  }
 };
 
-const deleteTransactionData = async (deleteDataId: string) => {
-  const data = await deleteTransactionDataAPI(deleteDataId);
-  return data;
+const deleteTransactionData = async (
+  deleteDataId: string,
+  dataType: string
+) => {
+  if (dataType === "0") {
+    const data = await deleteTransactionDataAPI(deleteDataId);
+    return data;
+  }
+  if (dataType === "1") {
+    const data = await deleteIncomeDataAPI(deleteDataId);
+    return data;
+  }
 };
 //
 
 const TransactionTable = ({ isEdit }: { isEdit: boolean }) => {
-  const [transactionHistory, setTransactionHistory] = useState<
-    TransactionHistoryData[]
-  >([]);
-  const [editRowId, setEditRowId] = useState<string | null>(null);
-  const [columns, setColumns] = useState(initialColumns);
+  const [expenseHistory, setExpenseHistory] = useState<ExpenseHistoryData[]>(
+    []
+  );
+  const [incomeHistory, setIncomeHistory] = useState<IncomeHistoryData[]>([]);
 
-  const fetchData = async () => {
-    const data = await getTransactionHistoryData();
-    setTransactionHistory(data);
+  /* 初始選單狀態 */
+  const [dataType, setDataType] = useState<string>("0"); // 0: 支出, 1: 收入
+  const [columns, setColumns] = useState(initialColumns);
+  const [editRowId, setEditRowId] = useState<string | null>(null);
+
+  const fetchData = async (dataType: string) => {
+    const data = await getTransactionHistoryData(dataType);
+    if (dataType === "0") {
+      setExpenseHistory(data as ExpenseHistoryData[]);
+    } else {
+      setIncomeHistory(data as IncomeHistoryData[]);
+    }
   };
 
+  const transactionHistory = dataType === "0" ? expenseHistory : incomeHistory;
+
   useEffect(() => {
-    fetchData();
-  }, []);
+    fetchData(dataType);
+  }, [dataType]);
 
   const toggleColumnVisibility = (key: string) => {
     setColumns((cols) =>
@@ -77,123 +135,158 @@ const TransactionTable = ({ isEdit }: { isEdit: boolean }) => {
   };
 
   return (
-    <div className="overflow-x-auto border-2 border-gray-300">
-      <table className="min-w-full border-collapse text-sm px-2">
-        <thead>
-          <tr className="bg-gray-100 text-left">
-            {columns.map((col) => (
-              <th
-                key={col.key}
-                className="px-4 py-2 border-b whitespace-nowrap max-w-[150px]"
-              >
-                <TransactionTitle
-                  label={col.label}
-                  isVisible={col.isVisible}
-                  onToggle={() => toggleColumnVisibility(col.key)}
-                />
-              </th>
-            ))}
-            {isEdit && (
-              <th
-                key="edit"
-                className="px-4 py-2 border-b whitespace-nowrap max-w-[150px]"
-              >
-                編輯
-              </th>
-            )}
-          </tr>
-        </thead>
-        <tbody>
-          {transactionHistory.map((row) => {
-            const isEditing = row.id === editRowId;
-            return (
-              <tr
-                key={row.id}
-                className="hover:bg-green-100 transition-all duration-200"
-              >
-                {columns.map((col) => (
-                  <td
-                    key={col.key}
-                    className="px-4 py-2 whitespace-nowrap max-w-[150px] overflow-hidden text-ellipsis"
-                  >
-                    {col.isVisible ? (
-                      isEditing ? (
-                        <AccountingFormField
-                          name={col.key}
-                          value={row[col.key]}
-                          onChange={(e) => {
-                            const { value } = e.target;
-                            setTransactionHistory((prev) =>
-                              prev.map((r) =>
-                                r.id === row.id ? { ...r, [col.key]: value } : r
-                              )
-                            );
-                          }}
-                          type={col.type}
-                          options={col.options}
-                          required={col.required}
-                        />
+    <div>
+      <div className="flex items-center">
+        {boardItems.map((item, idx) => (
+          <button
+            key={idx}
+            type="button"
+            className={`w-1/2  py-1 font-semibold text-xl  rounded-t-xl transition-all duration-200 ${
+              dataType === item.showStatus
+                ? "bg-blue-400 text-white bottom-shadow"
+                : ""
+            }`}
+            onClick={() => {
+              setDataType(item.showStatus);
+              setColumns(
+                item.showStatus === "0" ? initialColumns : initialIncomeColumns
+              );
+            }}
+          >
+            {item.text}
+          </button>
+        ))}
+      </div>
+      <div className="overflow-x-auto border-2 border-gray-300">
+        <table className="min-w-full border-collapse text-sm px-2">
+          <thead>
+            <tr className="bg-gray-100 text-left">
+              {columns.map((col) => (
+                <th
+                  key={col.key}
+                  className="px-4 py-2 border-b whitespace-nowrap max-w-[150px]"
+                >
+                  <TransactionTitle
+                    label={col.label}
+                    isVisible={col.isVisible}
+                    onToggle={() => toggleColumnVisibility(col.key)}
+                  />
+                </th>
+              ))}
+              {isEdit && (
+                <th
+                  key="edit"
+                  className="px-4 py-2 border-b whitespace-nowrap max-w-[150px]"
+                >
+                  編輯
+                </th>
+              )}
+            </tr>
+          </thead>
+          <tbody>
+            {transactionHistory.map((row) => {
+              const isEditing = row.id === editRowId;
+              return (
+                <tr
+                  key={row.id}
+                  className="hover:bg-green-100 transition-all duration-200"
+                >
+                  {columns.map((col) => (
+                    <td
+                      key={col.key}
+                      className="px-4 py-2 whitespace-nowrap max-w-[150px] overflow-hidden text-ellipsis"
+                    >
+                      {col.isVisible ? (
+                        isEditing ? (
+                          <AccountingFormField
+                            name={col.key}
+                            value={row[col.key]}
+                            onChange={(e) => {
+                              const { value } = e.target;
+                              if (dataType === "0") {
+                                setExpenseHistory((prev) =>
+                                  prev.map((r) =>
+                                    r.id === row.id
+                                      ? { ...r, [col.key]: value }
+                                      : r
+                                  )
+                                );
+                              } else {
+                                setIncomeHistory((prev) =>
+                                  prev.map((r) =>
+                                    r.id === row.id
+                                      ? { ...r, [col.key]: value }
+                                      : r
+                                  )
+                                );
+                              }
+                            }}
+                            type={col.type}
+                            options={col.options}
+                            required={col.required}
+                          />
+                        ) : (
+                          <span className="block px-1 text-gray-900 truncate">
+                            {row[col.key]}
+                          </span>
+                        )
                       ) : (
-                        <span className="block px-1 text-gray-900 truncate">
-                          {row[col.key]}
-                        </span>
-                      )
-                    ) : (
-                      ""
-                    )}
-                  </td>
-                ))}
-                {isEdit && (
-                  <td className="flex items-center gap-2 px-2 py-2">
-                    {isEditing ? (
-                      <>
-                        <IconButton
-                          iconSrc="/check-dark.png"
-                          onclick={async () => {
-                            setEditRowId(null);
-                            await updateTransactionData(row);
-                            await fetchData();
-                          }}
-                        />
-                        <IconButton
-                          iconSrc="/cancel-dark.png"
-                          onclick={() => {
-                            setEditRowId(null);
-                          }}
-                        />
-                      </>
-                    ) : (
-                      <>
-                        <IconButton
-                          iconSrc="/modify-dark.png"
-                          onclick={() => {
-                            setEditRowId(row.id);
-                          }}
-                        />
-                        <IconButton
-                          iconSrc="/delete-dark.png"
-                          onclick={async () => {
-                            const confirmed =
-                              window.confirm("確定要刪除這筆資料嗎？");
-                            if (!confirmed) return;
+                        ""
+                      )}
+                    </td>
+                  ))}
+                  {isEdit && (
+                    <td className="flex items-center gap-2 px-2 py-2">
+                      {isEditing ? (
+                        <>
+                          <IconButton
+                            iconSrc="/check-dark.png"
+                            onclick={async () => {
+                              setEditRowId(null);
+                              await updateTransactionData(row, dataType);
+                              await fetchData(dataType);
+                            }}
+                          />
+                          <IconButton
+                            iconSrc="/cancel-dark.png"
+                            onclick={() => {
+                              setEditRowId(null);
+                            }}
+                          />
+                        </>
+                      ) : (
+                        <>
+                          <IconButton
+                            iconSrc="/modify-dark.png"
+                            onclick={() => {
+                              setEditRowId(row.id);
+                            }}
+                          />
+                          <IconButton
+                            iconSrc="/delete-dark.png"
+                            onclick={async () => {
+                              const confirmed =
+                                window.confirm("確定要刪除這筆資料嗎？");
+                              if (!confirmed) return;
 
-                            try {
-                              await deleteTransactionData(row.id);
-                              await fetchData();
-                            } catch (err) {
-                              console.error("刪除失敗：", err);
-                            }
-                          }}
-                        />
-                      </>
-                    )}
-                  </td>
-                )}
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+                              try {
+                                await deleteTransactionData(row.id, dataType);
+                                await fetchData(dataType);
+                              } catch (err) {
+                                console.error("刪除失敗：", err);
+                              }
+                            }}
+                          />
+                        </>
+                      )}
+                    </td>
+                  )}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

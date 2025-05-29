@@ -12,6 +12,11 @@
   justify-content: center;
 }
 
+/* 陰影相關設定 */
+.bottom-shadow {
+  box-shadow: 0 8px 10px -2px rgba(66, 66, 66, 0.6);
+}
+
 /* 元件樣式設定 */
 /* button */
 .button-hover {

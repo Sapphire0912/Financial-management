@@ -94,4 +94,72 @@ export const initialColumns: Column[] = [
   { key: "description", label: "備註", isVisible: true, type: "text" },
 ];
 
+/* Income Form 選單 */
+export const initialIncomeColumns: Column[] = [
+  {
+    key: "date",
+    label: "日期",
+    isVisible: true,
+    type: "date",
+    required: true,
+  },
+  {
+    key: "time",
+    label: "時間",
+    isVisible: true,
+    type: "time",
+  },
+  {
+    key: "income_kind",
+    label: "收入類型",
+    isVisible: true,
+    type: "select",
+    required: true,
+    options: [
+      { label: "薪資", value: "薪資" },
+      { label: "獎金", value: "獎金" },
+      { label: "利息", value: "利息" },
+      { label: "投資", value: "投資" },
+      { label: "紅包", value: "紅包" },
+      { label: "其他", value: "其他" },
+    ],
+  },
+  { key: "category", label: "細項分類", isVisible: true, type: "text" },
+  {
+    key: "unit",
+    label: "金錢單位",
+    isVisible: true,
+    type: "select",
+    required: true,
+    options: [
+      { label: "TWD", value: "TWD" },
+      { label: "JPY", value: "JPY" },
+      { label: "USD", value: "USD" },
+    ],
+  },
+  {
+    key: "amount",
+    label: "金額",
+    isVisible: true,
+    type: "number",
+    required: true,
+  },
+
+  {
+    key: "payer",
+    label: "收入來源",
+    isVisible: true,
+    type: "text",
+    required: true,
+  },
+  {
+    key: "pay_account",
+    label: "收入帳戶",
+    isVisible: true,
+    type: "text",
+    required: true,
+  },
+  { key: "description", label: "備註", isVisible: true, type: "text" },
+];
+
 /* Filter Form 選單 */

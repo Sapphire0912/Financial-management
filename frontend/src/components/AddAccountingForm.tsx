@@ -112,7 +112,7 @@ const AddAccountingForm = () => {
 
       <div>
         <AccountingLabelAsterisk required={true}>
-          統計類型
+          支出類型
         </AccountingLabelAsterisk>
         <AccountingFormField
           name="statistics_kind"

@@ -64,7 +64,6 @@ export async function addAccounting(formData: AddFormDataProps) {
       user_time_data: userTime.user_time_data,
       timezone: userTime.timezoneString,
       current_utc_time: userTime.currentUTCTime,
-      oper: 0,
     }),
   });
 
@@ -76,9 +75,9 @@ export async function addAccounting(formData: AddFormDataProps) {
 }
 
 /* 取得使用者記帳資料 */
-export async function getTransactionHistory() {
+export async function getTransactionHistory(oper: string) {
   const params = new URLSearchParams({
-    oper: "0",
+    oper: oper,
   });
 
   const response = await fetchWithRefresh(
@@ -88,36 +87,63 @@ export async function getTransactionHistory() {
     }
   );
 
-  const result = await response.json();
-  if (!response.ok) {
-    throw new Error(result.message || "伺服器出現未預期錯誤");
+  if (oper === "0") {
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.message || "伺服器出現未預期錯誤");
+    }
+
+    // 使用者顯示時間做時區轉換 & 付費方式, 花費狀態文字轉換
+    const transData = result.data.map((item: Record<string, any>) => {
+      const localTime = new Date(item.created_at + "Z");
+      const year = localTime.getFullYear();
+      const month = String(localTime.getMonth() + 1).padStart(2, "0");
+      const day = String(localTime.getDate()).padStart(2, "0");
+
+      return {
+        ...item,
+        date: `${year}-${month}-${day}`,
+        time: localTime.toLocaleTimeString(undefined, {
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        }),
+        pay_method: Object.entries(payMethodMapping).find(
+          ([_, v]) => v === item.pay_method
+        )?.[0],
+        cost_status: Object.entries(costStatusMapping).find(
+          ([_, v]) => v === item.cost_status
+        )?.[0],
+      };
+    });
+    return transData;
+  } else if (oper === "1") {
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.message || "伺服器出現未預期錯誤");
+    }
+
+    // 使用者顯示時間做時區轉換 & 付費方式, 花費狀態文字轉換
+    const transData = result.data.map((item: Record<string, any>) => {
+      const localTime = new Date(item.created_at + "Z");
+      const year = localTime.getFullYear();
+      const month = String(localTime.getMonth() + 1).padStart(2, "0");
+      const day = String(localTime.getDate()).padStart(2, "0");
+
+      return {
+        ...item,
+        date: `${year}-${month}-${day}`,
+        time: localTime.toLocaleTimeString(undefined, {
+          hour12: false,
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        }),
+      };
+    });
+    return transData;
   }
-
-  // 使用者顯示時間做時區轉換 & 付費方式, 花費狀態文字轉換
-  const transData = result.data.map((item: Record<string, any>) => {
-    const localTime = new Date(item.created_at + "Z");
-    const year = localTime.getFullYear();
-    const month = String(localTime.getMonth() + 1).padStart(2, "0");
-    const day = String(localTime.getDate()).padStart(2, "0");
-
-    return {
-      ...item,
-      date: `${year}-${month}-${day}`,
-      time: localTime.toLocaleTimeString(undefined, {
-        hour12: false,
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-      }),
-      pay_method: Object.entries(payMethodMapping).find(
-        ([_, v]) => v === item.pay_method
-      )?.[0],
-      cost_status: Object.entries(costStatusMapping).find(
-        ([_, v]) => v === item.cost_status
-      )?.[0],
-    };
-  });
-  return transData;
 }
 
 /* 修改記帳資料 */
@@ -166,7 +192,6 @@ export async function updateTransactionData(formData: UpdateFormDataProps) {
       user_time_data: userTime.user_time_data,
       timezone: userTime.timezoneString,
       current_utc_time: userTime.currentUTCTime,
-      oper: 0,
     }),
   });
 
@@ -195,7 +220,136 @@ export async function deleteTransactionData(deleteDataId: string) {
       user_name: payload.username,
       user_id: payload.line_user_id,
       current_utc_time: currentUTCTime,
-      oper: 0,
+    }),
+  });
+
+  const result = await response.json();
+  if (!response.ok) {
+    throw new Error(result.message || "伺服器出現未預期錯誤");
+  }
+  return result;
+}
+
+/* 新增記帳收入 */
+type IncomeFormDataProps = {
+  income_kind: string;
+  category: string;
+  amount: number;
+  unit: string;
+  payer: string;
+  pay_account: string;
+  description: string;
+  accounting_date: string;
+  accounting_time: string;
+};
+
+export async function addIncomeAccounting(formData: IncomeFormDataProps) {
+  const userTime = await userTimeConvert(
+    formData.accounting_date,
+    formData.accounting_time
+  );
+  /* */
+
+  // 使用者 payload 資訊
+  const payload = await parsePayload();
+
+  const response = await fetchWithRefresh("/app/accounting/create/income", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      income_kind: formData.income_kind,
+      category: formData.category,
+      amount: formData.amount,
+      unit: formData.unit,
+      payer: formData.payer,
+      pay_account: formData.pay_account,
+      description: formData.description,
+      user_name: payload.username,
+      user_id: payload.line_user_id,
+      user_time_data: userTime.user_time_data,
+      timezone: userTime.timezoneString,
+      current_utc_time: userTime.currentUTCTime,
+    }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || "伺服器出現未預期錯誤");
+  }
+  return data;
+}
+
+/* 修改記帳收入 */
+type UpdateIncomeFormDataProps = {
+  id: string;
+  date: string;
+  time: string;
+  income_kind: string;
+  category: string;
+  unit: string;
+  amount: string;
+  payer: string;
+  pay_account: string;
+  description: string;
+  created_at: string;
+};
+
+export async function updateIncomeData(formData: UpdateIncomeFormDataProps) {
+  const userTime = await userTimeConvert(formData.date, formData.time);
+  /* */
+
+  // 使用者 payload 資訊
+  const payload = await parsePayload();
+
+  const response = await fetchWithRefresh("/app/accounting/update/income", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      id: formData.id,
+      income_kind: formData.income_kind,
+      category: formData.category,
+      amount: formData.amount,
+      unit: formData.unit,
+      payer: formData.payer,
+      pay_account: formData.pay_account,
+      description: formData.description,
+      user_name: payload.username,
+      user_id: payload.line_user_id,
+      user_time_data: userTime.user_time_data,
+      timezone: userTime.timezoneString,
+      current_utc_time: userTime.currentUTCTime,
+    }),
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || "伺服器出現未預期錯誤");
+  }
+  return data;
+}
+
+/* 刪除收入資料 */
+export async function deleteIncomeData(deleteDataId: string) {
+  const currentUTCTime: string = new Date().toISOString();
+
+  // 使用者 payload 資訊
+  const payload = await parsePayload();
+
+  console.log(currentUTCTime, deleteDataId, payload);
+  const response = await fetchWithRefresh("/app/accounting/delete/income", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      id: deleteDataId,
+      user_name: payload.username,
+      user_id: payload.line_user_id,
+      current_utc_time: currentUTCTime,
     }),
   });
 
