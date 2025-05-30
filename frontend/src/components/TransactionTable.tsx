@@ -100,14 +100,22 @@ const deleteTransactionData = async (
 };
 //
 
-const TransactionTable = ({ isEdit }: { isEdit: boolean }) => {
+const TransactionTable = ({
+  filterStatus,
+  setFilterStatus,
+  isEdit,
+}: {
+  filterStatus: string;
+  setFilterStatus: React.Dispatch<React.SetStateAction<string>>;
+  isEdit: boolean;
+}) => {
   const [expenseHistory, setExpenseHistory] = useState<ExpenseHistoryData[]>(
     []
   );
   const [incomeHistory, setIncomeHistory] = useState<IncomeHistoryData[]>([]);
 
   /* 初始選單狀態 */
-  const [dataType, setDataType] = useState<string>("0"); // 0: 支出, 1: 收入
+  // const [dataType, setDataType] = useState<string>("0"); // 0: 支出, 1: 收入
   const [columns, setColumns] = useState(initialColumns);
   const [editRowId, setEditRowId] = useState<string | null>(null);
 
@@ -120,11 +128,12 @@ const TransactionTable = ({ isEdit }: { isEdit: boolean }) => {
     }
   };
 
-  const transactionHistory = dataType === "0" ? expenseHistory : incomeHistory;
+  const transactionHistory =
+    filterStatus === "0" ? expenseHistory : incomeHistory;
 
   useEffect(() => {
-    fetchData(dataType);
-  }, [dataType]);
+    fetchData(filterStatus);
+  }, [filterStatus]);
 
   const toggleColumnVisibility = (key: string) => {
     setColumns((cols) =>
@@ -142,12 +151,12 @@ const TransactionTable = ({ isEdit }: { isEdit: boolean }) => {
             key={idx}
             type="button"
             className={`w-1/2  py-1 font-semibold text-xl  rounded-t-xl transition-all duration-200 ${
-              dataType === item.showStatus
+              filterStatus === item.showStatus
                 ? "bg-blue-400 text-white bottom-shadow"
                 : ""
             }`}
             onClick={() => {
-              setDataType(item.showStatus);
+              setFilterStatus(item.showStatus);
               setColumns(
                 item.showStatus === "0" ? initialColumns : initialIncomeColumns
               );
@@ -203,7 +212,7 @@ const TransactionTable = ({ isEdit }: { isEdit: boolean }) => {
                             value={row[col.key]}
                             onChange={(e) => {
                               const { value } = e.target;
-                              if (dataType === "0") {
+                              if (filterStatus === "0") {
                                 setExpenseHistory((prev) =>
                                   prev.map((r) =>
                                     r.id === row.id
@@ -243,8 +252,8 @@ const TransactionTable = ({ isEdit }: { isEdit: boolean }) => {
                             iconSrc="/check-dark.png"
                             onclick={async () => {
                               setEditRowId(null);
-                              await updateTransactionData(row, dataType);
-                              await fetchData(dataType);
+                              await updateTransactionData(row, filterStatus);
+                              await fetchData(filterStatus);
                             }}
                           />
                           <IconButton
@@ -270,8 +279,11 @@ const TransactionTable = ({ isEdit }: { isEdit: boolean }) => {
                               if (!confirmed) return;
 
                               try {
-                                await deleteTransactionData(row.id, dataType);
-                                await fetchData(dataType);
+                                await deleteTransactionData(
+                                  row.id,
+                                  filterStatus
+                                );
+                                await fetchData(filterStatus);
                               } catch (err) {
                                 console.error("刪除失敗：", err);
                               }

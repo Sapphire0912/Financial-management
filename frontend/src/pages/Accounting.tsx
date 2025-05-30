@@ -23,11 +23,13 @@ const boardItems = [
     img: "/board-add-dark.png",
     text: "支出",
     showStatus: 1,
+    filterStatus: "0",
   },
   {
     img: "/board-income-dark.png",
     text: "收入",
     showStatus: 2,
+    filterStatus: "1",
   },
   {
     img: "/board-edit-dark.png",
@@ -38,9 +40,10 @@ const boardItems = [
 
 const AccountingPage = () => {
   /* 選單控制 */
-  const [userOperation, setUserOperation] = useState<number>(1); // add = 1, income = 2, edit = 3
+  const [userOperation, setUserOperation] = useState<number>(1); // add = 1, income = 2
+
   const [queryFilter, setQueryFilter] = useState<boolean>(false); // filter
-  // const [filterContent, setFilterContent] = useState<string | null>("");
+  const [filterStatus, setFilterStatus] = useState<string>("0");
 
   /* 使用者資訊 */
   const [userInfo, setUserInfo] = useState({ username: "", email: "" });
@@ -87,24 +90,32 @@ const AccountingPage = () => {
                   img={item.img}
                   text={item.text}
                   isActive={userOperation === item.showStatus}
-                  onClick={() => setUserOperation(item.showStatus)}
+                  onClick={() => {
+                    setUserOperation(item.showStatus);
+                    if (item.showStatus !== 3)
+                      setFilterStatus(item.filterStatus || "");
+                  }}
                 />
               ))}
             </div>
-            <div className="flex items-center mb-4">
+            <div className="relative">
               <BoardButtonItems
                 img="/board-filter-dark.png"
                 text="篩選"
                 isActive={queryFilter}
                 onClick={() => setQueryFilter(!queryFilter)}
               />
+              {queryFilter && (
+                <div className="dashboard-filter">
+                  <FilterForm
+                    filterStatus={filterStatus}
+                    onClose={() => setQueryFilter(false)}
+                  />
+                </div>
+              )}
             </div>
           </div>
-          {queryFilter && (
-            <div className="dashboard-filter">
-              <FilterForm />
-            </div>
-          )}
+
           <div
             className={`dashboard-content ${
               userOperation !== 3 ? "justify-between" : ""
@@ -117,7 +128,13 @@ const AccountingPage = () => {
             >
               {userOperation === 1 && <AddAccountingForm />}
               {userOperation === 2 && <IncomeAccountingForm />}
-              {userOperation === 3 && <TransactionTable isEdit={true} />}
+              {userOperation === 3 && (
+                <TransactionTable
+                  filterStatus={filterStatus}
+                  setFilterStatus={setFilterStatus}
+                  isEdit={true}
+                />
+              )}
             </div>
             {userOperation !== 3 && (
               <div className="dashboard-right">Figure Details</div>
