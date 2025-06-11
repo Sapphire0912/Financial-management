@@ -156,6 +156,7 @@ const TransactionTable = ({
 
   useEffect(() => {
     fetchData(filterStatus, filterQuery, page);
+    setColumns(filterStatus === "0" ? initialColumns : initialIncomeColumns);
   }, [filterStatus, filterQuery, page]);
 
   const toggleColumnVisibility = (key: string) => {
