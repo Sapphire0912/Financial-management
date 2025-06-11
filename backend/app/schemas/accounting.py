@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime, date
 
 
@@ -59,7 +59,7 @@ class AccountingDelete(BaseModel):
     current_utc_time: str
 
 
-# 使用者記帳收入相關
+# -- 使用者記帳收入相關 --
 class IncomeCreate(BaseModel):
     income_kind: str
     category: Optional[str]
@@ -107,3 +107,18 @@ class IncomeDelete(BaseModel):
     user_id: Optional[str] = None  # 使用者 line id
     current_utc_time: str
 # -- End --
+
+
+# -- 使用者篩選查詢相關 --
+class FilterRow(BaseModel):
+    field: str
+    operator: str
+    value: str
+    matchMode: Optional[str] = None
+    sortOrder: Optional[str] = None
+
+
+class FilterRequest(BaseModel):
+    oper: str
+    page: int
+    filters: List[FilterRow]

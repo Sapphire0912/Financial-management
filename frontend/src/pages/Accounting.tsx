@@ -38,11 +38,21 @@ const boardItems = [
   },
 ];
 
+type FilterRow = {
+  field: string;
+  operator: string;
+  value: string;
+  matchMode?: string;
+  sortOrder?: string;
+};
+
 const AccountingPage = () => {
   /* 選單控制 */
   const [userOperation, setUserOperation] = useState<number>(1); // add = 1, income = 2
 
+  /* 篩選功能 */
   const [queryFilter, setQueryFilter] = useState<boolean>(false); // filter
+  const [filterQuery, setFilterQuery] = useState<FilterRow[]>([]);
   const [filterStatus, setFilterStatus] = useState<string>("0");
 
   /* 使用者資訊 */
@@ -110,6 +120,7 @@ const AccountingPage = () => {
                   <FilterForm
                     filterStatus={filterStatus}
                     onClose={() => setQueryFilter(false)}
+                    setFilterQuery={setFilterQuery}
                   />
                 </div>
               )}
@@ -131,6 +142,7 @@ const AccountingPage = () => {
               {userOperation === 3 && (
                 <TransactionTable
                   filterStatus={filterStatus}
+                  filterQuery={filterQuery}
                   setFilterStatus={setFilterStatus}
                   isEdit={true}
                 />

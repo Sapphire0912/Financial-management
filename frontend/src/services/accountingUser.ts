@@ -75,15 +75,31 @@ export async function addAccounting(formData: AddFormDataProps) {
 }
 
 /* 取得使用者記帳資料 */
-export async function getTransactionHistory(oper: string) {
-  const params = new URLSearchParams({
-    oper: oper,
-  });
+type FilterRow = {
+  field: string;
+  operator: string;
+  value: string;
+  matchMode?: string;
+  sortOrder?: string;
+};
 
+export async function getTransactionHistory(
+  oper: string,
+  filterQuery: FilterRow[],
+  page: number
+) {
   const response = await fetchWithRefresh(
-    `/app/accounting/transaction/history?${params.toString()}`,
+    "/app/accounting/transaction/history",
     {
-      method: "GET",
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        oper,
+        page,
+        filters: filterQuery,
+      }),
     }
   );
 

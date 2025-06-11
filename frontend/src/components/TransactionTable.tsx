@@ -53,6 +53,14 @@ type IncomeHistoryData = {
   [key: string]: string;
 };
 
+type FilterRow = {
+  field: string;
+  operator: string;
+  value: string;
+  matchMode?: string;
+  sortOrder?: string;
+};
+
 const boardItems = [
   {
     img: "/board-add-dark.png",
@@ -66,8 +74,12 @@ const boardItems = [
   },
 ];
 
-const getTransactionHistoryData = async (dataType: string) => {
-  const data = await getTransactionHistory(dataType);
+const getTransactionHistoryData = async (
+  dataType: string,
+  filterQuery: FilterRow[],
+  page: number
+) => {
+  const data = await getTransactionHistory(dataType, filterQuery, page);
   return data;
 };
 
@@ -103,37 +115,48 @@ const deleteTransactionData = async (
 const TransactionTable = ({
   filterStatus,
   setFilterStatus,
+  filterQuery,
   isEdit,
 }: {
   filterStatus: string;
   setFilterStatus: React.Dispatch<React.SetStateAction<string>>;
+  filterQuery: FilterRow[];
   isEdit: boolean;
 }) => {
+  /* 表格資料 */
   const [expenseHistory, setExpenseHistory] = useState<ExpenseHistoryData[]>(
     []
   );
   const [incomeHistory, setIncomeHistory] = useState<IncomeHistoryData[]>([]);
 
+  /* 分頁控制 */
+  const [page, setPage] = useState<number>(1);
+  const [maxPage, setMaxPage] = useState<number>(1);
+
   /* 初始選單狀態 */
-  // const [dataType, setDataType] = useState<string>("0"); // 0: 支出, 1: 收入
   const [columns, setColumns] = useState(initialColumns);
   const [editRowId, setEditRowId] = useState<string | null>(null);
 
-  const fetchData = async (dataType: string) => {
-    const data = await getTransactionHistoryData(dataType);
+  const fetchData = async (
+    dataType: string,
+    filterQuery: FilterRow[],
+    page: number
+  ) => {
+    const data = await getTransactionHistoryData(dataType, filterQuery, page);
     if (dataType === "0") {
       setExpenseHistory(data as ExpenseHistoryData[]);
     } else {
       setIncomeHistory(data as IncomeHistoryData[]);
     }
+    // setMaxPage(data.page);  # 後端要額外回傳 page 欄位
   };
 
   const transactionHistory =
     filterStatus === "0" ? expenseHistory : incomeHistory;
 
   useEffect(() => {
-    fetchData(filterStatus);
-  }, [filterStatus]);
+    fetchData(filterStatus, filterQuery, page);
+  }, [filterStatus, filterQuery, page]);
 
   const toggleColumnVisibility = (key: string) => {
     setColumns((cols) =>
@@ -253,7 +276,7 @@ const TransactionTable = ({
                             onclick={async () => {
                               setEditRowId(null);
                               await updateTransactionData(row, filterStatus);
-                              await fetchData(filterStatus);
+                              await fetchData(filterStatus, filterQuery, page);
                             }}
                           />
                           <IconButton
@@ -283,7 +306,11 @@ const TransactionTable = ({
                                   row.id,
                                   filterStatus
                                 );
-                                await fetchData(filterStatus);
+                                await fetchData(
+                                  filterStatus,
+                                  filterQuery,
+                                  page
+                                );
                               } catch (err) {
                                 console.error("刪除失敗：", err);
                               }
@@ -298,6 +325,62 @@ const TransactionTable = ({
             })}
           </tbody>
         </table>
+      </div>
+      <div className="flex justify-center items-center">
+        <button
+          type="button"
+          className={`p-2 transition-opacity ${
+            page <= 1 ? "opacity-30 cursor-not-allowed" : "hover:opacity-80"
+          }`}
+          disabled={page <= 1}
+          onClick={() => setPage(1)}
+        >
+          <img
+            src="/previous-bound-dark.png"
+            alt="previous-bound"
+            width={24}
+            height={24}
+          />
+        </button>
+        <button
+          type="button"
+          className={`p-2 transition-opacity ${
+            page <= 1 ? "opacity-30 cursor-not-allowed" : "hover:opacity-80"
+          }`}
+          disabled={page <= 1}
+          onClick={() => setPage(page - 1)}
+        >
+          <img src="/previous-dark.png" alt="previous" width={24} height={24} />
+        </button>
+        <span className="text-center text-base p-2">
+          {page}/{maxPage}
+        </span>
+        <button
+          type="button"
+          className={`p-2 transition-opacity ${
+            page <= 1 ? "opacity-30 cursor-not-allowed" : "hover:opacity-80"
+          }`}
+          disabled={page >= maxPage}
+          onClick={() => setPage(maxPage)}
+        >
+          <img src="/next-dark.png" alt="next-dark" width={24} height={24} />
+        </button>
+
+        <button
+          type="button"
+          className={`p-2 transition-opacity ${
+            page <= 1 ? "opacity-30 cursor-not-allowed" : "hover:opacity-80"
+          }`}
+          disabled={page >= maxPage}
+          onClick={() => setPage(maxPage)}
+        >
+          <img
+            src="/next-bound-dark.png"
+            alt="next-bound"
+            width={24}
+            height={24}
+          />
+        </button>
       </div>
     </div>
   );

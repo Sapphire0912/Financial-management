@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 
 # Databases
 from app.models.mongo_model import Accounting, IncomeAccounting
-from app.schemas.accounting import AccountingCreate, AccountingUpdate, AccountingDelete, IncomeCreate, IncomeUpdate, IncomeDelete
+from app.schemas.accounting import AccountingCreate, AccountingUpdate, AccountingDelete, IncomeCreate, IncomeUpdate, IncomeDelete, FilterRequest
 
 # JWT
 from app.utils.jwt_verification import verify_jwt_token
@@ -13,31 +13,51 @@ from app.utils.jwt_verification import verify_jwt_token
 from app.utils.attach_info import verify_utc_time, convert_to_utc_time
 from datetime import date, datetime
 from bson import ObjectId
+from typing import Dict
 
 # tags 是在 swagger UI 中的分區名稱資料
 router = APIRouter(prefix="/accounting", tags=["accounting"])
 
 
-@router.get("/transaction/history")
+def _handle_filter_to_query(query: FilterRequest) -> Dict[str, any]:
+    """
+    將使用者篩選條件欄位轉換成 Mongo Query
+
+    Args:
+        query (FilterRequest): FilterRequest 物件
+
+    Returns:
+        dict, 符合 Mongo 聚合查詢的樣式
+    """
+    # 支出欄位查詢
+    print(query.filters)
+    pass
+
+
+@router.post("/transaction/history")
 @verify_jwt_token
-async def get_transaction_history(request: Request, oper: str):
+async def get_transaction_history(request: Request, query: FilterRequest):
     """
       :router 記帳紀錄
 
-      Args:
-          oper (str): 0 代表記帳支出歷史, 1 代表記帳收入歷史
+      註: 每一頁回傳 12 筆資料
     """
+    per_page = 12
     try:
-        if oper == "0":
+        end_index = query.page * per_page
+        start_index = end_index - 12 if end_index >= 12 else 0
+        filters = _handle_filter_to_query(query)
+
+        if query.oper == "0":
             transaction_data = Accounting.objects(
-                user_name=request.state.payload['username']).order_by('-created_at')
+                user_name=request.state.payload['username']).order_by('-created_at').skip(start_index).limit(per_page)
 
             response_data = [data.to_api_format() for data in transaction_data]
             return JSONResponse(status_code=200, content={"success": True, "data": response_data})
 
-        elif oper == "1":
+        elif query.oper == "1":
             transaction_data = IncomeAccounting.objects(
-                user_name=request.state.payload['username']).order_by('-created_at')
+                user_name=request.state.payload['username']).order_by('-created_at').skip(start_index).limit(per_page)
 
             response_data = [data.to_api_format() for data in transaction_data]
             return JSONResponse(status_code=200, content={"success": True, "data": response_data})
@@ -74,6 +94,7 @@ async def create_users_accounting(request: Request, data: AccountingCreate):
             pay_method=data.pay_method,
             store_name=data.store_name,
             invoice_number=data.invoice_number,
+            description=data.description,
             created_at=utc_time,
             updated_at=utc_time
         )
@@ -140,7 +161,7 @@ async def delete_users_accounting(request: Request, data: AccountingDelete):
     try:
         # 先判斷只有使用者本人才可以做刪除操作
         record = Accounting.objects(id=ObjectId(
-            data.id), user_name=data.user_name, line_user_id=data.user_id).first()
+            data.id), user_name=data.user_name).first()
         if record:
             record.delete()
         else:

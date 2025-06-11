@@ -11,9 +11,11 @@ interface FilterRow {
 
 const FilterForm = ({
   filterStatus,
+  setFilterQuery,
   onClose,
 }: {
   filterStatus: string;
+  setFilterQuery: (query: FilterRow[]) => void;
   onClose: () => void;
 }) => {
   const [filterRows, setFilterRows] = useState<FilterRow[]>([
@@ -44,13 +46,15 @@ const FilterForm = ({
       { field: "", operator: "", value: "" },
       { field: "", operator: "", value: "" },
     ]);
+    setFilterQuery([]);
   };
 
   const submitRows = () => {
     const valid = filterRows.filter(
       (row) => row.field && row.operator && row.value
     );
-    console.log("✅ 篩選條件：", valid);
+    setFilterQuery(valid);
+    // console.log("✅ 篩選條件：", valid);
   };
 
   /* 當前為哪個頁面則顯示哪個篩選欄位 */
