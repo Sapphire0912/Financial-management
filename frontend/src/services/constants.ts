@@ -190,21 +190,23 @@ export const filterExpenseForm: filterFormProps[] = [
     label: "日期",
     type: "date",
     secondOptions: [
-      { label: "之前", value: "<" },
-      { label: "之後", value: ">" },
-      { label: "等於", value: "=" },
+      { label: "小於", value: "lt" },
+      { label: "大於", value: "gt" },
+      { label: "等於", value: "eq" },
+      { label: "大於等於", value: "gte" },
+      { label: "小於等於", value: "lte" },
     ],
     showForthOptions: true,
     forthOptions: [
-      { label: "升序", value: "asc" },
-      { label: "降序", value: "desc" },
+      { label: "升序", value: "+" },
+      { label: "降序", value: "-" },
     ],
   },
   {
     key: "statistics_kind",
     label: "統計類型",
     type: "select",
-    secondOptions: [{ label: "等於", value: "=" }],
+    secondOptions: [{ label: "等於", value: "eq" }],
     thirdOptions: [
       { label: "食", value: "食" },
       { label: "衣", value: "衣" },
@@ -225,7 +227,6 @@ export const filterExpenseForm: filterFormProps[] = [
     secondOptions: [
       { label: "包含", value: "include" },
       { label: "不包含", value: "exclude" },
-      { label: "等於", value: "=" },
     ],
     showForthOptions: true,
     forthOptions: [
@@ -240,7 +241,6 @@ export const filterExpenseForm: filterFormProps[] = [
     secondOptions: [
       { label: "包含", value: "include" },
       { label: "不包含", value: "exclude" },
-      { label: "等於", value: "=" },
     ],
     showForthOptions: true,
     forthOptions: [
@@ -252,7 +252,7 @@ export const filterExpenseForm: filterFormProps[] = [
     key: "cost_status",
     label: "花費狀態",
     type: "select",
-    secondOptions: [{ label: "等於", value: "=" }],
+    secondOptions: [{ label: "等於", value: "eq" }],
     thirdOptions: [
       { label: "必要", value: "必要" },
       { label: "想要", value: "想要" },
@@ -265,7 +265,7 @@ export const filterExpenseForm: filterFormProps[] = [
     key: "unit",
     label: "金錢單位",
     type: "select",
-    secondOptions: [{ label: "等於", value: "=" }],
+    secondOptions: [{ label: "等於", value: "eq" }],
     thirdOptions: [
       { label: "TWD", value: "TWD" },
       { label: "JPY", value: "JPY" },
@@ -278,23 +278,23 @@ export const filterExpenseForm: filterFormProps[] = [
     label: "金額",
     type: "number",
     secondOptions: [
-      { label: ">", value: ">" },
-      { label: "<", value: "<" },
-      { label: "=", value: "=" },
-      { label: ">=", value: ">=" },
-      { label: "<=", value: "<=" },
+      { label: ">", value: "gt" },
+      { label: "<", value: "lt" },
+      { label: "=", value: "eq" },
+      { label: ">=", value: "gte" },
+      { label: "<=", value: "lte" },
     ],
     showForthOptions: true,
     forthOptions: [
-      { label: "升序", value: "asc" },
-      { label: "降序", value: "desc" },
+      { label: "升序", value: "+" },
+      { label: "降序", value: "-" },
     ],
   },
   {
     key: "pay_method",
     label: "付款方式",
     type: "select",
-    secondOptions: [{ label: "等於", value: "=" }],
+    secondOptions: [{ label: "等於", value: "eq" }],
     thirdOptions: [
       { label: "現金", value: "現金" },
       { label: "Line Pay", value: "Line Pay" },
@@ -311,7 +311,6 @@ export const filterExpenseForm: filterFormProps[] = [
     secondOptions: [
       { label: "包含", value: "include" },
       { label: "不包含", value: "exclude" },
-      { label: "等於", value: "=" },
     ],
     showForthOptions: true,
     forthOptions: [
@@ -326,7 +325,6 @@ export const filterExpenseForm: filterFormProps[] = [
     secondOptions: [
       { label: "包含", value: "include" },
       { label: "不包含", value: "exclude" },
-      { label: "等於", value: "=" },
     ],
     showForthOptions: true,
     forthOptions: [
@@ -341,7 +339,6 @@ export const filterExpenseForm: filterFormProps[] = [
     secondOptions: [
       { label: "包含", value: "include" },
       { label: "不包含", value: "exclude" },
-      { label: "等於", value: "=" },
     ],
     showForthOptions: true,
     forthOptions: [
@@ -357,21 +354,23 @@ export const filterIncomeForm: filterFormProps[] = [
     label: "日期",
     type: "date",
     secondOptions: [
-      { label: "之前", value: "<" },
-      { label: "之後", value: ">" },
-      { label: "等於", value: "=" },
+      { label: "小於", value: "lt" },
+      { label: "大於", value: "gt" },
+      { label: "等於", value: "eq" },
+      { label: "大於等於", value: "gte" },
+      { label: "小於等於", value: "lte" },
     ],
     showForthOptions: true,
     forthOptions: [
-      { label: "升序", value: "asc" },
-      { label: "降序", value: "desc" },
+      { label: "升序", value: "+" },
+      { label: "降序", value: "-" },
     ],
   },
   {
     key: "income_kind",
     label: "收入類型",
     type: "select",
-    secondOptions: [{ label: "等於", value: "=" }],
+    secondOptions: [{ label: "等於", value: "eq" }],
     thirdOptions: [
       { label: "薪資", value: "薪資" },
       { label: "獎金", value: "獎金" },
@@ -389,7 +388,6 @@ export const filterIncomeForm: filterFormProps[] = [
     secondOptions: [
       { label: "包含", value: "include" },
       { label: "不包含", value: "exclude" },
-      { label: "等於", value: "=" },
     ],
     showForthOptions: true,
     forthOptions: [
@@ -401,7 +399,7 @@ export const filterIncomeForm: filterFormProps[] = [
     key: "unit",
     label: "金錢單位",
     type: "select",
-    secondOptions: [{ label: "等於", value: "=" }],
+    secondOptions: [{ label: "等於", value: "eq" }],
     thirdOptions: [
       { label: "TWD", value: "TWD" },
       { label: "JPY", value: "JPY" },
@@ -414,16 +412,16 @@ export const filterIncomeForm: filterFormProps[] = [
     label: "金額",
     type: "number",
     secondOptions: [
-      { label: ">", value: ">" },
-      { label: "<", value: "<" },
-      { label: "=", value: "=" },
-      { label: ">=", value: ">=" },
-      { label: "<=", value: "<=" },
+      { label: ">", value: "gt" },
+      { label: "<", value: "lt" },
+      { label: "=", value: "eq" },
+      { label: ">=", value: "gte" },
+      { label: "<=", value: "lte" },
     ],
     showForthOptions: true,
     forthOptions: [
-      { label: "升序", value: "asc" },
-      { label: "降序", value: "desc" },
+      { label: "升序", value: "+" },
+      { label: "降序", value: "-" },
     ],
   },
   {
@@ -433,7 +431,6 @@ export const filterIncomeForm: filterFormProps[] = [
     secondOptions: [
       { label: "包含", value: "include" },
       { label: "不包含", value: "exclude" },
-      { label: "等於", value: "=" },
     ],
     showForthOptions: true,
     forthOptions: [
@@ -448,7 +445,6 @@ export const filterIncomeForm: filterFormProps[] = [
     secondOptions: [
       { label: "包含", value: "include" },
       { label: "不包含", value: "exclude" },
-      { label: "等於", value: "=" },
     ],
     showForthOptions: true,
     forthOptions: [
@@ -463,7 +459,6 @@ export const filterIncomeForm: filterFormProps[] = [
     secondOptions: [
       { label: "包含", value: "include" },
       { label: "不包含", value: "exclude" },
-      { label: "等於", value: "=" },
     ],
     showForthOptions: true,
     forthOptions: [

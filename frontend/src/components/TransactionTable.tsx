@@ -148,7 +148,8 @@ const TransactionTable = ({
     } else {
       setIncomeHistory(data as IncomeHistoryData[]);
     }
-    // setMaxPage(data.page);  # 後端要額外回傳 page 欄位
+    if (data.max_page == 0) setPage(0);
+    setMaxPage(data.max_page);
   };
 
   const transactionHistory =
@@ -327,7 +328,7 @@ const TransactionTable = ({
           </tbody>
         </table>
       </div>
-      <div className="flex justify-center items-center">
+      <div className="flex justify-center items-center my-1">
         <button
           type="button"
           className={`p-2 transition-opacity ${
@@ -359,7 +360,9 @@ const TransactionTable = ({
         <button
           type="button"
           className={`p-2 transition-opacity ${
-            page <= 1 ? "opacity-30 cursor-not-allowed" : "hover:opacity-80"
+            page >= maxPage
+              ? "opacity-30 cursor-not-allowed"
+              : "hover:opacity-80"
           }`}
           disabled={page >= maxPage}
           onClick={() => setPage(maxPage)}
@@ -370,7 +373,9 @@ const TransactionTable = ({
         <button
           type="button"
           className={`p-2 transition-opacity ${
-            page <= 1 ? "opacity-30 cursor-not-allowed" : "hover:opacity-80"
+            page >= maxPage
+              ? "opacity-30 cursor-not-allowed"
+              : "hover:opacity-80"
           }`}
           disabled={page >= maxPage}
           onClick={() => setPage(maxPage)}

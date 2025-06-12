@@ -133,6 +133,7 @@ export async function getTransactionHistory(
         )?.[0],
       };
     });
+    transData["max_page"] = result.max_page;
     return transData;
   } else if (oper === "1") {
     const result = await response.json();
@@ -158,6 +159,7 @@ export async function getTransactionHistory(
         }),
       };
     });
+    transData["max_page"] = result.max_page;
     return transData;
   }
 }

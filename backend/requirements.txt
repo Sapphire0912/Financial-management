@@ -1,5 +1,6 @@
 # fastapi
 # uvicorn[standard]
+# fastapi-cache2
 # python-dotenv
 # mongoengine
 # pymysql
@@ -27,6 +28,7 @@ cryptography==44.0.3
 dnspython==2.7.0
 ecdsa==0.19.1
 fastapi==0.115.12
+fastapi-cache2==0.2.2
 greenlet==3.2.1
 h11==0.16.0
 httptools==0.6.4

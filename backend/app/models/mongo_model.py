@@ -144,9 +144,9 @@ class IncomeAccounting(BaseModel):
     def to_api_format(self):
         return {
             "id": str(self.id),
+            "user_name": self.user_name,
             "income_kind": self.income_kind,
             "category": self.category,
-            "user_name": self.user_name,
             "amount": self.amount,
             "unit": self.unit,
             "payer": self.payer,

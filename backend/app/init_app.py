@@ -3,6 +3,11 @@ from fastapi import FastAPI
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
+# cache
+import redis
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
+
 # CORS
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -19,6 +24,13 @@ from app.router.dashboard import dashboard_api
 # error handling
 from app.utils.error_handle import AuthorizationError
 from app.tasks.tasks import jwt_exception_log
+
+# env
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+REDIS_URI = os.environ.get("REDIS_URI")
 
 
 def init_app() -> FastAPI:
@@ -39,7 +51,10 @@ def init_app() -> FastAPI:
     )
 
     @app.on_event("startup")
-    def startup():
+    async def startup():
+        # fastapi-cache memory 方式
+        redis_client = redis.from_url(REDIS_URI, decode_responses=True)
+        FastAPICache.init(RedisBackend(redis_client), prefix="fastapi-cache")
         connect_mongo()
         Base.metadata.create_all(bind=engine)
 
