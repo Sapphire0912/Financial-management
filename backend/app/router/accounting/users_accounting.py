@@ -36,9 +36,9 @@ async def get_transaction_history(request: Request, query: FilterRequest):
       註: 每一頁回傳 12 筆資料
     """
     # 參數處理
-    per_page = 12
+    per_page = query.per_page
     end_index = query.page * per_page
-    start_index = end_index - 12 if end_index >= 12 else 0
+    start_index = end_index - per_page if end_index >= per_page else 0
     convert_query = handle_filter_query(query=query.filters)
     query_conditions, sort_order = convert_query["mongo_query"], convert_query["sort_order"]
     #
@@ -71,7 +71,7 @@ async def get_transaction_history(request: Request, query: FilterRequest):
         #
 
         transaction_data = list(collection.objects.aggregate(*pipeline))
-        max_page = (len(transaction_data) + per_page - 1) // 12
+        max_page = (len(transaction_data) + per_page - 1) // per_page
 
         if collection.__name__ == "Accounting":
             response_data = [

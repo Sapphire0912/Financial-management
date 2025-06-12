@@ -8,11 +8,28 @@ import { userData, userLogout } from "../services/dashboardUser";
 /* Components */
 import TitleSection from "../components/TitleProps";
 import Sidebar from "../components/Sidebar";
+import { BoardButtonItems } from "../components/componentProps";
+import TransactionTable from "../components/TransactionTable";
+import FilterForm from "../components/FilterForm";
 
 /* CSS */
 import "../styles/page.css";
 
+type FilterRow = {
+  field: string;
+  operator: string;
+  value: string;
+  matchMode?: string;
+  sortOrder?: string;
+};
+
 const TransactionPage = () => {
+  /* 篩選功能 */
+  const [queryFilter, setQueryFilter] = useState<boolean>(false); // filter
+  const [filterQuery, setFilterQuery] = useState<FilterRow[]>([]);
+  const [filterStatus, setFilterStatus] = useState<string>("0");
+
+  /* 使用者資訊 */
   const [userInfo, setUserInfo] = useState({ username: "", email: "" });
 
   // 使用者登出
@@ -46,7 +63,39 @@ const TransactionPage = () => {
           title="交易紀錄"
           description="查看你過去的每一筆收支，清楚掌握金流明細"
         />
-        Transaction History Page Enter~!
+        <div className="dashboard-outside">
+          <div className="flex items-center justify-end">
+            <div className="relative">
+              <BoardButtonItems
+                img="/board-filter-dark.png"
+                text="篩選"
+                isActive={queryFilter}
+                onClick={() => setQueryFilter(!queryFilter)}
+              />
+              {queryFilter && (
+                <div className="dashboard-filter">
+                  <FilterForm
+                    filterStatus={filterStatus}
+                    onClose={() => setQueryFilter(false)}
+                    setFilterQuery={setFilterQuery}
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="dashboard-content">
+            <div className="h-full min-w-full overflow-x-auto">
+              <TransactionTable
+                per_page={20}
+                filterStatus={filterStatus}
+                filterQuery={filterQuery}
+                setFilterStatus={setFilterStatus}
+                isEdit={false}
+              />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

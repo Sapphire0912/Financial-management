@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { initialColumns, initialIncomeColumns } from "../services/constants";
 
 /* Components */
@@ -77,9 +77,15 @@ const boardItems = [
 const getTransactionHistoryData = async (
   dataType: string,
   filterQuery: FilterRow[],
-  page: number
+  page: number,
+  per_page: number = 12
 ) => {
-  const data = await getTransactionHistory(dataType, filterQuery, page);
+  const data = await getTransactionHistory(
+    dataType,
+    filterQuery,
+    page,
+    per_page
+  );
   return data;
 };
 
@@ -113,11 +119,13 @@ const deleteTransactionData = async (
 //
 
 const TransactionTable = ({
+  per_page,
   filterStatus,
   setFilterStatus,
   filterQuery,
   isEdit,
 }: {
+  per_page: number;
   filterStatus: string;
   setFilterStatus: React.Dispatch<React.SetStateAction<string>>;
   filterQuery: FilterRow[];
@@ -137,20 +145,24 @@ const TransactionTable = ({
   const [columns, setColumns] = useState(initialColumns);
   const [editRowId, setEditRowId] = useState<string | null>(null);
 
-  const fetchData = async (
-    dataType: string,
-    filterQuery: FilterRow[],
-    page: number
-  ) => {
-    const data = await getTransactionHistoryData(dataType, filterQuery, page);
-    if (dataType === "0") {
-      setExpenseHistory(data as ExpenseHistoryData[]);
-    } else {
-      setIncomeHistory(data as IncomeHistoryData[]);
-    }
-    if (data.max_page == 0) setPage(0);
-    setMaxPage(data.max_page);
-  };
+  const fetchData = useCallback(
+    async (dataType: string, filterQuery: FilterRow[], page: number) => {
+      const data = await getTransactionHistoryData(
+        dataType,
+        filterQuery,
+        page,
+        per_page
+      );
+      if (dataType === "0") {
+        setExpenseHistory(data as ExpenseHistoryData[]);
+      } else {
+        setIncomeHistory(data as IncomeHistoryData[]);
+      }
+      if (data.max_page == 0) setPage(0);
+      setMaxPage(data.max_page);
+    },
+    [per_page]
+  );
 
   const transactionHistory =
     filterStatus === "0" ? expenseHistory : incomeHistory;
@@ -158,7 +170,7 @@ const TransactionTable = ({
   useEffect(() => {
     fetchData(filterStatus, filterQuery, page);
     setColumns(filterStatus === "0" ? initialColumns : initialIncomeColumns);
-  }, [filterStatus, filterQuery, page]);
+  }, [filterStatus, filterQuery, per_page, page, fetchData]);
 
   const toggleColumnVisibility = (key: string) => {
     setColumns((cols) =>
@@ -175,7 +187,7 @@ const TransactionTable = ({
           <button
             key={idx}
             type="button"
-            className={`w-1/2  py-1 font-semibold text-xl  rounded-t-xl transition-all duration-200 ${
+            className={`w-1/2 py-1 font-semibold text-xl  rounded-t-xl transition-all duration-200 ${
               filterStatus === item.showStatus
                 ? "bg-blue-400 text-white bottom-shadow"
                 : ""

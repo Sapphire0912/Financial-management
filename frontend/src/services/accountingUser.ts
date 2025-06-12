@@ -86,22 +86,21 @@ type FilterRow = {
 export async function getTransactionHistory(
   oper: string,
   filterQuery: FilterRow[],
-  page: number
+  page: number,
+  per_page: number
 ) {
-  const response = await fetchWithRefresh(
-    "/app/accounting/transaction/history",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        oper,
-        page,
-        filters: filterQuery,
-      }),
-    }
-  );
+  const response = await fetchWithRefresh("/app/transaction/history", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      oper,
+      page,
+      filters: filterQuery,
+      per_page,
+    }),
+  });
 
   if (oper === "0") {
     const result = await response.json();

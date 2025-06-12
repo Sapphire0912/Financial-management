@@ -51,6 +51,8 @@ const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
+  // 需要新增取得交易紀錄通知的 API
+
   return (
     <aside className="h-screen w-64 bg-white border-r border-slate-400 px-4 py-6 shadow-2xl flex-column items-center">
       <div className="flex items-center justify-start mb-10">

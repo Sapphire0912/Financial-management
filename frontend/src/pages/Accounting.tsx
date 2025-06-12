@@ -141,6 +141,7 @@ const AccountingPage = () => {
               {userOperation === 2 && <IncomeAccountingForm />}
               {userOperation === 3 && (
                 <TransactionTable
+                  per_page={12}
                   filterStatus={filterStatus}
                   filterQuery={filterQuery}
                   setFilterStatus={setFilterStatus}

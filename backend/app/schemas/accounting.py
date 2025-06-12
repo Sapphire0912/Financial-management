@@ -121,4 +121,5 @@ class FilterRow(BaseModel):
 class FilterRequest(BaseModel):
     oper: str
     page: int
+    per_page: int
     filters: List[FilterRow]
