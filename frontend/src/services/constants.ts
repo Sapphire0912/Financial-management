@@ -193,8 +193,6 @@ export const filterExpenseForm: filterFormProps[] = [
       { label: "小於", value: "lt" },
       { label: "大於", value: "gt" },
       { label: "等於", value: "eq" },
-      { label: "大於等於", value: "gte" },
-      { label: "小於等於", value: "lte" },
     ],
     showForthOptions: true,
     forthOptions: [
@@ -357,8 +355,6 @@ export const filterIncomeForm: filterFormProps[] = [
       { label: "小於", value: "lt" },
       { label: "大於", value: "gt" },
       { label: "等於", value: "eq" },
-      { label: "大於等於", value: "gte" },
-      { label: "小於等於", value: "lte" },
     ],
     showForthOptions: true,
     forthOptions: [
