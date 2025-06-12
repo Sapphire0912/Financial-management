@@ -43,6 +43,7 @@ async def get_transaction_history(request: Request, query: FilterRequest):
     query_conditions, sort_order = convert_query["mongo_query"], convert_query["sort_order"]
     #
     print(query_conditions)
+    print(sort_order)
 
     @cache(expire=_CACHE_MEMORY_TIME, key_builder=transaction_key_builder)
     def _get_transaction_data(

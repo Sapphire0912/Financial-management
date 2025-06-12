@@ -79,9 +79,8 @@ def handle_filter_query(query: list[FilterRow]) -> Dict[str, Any]:
 
         # 排序
         if column.sortOrder:
+            isDefaultOrder = False
             order = 1 if column.sortOrder == "+" else -1
-            if field == "created_at":
-                isDefaultOrder = False
             sort_order.append((field, order))
 
     # 合併 eq 為 $in 或單值
