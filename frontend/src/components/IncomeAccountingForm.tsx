@@ -6,8 +6,12 @@ import { ToastBox } from "../components/componentProps";
 
 /* API */
 import { addIncomeAccounting } from "../services/accountingUser";
+import { getNewTransactionLog } from "../services/transactionUser";
 
-// Call Api
+/* Menu Context */
+import { useMenu } from "../hooks/sidebarMenu";
+
+// 表單資料類型
 type IncomeFormProps = {
   income_kind: string;
   category: string;
@@ -20,23 +24,22 @@ type IncomeFormProps = {
   accounting_time: string;
 };
 
-const createNewIncomeAccounting = async (
-  e: React.FormEvent,
-  formData: IncomeFormProps,
-  showToast: (msg: string, kind: "success" | "error" | "info") => void
-) => {
-  e.preventDefault();
-  console.log("送出資料", formData);
+// 更新 Sidebar menu 的交易通知數量
+const useUpdateTransactionCount = () => {
+  const { setMenuList } = useMenu();
 
-  try {
-    const result = await addIncomeAccounting(formData);
-    showToast(result.message, result.success ? "success" : "error");
-  } catch (err: unknown) {
-    showToast(
-      `新增失敗: ${err instanceof Error ? err.message : "未知錯誤"}`,
-      "error"
-    );
-  }
+  return async () => {
+    try {
+      const count = await getNewTransactionLog();
+      setMenuList((prev) =>
+        prev.map((item) =>
+          item.text === "交易紀錄" ? { ...item, amount: count } : item
+        )
+      );
+    } catch (err) {
+      console.error("讀取交易紀錄失敗", err);
+    }
+  };
 };
 
 const IncomeAccountingForm = () => {
@@ -76,10 +79,32 @@ const IncomeAccountingForm = () => {
     }));
   };
 
+  const updateTransactionCount = useUpdateTransactionCount();
+
+  // 表單送出成功時呼叫更新 Sidebar 狀態
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("送出資料", formData);
+
+    try {
+      const result = await addIncomeAccounting(formData);
+      showToast(result.message, result.success ? "success" : "error");
+
+      if (result.success) {
+        await updateTransactionCount(); // 通知 Sidebar 更新
+      }
+    } catch (err: unknown) {
+      showToast(
+        `新增失敗: ${err instanceof Error ? err.message : "未知錯誤"}`,
+        "error"
+      );
+    }
+  };
+
   return (
     <form
       className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4 p-4 max-w-4xl mx-auto bg-white shadow-md rounded-lg"
-      onSubmit={(e) => createNewIncomeAccounting(e, formData, showToast)}
+      onSubmit={handleSubmit}
     >
       <div>
         <AccountingLabelAsterisk required={true}>
@@ -113,7 +138,10 @@ const IncomeAccountingForm = () => {
           required
           type="select"
           options={["薪資", "獎金", "利息", "投資", "紅包", "其他"].map(
-            (v) => ({ label: v, value: v })
+            (v) => ({
+              label: v,
+              value: v,
+            })
           )}
         />
       </div>

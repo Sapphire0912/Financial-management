@@ -80,7 +80,7 @@ async def login(response: Response, data: UserLogin, sqldb: Session = Depends(co
         response = JSONResponse(
             status_code=200,
             content={"success": True, "token": jwt_token, "token_type": "bearer"})
-        set_cookies(response, token=jwt_refresh_token, expired_days=7)
+        set_cookies(response, token=jwt_refresh_token, expired_days=3)
         # - End. -
 
         return response

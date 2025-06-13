@@ -1,5 +1,8 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
+/* Provider */
+import { MenuProvider } from "./contexts/SidebarMenu";
+
 /* Pages */
 import LoginPage from "./pages/LoginPage";
 import DashBoard from "./pages/DashBoard";
@@ -15,18 +18,20 @@ import "./styles/index.css";
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<LoginPage />} />
-        <Route path="/dashboard" element={<DashBoard />} />
-        <Route path="/accounting" element={<AccountingPage />} />
-        <Route path="/analyze" element={<AnalyzePage />} />
-        <Route path="/history" element={<TransactionPage />} />
-        <Route path="/notification" element={<NotificationPage />} />
-        <Route path="/investing" element={<InvestingPage />} />
-        <Route path="/setting" element={<SettingPage />} />
-      </Routes>
-    </BrowserRouter>
+    <MenuProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<LoginPage />} />
+          <Route path="/dashboard" element={<DashBoard />} />
+          <Route path="/accounting" element={<AccountingPage />} />
+          <Route path="/analyze" element={<AnalyzePage />} />
+          <Route path="/history" element={<TransactionPage />} />
+          <Route path="/notification" element={<NotificationPage />} />
+          <Route path="/investing" element={<InvestingPage />} />
+          <Route path="/setting" element={<SettingPage />} />
+        </Routes>
+      </BrowserRouter>
+    </MenuProvider>
   );
 }
 

@@ -6,8 +6,12 @@ import { ToastBox } from "../components/componentProps";
 
 /* API */
 import { addAccounting } from "../services/accountingUser";
+import { getNewTransactionLog } from "../services/transactionUser";
 
-// Call Api
+/* Menu Context */
+import { useMenu } from "../hooks/sidebarMenu";
+
+/* 表單資料型別 */
 type FormDataProps = {
   statistics_kind: string;
   category: string;
@@ -23,23 +27,22 @@ type FormDataProps = {
   accounting_time: string;
 };
 
-const createNewAccounting = async (
-  e: React.FormEvent,
-  formData: FormDataProps,
-  showToast: (msg: string, kind: "success" | "error" | "info") => void
-) => {
-  e.preventDefault();
-  console.log("送出資料", formData);
+// 更新 Sidebar menu 的交易通知數量
+const useUpdateTransactionCount = () => {
+  const { setMenuList } = useMenu();
 
-  try {
-    const result = await addAccounting(formData);
-    showToast(result.message, result.success ? "success" : "error");
-  } catch (err: unknown) {
-    showToast(
-      `新增失敗: ${err instanceof Error ? err.message : "未知錯誤"}`,
-      "error"
-    );
-  }
+  return async () => {
+    try {
+      const count = await getNewTransactionLog();
+      setMenuList((prev) =>
+        prev.map((item) =>
+          item.text === "交易紀錄" ? { ...item, amount: count } : item
+        )
+      );
+    } catch (err) {
+      console.error("讀取交易紀錄失敗", err);
+    }
+  };
 };
 
 const AddAccountingForm = () => {
@@ -82,10 +85,31 @@ const AddAccountingForm = () => {
     }));
   };
 
+  const updateTransactionCount = useUpdateTransactionCount();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("送出資料", formData);
+
+    try {
+      const result = await addAccounting(formData);
+      showToast(result.message, result.success ? "success" : "error");
+
+      if (result.success) {
+        await updateTransactionCount(); // ✅ 表單送出成功時更新 Sidebar 狀態
+      }
+    } catch (err: unknown) {
+      showToast(
+        `新增失敗: ${err instanceof Error ? err.message : "未知錯誤"}`,
+        "error"
+      );
+    }
+  };
+
   return (
     <form
       className="grid grid-cols-1 md:grid-cols-3 gap-x-6 gap-y-4 p-4 max-w-4xl mx-auto bg-white shadow-md rounded-lg"
-      onSubmit={(e) => createNewAccounting(e, formData, showToast)}
+      onSubmit={handleSubmit}
     >
       <div>
         <AccountingLabelAsterisk required={true}>

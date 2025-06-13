@@ -1,10 +1,11 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime, date
 
 Base = declarative_base()
 
 
+# -- 使用者相關 Schema --
 class JwtTokenLog(Base):
     """
     JWT token 日誌紀錄
@@ -80,4 +81,25 @@ class UserLoginLog(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     def __repr__(self):
-        return f"<UserLoginLog (id={self.id}, status={self.success_status})"
+        return f"<UserLoginLog (id={self.id}, status={self.success_status})>"
+
+
+class UserBrowserRecord(Base):
+    """
+    紀錄使用者交易歷史與通知的最後瀏覽時間
+    (關聯 User 資料表)
+
+    資料欄位:
+        id (int): 資料庫自增屬性。
+        user_id (int): 關聯 User 表的 ID 值
+        history_last_view_at (datetime): 上次瀏覽交易歷史紀錄時間
+        notification_last_view_at (datetime): 上次瀏覽通知紀錄時間
+    """
+    __tablename__ = "user_browser_record"
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)  # 外鍵關聯
+    history_last_view_at = Column(DateTime, nullable=True)
+    notification_last_view_at = Column(DateTime, nullable=True)
+
+    def __repr__(self):
+        return f"<UserBrowserRecord (user_id={self.user_id})>"

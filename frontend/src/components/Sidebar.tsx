@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 /* Components */
@@ -6,52 +7,35 @@ import { MenuIcons } from "./componentProps";
 /* CSS */
 import "../styles/component.css";
 
-/* Sidebar Menu items */
-const menuItems = [
-  {
-    img: "/homepage-dark.png",
-    text: "總覽",
-    path: "/dashboard",
-  },
-  {
-    img: "/accounting-dark.png",
-    text: "記帳",
-    path: "/accounting",
-  },
-  {
-    img: "/analyze-dark.png",
-    text: "分析",
-    path: "/analyze",
-  },
-  {
-    img: "/transaction-dark.png",
-    text: "交易紀錄",
-    path: "/history",
-    amount: 0,
-  },
-  {
-    img: "/notification-dark.png",
-    text: "通知",
-    path: "/notification",
-    amount: 0,
-  },
-  {
-    img: "/investing-dark.png",
-    text: "投資&存錢計畫",
-    path: "/investing",
-  },
-  {
-    img: "/setting-dark.png",
-    text: "設定",
-    path: "/setting",
-  },
-];
+/* API */
+import { getNewTransactionLog } from "../services/transactionUser";
+
+/* Menu Context */
+import { useMenu } from "../hooks/sidebarMenu";
 
 const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // 需要新增取得交易紀錄通知的 API
+  // 動態取得交易紀錄通知的
+  const { menuList, setMenuList } = useMenu();
+
+  useEffect(() => {
+    const fetchCount = async () => {
+      try {
+        const count = await getNewTransactionLog();
+        setMenuList((prev) =>
+          prev.map((item) =>
+            item.text === "交易紀錄" ? { ...item, amount: count } : item
+          )
+        );
+      } catch (err) {
+        console.error("讀取交易紀錄失敗", err);
+      }
+    };
+
+    fetchCount();
+  }, [setMenuList]);
 
   return (
     <aside className="h-screen w-64 bg-white border-r border-slate-400 px-4 py-6 shadow-2xl flex-column items-center">
@@ -65,7 +49,7 @@ const Sidebar = () => {
       </div>
       <div className="px-1">
         <h3 className="font-semibold text-xl py-2">選單</h3>
-        {menuItems.map((item, idx) => {
+        {menuList.map((item, idx) => {
           const isActive = location.pathname === item.path;
           return (
             <MenuIcons

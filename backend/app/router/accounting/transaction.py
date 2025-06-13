@@ -1,10 +1,12 @@
 # fastApi
-from fastapi import APIRouter, Request, Response
+from fastapi import APIRouter, Request, Depends, Response
 from fastapi.responses import JSONResponse
 
 # Databases
+from app.databases.mysql_setting import connect_mysql
+from sqlalchemy.orm import Session
+from app.models.sql_model import User, UserBrowserRecord
 from app.models.mongo_model import Accounting, IncomeAccounting
-from app.schemas.accounting import FilterRequest
 
 # JWT
 from app.utils.jwt_verification import verify_jwt_token
@@ -12,6 +14,9 @@ from app.utils.jwt_verification import verify_jwt_token
 # cache & key builder
 from fastapi_cache.decorator import cache
 from app.utils.cachekey import transaction_key_builder
+
+# Validation Schema
+from app.schemas.accounting import FilterRequest
 
 # Tools
 from app.utils.attach_info import verify_utc_time, convert_to_utc_time
@@ -131,17 +136,72 @@ async def get_transaction_history(request: Request, query: FilterRequest):
 
 @router.get("/new/record")
 @verify_jwt_token
-async def get_new_record(request: Request):
+async def get_new_record(request: Request, sqldb: Session = Depends(connect_mysql)):
     """
     取得使用者距離上次瀏覽交易紀錄頁面時, 新增了幾筆紀錄
     """
-    pass
+    username = request.state.payload["username"]
+    user = sqldb.query(User).filter(User.username == username).first()
+
+    if not user:
+        return JSONResponse(status_code=403, content={"success": False, "message": "使用者名稱不正確"})
+
+    try:
+        user_record = sqldb.query(UserBrowserRecord).filter(
+            UserBrowserRecord.user_id == user.id).first()
+
+        # 如果有瀏覽紀錄: 則支出 + 收入的筆數做總和
+        last_view_at = user_record.history_last_view_at if user_record and user_record.history_last_view_at else datetime.utcnow()
+
+        expense_count = Accounting.objects(
+            user_name=username,
+            created_at__gt=last_view_at
+        ).count()
+        income_count = IncomeAccounting.objects(
+            user_name=username,
+            created_at__gt=last_view_at
+        ).count()
+        new_record_count = expense_count + income_count
+
+        return JSONResponse(
+            status_code=200,
+            content={
+                "success": True,
+                "data": {"count": new_record_count},
+                "message": "取得紀錄成功"
+            }
+        )
+
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"success": False, "message": f"伺服器錯誤: {str(e)}"})
 
 
 @router.put("/last_browser_time")
 @verify_jwt_token
-async def update_last_browser_time(request: Request):
+async def update_last_browser_time(request: Request, sqldb: Session = Depends(connect_mysql)):
     """
     紀錄使用者瀏覽交易紀錄頁面的時間
     """
-    pass
+    username = request.state.payload["username"]
+    user = sqldb.query(User).filter(User.username == username).first()
+
+    if not user:
+        return JSONResponse(status_code=403, content={"success": False, "message": "使用者名稱不正確"})
+
+    user_record = sqldb.query(UserBrowserRecord).filter(
+        UserBrowserRecord.user_id == user.id).first()
+    try:
+        if user_record:
+            user_record.user_id = user.id
+            user_record.history_last_view_at = datetime.utcnow()
+        else:
+            create_new_record = UserBrowserRecord(
+                user_id=user.id,
+                history_last_view_at=datetime.utcnow()
+            )
+            sqldb.add(create_new_record)
+        sqldb.commit()
+        return JSONResponse(status_code=201, content={"success": True, "message": "新增瀏覽紀錄成功"})
+    except Exception as e:
+        sqldb.rollback()
+        return JSONResponse(status_code=500, content={"success": False, "message": f"伺服器錯誤: {str(e)}"})

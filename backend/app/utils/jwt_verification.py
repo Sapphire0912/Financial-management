@@ -35,13 +35,13 @@ def create_jwt_token(data: dict):
     return jwt_token
 
 
-def create_refresh_token(data: dict, expired_days: int = 7):
+def create_refresh_token(data: dict, expired_days: int = 3):
     """
     建立 JWT Refresh Token。
 
     Args:
         data (dict): 使用者需要加密的資料，例如 user_id、email 等。
-        expired_days (int): Refresh Token 過期時間，預設 7 天。
+        expired_days (int): Refresh Token 過期時間，預設 3 天。
 
     Returns:
         str: Refresh Token 字串。若失敗則回傳 None。

@@ -16,6 +16,10 @@ import {
   deleteTransactionData as deleteTransactionDataAPI,
   deleteIncomeData as deleteIncomeDataAPI,
 } from "../services/accountingUser";
+import { getNewTransactionLog } from "../services/transactionUser";
+
+/* Menu Context */
+import { useMenu } from "../hooks/sidebarMenu";
 
 /* CSS */
 import "../styles/component.css";
@@ -73,6 +77,24 @@ const boardItems = [
     showStatus: "1",
   },
 ];
+
+// 更新 Sidebar menu 的交易通知數量
+const useUpdateTransactionCount = () => {
+  const { setMenuList } = useMenu();
+
+  return async () => {
+    try {
+      const count = await getNewTransactionLog();
+      setMenuList((prev) =>
+        prev.map((item) =>
+          item.text === "交易紀錄" ? { ...item, amount: count } : item
+        )
+      );
+    } catch (err) {
+      console.error("讀取交易紀錄失敗", err);
+    }
+  };
+};
 
 const getTransactionHistoryData = async (
   dataType: string,
@@ -144,6 +166,9 @@ const TransactionTable = ({
   /* 初始選單狀態 */
   const [columns, setColumns] = useState(initialColumns);
   const [editRowId, setEditRowId] = useState<string | null>(null);
+
+  /* 更新交易通知的資料 */
+  const updateTransactionCount = useUpdateTransactionCount();
 
   const fetchData = useCallback(
     async (dataType: string, filterQuery: FilterRow[], page: number) => {
@@ -290,6 +315,7 @@ const TransactionTable = ({
                             onclick={async () => {
                               setEditRowId(null);
                               await updateTransactionData(row, filterStatus);
+                              updateTransactionCount();
                               await fetchData(filterStatus, filterQuery, page);
                             }}
                           />
@@ -320,6 +346,7 @@ const TransactionTable = ({
                                   row.id,
                                   filterStatus
                                 );
+                                updateTransactionCount();
                                 await fetchData(
                                   filterStatus,
                                   filterQuery,

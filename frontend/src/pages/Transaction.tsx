@@ -15,6 +15,9 @@ import FilterForm from "../components/FilterForm";
 /* CSS */
 import "../styles/page.css";
 
+// Call Api
+/* 當使用者瀏覽交易紀錄頁面 1s 時, 打此 api updateTransactionViewTime */
+
 type FilterRow = {
   field: string;
   operator: string;
