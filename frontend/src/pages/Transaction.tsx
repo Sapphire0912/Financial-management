@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 /* API */
 import { userData, userLogout } from "../services/dashboardUser";
+import { updateTransactionViewTime } from "../services/transactionUser";
 
 /* Components */
 import TitleSection from "../components/TitleProps";
@@ -15,8 +16,8 @@ import FilterForm from "../components/FilterForm";
 /* CSS */
 import "../styles/page.css";
 
-// Call Api
-/* 當使用者瀏覽交易紀錄頁面 1s 時, 打此 api updateTransactionViewTime */
+/* Menu Context */
+import { useMenu } from "../hooks/sidebarMenu";
 
 type FilterRow = {
   field: string;
@@ -42,6 +43,9 @@ const TransactionPage = () => {
     if (result) navigate("/");
   };
 
+  // 動態取得交易紀錄通知的
+  const { setMenuList } = useMenu();
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -55,6 +59,23 @@ const TransactionPage = () => {
 
     fetchData();
   }, []);
+
+  useEffect(() => {
+    // 進入 1s 之後才判斷是頁面瀏覽中
+    const timer = setTimeout(async () => {
+      const result = await updateTransactionViewTime();
+      if (result) {
+        setMenuList((prev) =>
+          prev.map((item) =>
+            item.text === "交易紀錄" ? { ...item, amount: 0 } : item
+          )
+        );
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer); // 清除 timeout 避免 memory leak
+  }, [setMenuList]);
+
   return (
     <div className="dashboard-full">
       <Sidebar />

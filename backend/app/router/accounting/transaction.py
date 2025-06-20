@@ -36,9 +36,8 @@ _CACHE_MEMORY_TIME = 300  # 快取 function 到記憶體的時間, 單位秒
 @verify_jwt_token
 async def get_transaction_history(request: Request, query: FilterRequest):
     """
-      :router 記帳紀錄
-
-      註: 每一頁回傳 12 筆資料
+    記帳紀錄
+    註: 每一頁回傳 12/20 筆資料
     """
     # 參數處理
     per_page = query.per_page
@@ -47,8 +46,8 @@ async def get_transaction_history(request: Request, query: FilterRequest):
     convert_query = handle_filter_query(query=query.filters)
     query_conditions, sort_order = convert_query["mongo_query"], convert_query["sort_order"]
     #
-    print(query_conditions)
-    print(sort_order)
+    print('query_conditions:', query_conditions)
+    print('sort_order:', sort_order)
 
     @cache(expire=_CACHE_MEMORY_TIME, key_builder=transaction_key_builder)
     def _get_transaction_data(
@@ -155,11 +154,11 @@ async def get_new_record(request: Request, sqldb: Session = Depends(connect_mysq
 
         expense_count = Accounting.objects(
             user_name=username,
-            created_at__gt=last_view_at
+            updated_at__gt=last_view_at
         ).count()
         income_count = IncomeAccounting.objects(
             user_name=username,
-            created_at__gt=last_view_at
+            updated_at__gt=last_view_at
         ).count()
         new_record_count = expense_count + income_count
 

@@ -33,7 +33,6 @@ const Sidebar = () => {
         console.error("讀取交易紀錄失敗", err);
       }
     };
-
     fetchCount();
   }, [setMenuList]);
 

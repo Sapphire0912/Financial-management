@@ -16,7 +16,7 @@ export async function getNewTransactionLog() {
 }
 
 export async function updateTransactionViewTime() {
-  // 使用者瀏覽交易紀錄頁面 2 秒時, 需要打此 api
+  // 紀錄使用者瀏覽交易頁面的時間
   const response = await fetchWithRefresh(
     "/app/transaction/last_browser_time",
     {

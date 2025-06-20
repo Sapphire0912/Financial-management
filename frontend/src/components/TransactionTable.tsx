@@ -197,6 +197,11 @@ const TransactionTable = ({
     setColumns(filterStatus === "0" ? initialColumns : initialIncomeColumns);
   }, [filterStatus, filterQuery, per_page, page, fetchData]);
 
+  useEffect(() => {
+    // 避免切換顯示頁面時, 頁數狀態未更新的問題
+    setPage(1);
+  }, [filterStatus]);
+
   const toggleColumnVisibility = (key: string) => {
     setColumns((cols) =>
       cols.map((col) =>
@@ -204,6 +209,7 @@ const TransactionTable = ({
       )
     );
   };
+  /* */
 
   return (
     <div>
@@ -404,7 +410,7 @@ const TransactionTable = ({
               : "hover:opacity-80"
           }`}
           disabled={page >= maxPage}
-          onClick={() => setPage(maxPage)}
+          onClick={() => setPage(page + 1)}
         >
           <img src="/next-dark.png" alt="next-dark" width={24} height={24} />
         </button>
