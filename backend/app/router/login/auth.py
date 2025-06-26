@@ -1,5 +1,5 @@
 # Fastapi
-from fastapi import APIRouter, Depends, Request, Response
+from fastapi import APIRouter, Depends, Request, Response, Header
 from fastapi.responses import JSONResponse
 
 # Databases
@@ -235,18 +235,15 @@ async def delete_account(data: UserDeleteAccount, sqldb: Session = Depends(conne
 
 
 @router.post("/verification/token")
+@verify_refresh_token
 async def refresh_token(request: Request):
     """
-      更新 access token
+      更新 access token (需攜帶舊的過期 token)
+      註: refresh token 作為標示, 但需要驗證過期的 access token 以及 refresh token
     """
-    refresh_token = request.cookies.get("refresh_token")
-
-    if not refresh_token:
-        return JSONResponse(status_code=400, content={"success": False, "message": "缺少 Token"})
-
-    new_token = verify_refresh_token(refresh_token)
-    if new_token:
-        return JSONResponse(status_code=200, content={"success": True, "token": new_token})
+    new_access_token = request.state.new_token
+    if new_access_token:
+        return JSONResponse(status_code=200, content={"success": True, "token": new_access_token})
     else:
         return JSONResponse(status_code=401, content={"success": False, "message": "Token 已過期，請重新登入"})
 

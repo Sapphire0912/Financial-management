@@ -14,6 +14,9 @@ const fetchWithRefresh = async (url: string, options: RequestInit = {}) => {
     const refreshRes = await fetch("/app/auth/verification/token", {
       method: "POST",
       credentials: "include", // refresh_token 是 cookie 要加上 credentials
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
 
     if (!refreshRes.ok) {

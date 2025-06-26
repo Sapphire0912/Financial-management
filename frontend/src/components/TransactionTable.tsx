@@ -200,7 +200,7 @@ const TransactionTable = ({
   useEffect(() => {
     // 避免切換顯示頁面時, 頁數狀態未更新的問題
     setPage(1);
-  }, [filterStatus]);
+  }, [filterStatus, filterQuery]);
 
   const toggleColumnVisibility = (key: string) => {
     setColumns((cols) =>

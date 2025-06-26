@@ -55,22 +55,56 @@ def create_refresh_token(data: dict, expired_days: int = 3):
     return jwt_refresh_token
 
 
-def verify_refresh_token(token: str) -> str | None:
+def verify_refresh_token(func: Callable):
     """
     驗證使用者的 Refresh Token 並重新簽發新的 Access Token。
 
     Args:
-        token (str): 用戶端提供的 Refresh Token。
+        func (Callable): 被裝飾的 FastAPI 路由處理函式。
 
     Returns:
         str | None: 若驗證成功則回傳新的 Access Token，否則回傳 None。
     """
-    try:
-        payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[ALGORITHM])
-        new_token = create_jwt_token(payload)
-        return new_token
-    except JWTError:
-        return None
+
+    @wraps(func)
+    async def _verify_refresh_token(request: Request, *args, **kwargs):
+        # 需要驗證已過期的 Access Token 和 refresh_token(Cookies) 的正確性
+        auth_headers = request.headers.get("Authorization")
+        refresh_token = request.cookies.get("refresh_token")
+
+        if not auth_headers or not auth_headers.startswith("Bearer ") or not refresh_token:
+            raise AuthorizationError(request)
+
+        auth_token = auth_headers.split(' ')[1]
+        try:
+            auth_payload = jwt.decode(
+                auth_token,
+                JWT_SECRET_KEY,
+                algorithms=[ALGORITHM],
+                options={"verify_exp": False}  # 忽略過期驗證
+            )
+
+            refresh_payload = jwt.decode(
+                refresh_token,
+                JWT_SECRET_KEY,
+                algorithms=[ALGORITHM]
+            )
+
+            # 比對 auth_payload 和 refresh_payload 除了時間以外其他是否一樣
+            for key, value in auth_payload.items():
+                if key != "exp" and value != refresh_payload.get(key):
+                    raise AuthorizationError(request)
+
+            new_token = create_jwt_token(refresh_payload)
+
+        except JWTError:
+            return None
+
+        # 設定 request.state 將使用者訊息帶到 api (類似 flask.g)
+        request.state.new_token = new_token
+        return await func(request, *args, **kwargs)
+
+    return _verify_refresh_token
 
 
 def verify_jwt_token(func: Callable) -> Callable:
