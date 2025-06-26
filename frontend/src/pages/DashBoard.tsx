@@ -6,8 +6,8 @@ import { useNavigate } from "react-router-dom";
 import { userData, userLogout } from "../services/dashboardUser";
 
 /* Components */
-import TitleSection from "../components/TitleProps";
-import Sidebar from "../components/Sidebar";
+import TitleSection from "../components/screen/TitleProps";
+import Sidebar from "../components/screen/Sidebar";
 
 /* CSS */
 import "../styles/page.css";
@@ -51,7 +51,7 @@ const DashBoardPage = () => {
           title="財務總覽"
           description="即時追蹤收支、設定目標，掌握每一筆開銷。"
         />
-        DashBoardPage Enter~!
+        <div className="dashboard-outside"> DashBoardPage Enter~!</div>
       </div>
     </div>
   );

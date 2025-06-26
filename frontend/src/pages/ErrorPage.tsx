@@ -1,3 +1,3 @@
-const ErrorPage = ({ err }: unknown) => {
-  return <div>{err}</div>;
-};
+// const ErrorPage = ({ err }: unknown) => {
+//   return <div>{err}</div>;
+// };

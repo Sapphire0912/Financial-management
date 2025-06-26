@@ -1,17 +1,17 @@
 /* React */
-import { useState, useEffect, Component } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 /* API */
 import { userData, userLogout } from "../services/dashboardUser";
 
 /* Components */
-import Sidebar from "../components/Sidebar";
-import TitleSection from "../components/TitleProps";
-import AddAccountingForm from "../components/AddAccountingForm";
-import IncomeAccountingForm from "../components/IncomeAccountingForm";
+import Sidebar from "../components/screen/Sidebar";
+import TitleSection from "../components/screen/TitleProps";
+import AddAccountingForm from "../components/accounting/AddAccountingForm";
+import IncomeAccountingForm from "../components/accounting/IncomeAccountingForm";
 import { BoardButtonItems } from "../components/componentProps";
-import TransactionTable from "../components/TransactionTable";
+import TransactionTable from "../components/transactions/TransactionTable";
 import FilterForm from "../components/FilterForm";
 
 /* CSS */

@@ -2,16 +2,16 @@ import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 
 /* Components */
-import { MenuIcons } from "./componentProps";
+import { MenuIcons } from "../componentProps";
 
 /* CSS */
-import "../styles/component.css";
+import "../../styles/component.css";
 
 /* API */
-import { getNewTransactionLog } from "../services/transactionUser";
+import { getNewTransactionLog } from "../../services/transactionUser";
 
 /* Menu Context */
-import { useMenu } from "../hooks/sidebarMenu";
+import { useMenu } from "../../hooks/sidebarMenu";
 
 const Sidebar = () => {
   const navigate = useNavigate();

@@ -7,10 +7,10 @@ import { userData, userLogout } from "../services/dashboardUser";
 import { updateTransactionViewTime } from "../services/transactionUser";
 
 /* Components */
-import TitleSection from "../components/TitleProps";
-import Sidebar from "../components/Sidebar";
+import TitleSection from "../components/screen/TitleProps";
+import Sidebar from "../components/screen/Sidebar";
 import { BoardButtonItems } from "../components/componentProps";
-import TransactionTable from "../components/TransactionTable";
+import TransactionTable from "../components/transactions/TransactionTable";
 import FilterForm from "../components/FilterForm";
 
 /* CSS */

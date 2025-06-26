@@ -1,12 +1,12 @@
 import { useState, useEffect, useCallback } from "react";
-import { initialColumns, initialIncomeColumns } from "../services/constants";
+import { initialColumns, initialIncomeColumns } from "../../services/constants";
 
 /* Components */
 import {
   TransactionTitle,
   IconButton,
   AccountingFormField,
-} from "./componentProps";
+} from "../componentProps";
 
 /* API */
 import {
@@ -15,14 +15,14 @@ import {
   updateIncomeData as updateIncomeDataAPI,
   deleteTransactionData as deleteTransactionDataAPI,
   deleteIncomeData as deleteIncomeDataAPI,
-} from "../services/accountingUser";
-import { getNewTransactionLog } from "../services/transactionUser";
+} from "../../services/accountingUser";
+import { getNewTransactionLog } from "../../services/transactionUser";
 
 /* Menu Context */
-import { useMenu } from "../hooks/sidebarMenu";
+import { useMenu } from "../../hooks/sidebarMenu";
 
 /* CSS */
-import "../styles/component.css";
+import "../../styles/component.css";
 
 type ExpenseHistoryData = {
   id: string;

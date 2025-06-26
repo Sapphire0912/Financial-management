@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 
-import "../styles/page.css";
-import "../styles/component.css";
+import "../../styles/page.css";
+import "../../styles/component.css";
 
 /* args data type */
 type userInfoProp = {

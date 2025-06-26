@@ -6,8 +6,8 @@ import { useNavigate } from "react-router-dom";
 import { userData, userLogout } from "../services/dashboardUser";
 
 /* Components */
-import TitleSection from "../components/TitleProps";
-import Sidebar from "../components/Sidebar";
+import TitleSection from "../components/screen/TitleProps";
+import Sidebar from "../components/screen/Sidebar";
 
 /* CSS */
 import "../styles/page.css";
