@@ -111,7 +111,7 @@ const TransactionPage = () => {
           <div className="dashboard-content">
             <div className="h-full min-w-full overflow-x-auto">
               <TransactionTable
-                per_page={20}
+                per_page={18}
                 filterStatus={filterStatus}
                 filterQuery={filterQuery}
                 setFilterStatus={setFilterStatus}

@@ -49,7 +49,7 @@ export const defaultMenuItems: MenuItem[] = [
   },
   {
     img: "/investing-dark.png",
-    text: "投資&存錢計畫",
+    text: "理財規劃",
     path: "/investing",
   },
   {
