@@ -57,8 +57,7 @@ const ExpenseTopInfo: React.FC<ExpenseTopInfoProps> = ({
       className="rounded-xl bg-slate-300/40 p-2 flex flex-col justify-between "
       style={{ height }}
     >
-      <div className={`w-full h-2 rounded-full ${barColor} mb-3`} />
-
+      <div className={`w-full h-4 rounded-full ${barColor} mb-4`} />
       <div
         className={`${barColor} rounded-lg p-2 text-white flex flex-col justify-between h-full`}
       >
@@ -128,7 +127,7 @@ const MyRemaining = () => {
           expensePercent="60"
           expenseValue="8000"
           necessaryExpenseValue="5000"
-          wantToExpenseValue="3,000"
+          wantToExpenseValue="3000"
           barColor="bg-green-900"
           height="240px"
           isShowDetail={true}
