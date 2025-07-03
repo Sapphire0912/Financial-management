@@ -1,3 +1,8 @@
+import { useState, useEffect } from "react";
+
+/* API */
+import { getUserBalance } from "../../services/dashboardUser";
+
 // My Balance Components
 type BalanceInfoCardProps = {
   iconSrc: string;
@@ -24,6 +29,26 @@ const BalanceInfoCard: React.FC<BalanceInfoCardProps> = ({
 };
 
 const MyBalance = () => {
+  const [balanceInfo, setBalanceInfo] = useState({
+    total_balance: 0,
+    last_month_expenses: 0,
+    last_month_incomes: 0,
+    last_month_bonus: 0,
+  });
+
+  useEffect(() => {
+    const fetchBalanceData = async () => {
+      const data = await getUserBalance();
+      setBalanceInfo({
+        total_balance: data.total_balance,
+        last_month_expenses: data.last_month_expenses,
+        last_month_incomes: data.last_month_incomes,
+        last_month_bonus: data.last_month_bonus,
+      });
+    };
+    fetchBalanceData();
+  }, []);
+
   return (
     <div className="h-full flex flex-col justify-between">
       <div className="py-2">
@@ -31,26 +56,26 @@ const MyBalance = () => {
       </div>
       <div className="py-2">
         <h4 className="font-bold text-gray-600 py-0.5">全部餘額</h4>
-        <h1 className="font-bold text-4xl">{"$74503.00"}</h1>
+        <h1 className="font-bold text-4xl">{`$ ${balanceInfo.total_balance}`}</h1>
       </div>
 
       <div>
         <BalanceInfoCard
           iconSrc="/dashboard-income-dark.png"
           label="上個月總收入"
-          value="+$14,503.00"
+          value={`$ ${balanceInfo.last_month_incomes}`}
           valueColor="text-emerald-500"
         />
         <BalanceInfoCard
           iconSrc="/dashboard-bonus-dark.png"
           label="上個月總獎金"
-          value="+$12,000.00"
+          value={`$ ${balanceInfo.last_month_bonus}`}
           valueColor="text-sky-400"
         />
         <BalanceInfoCard
           iconSrc="/dashboard-expense-dark.png"
           label="上個月總支出"
-          value="-$12,000.00"
+          value={`$ ${balanceInfo.last_month_expenses}`}
           valueColor="text-red-500"
         />
       </div>

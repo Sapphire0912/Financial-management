@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import JSONResponse
 
 # Databases & Schemas
-from app.schemas.dashboard import TimeInfo, DashboardBalanceInfo
+from app.schemas.dashboard import TimeInfo, DashboardMenuInfo
 from app.models.mongo_model import Accounting, IncomeAccounting
 
 # JWT
@@ -106,7 +106,7 @@ async def get_user_dashboard_date_menu(request: Request, timeInfo: TimeInfo):
     return JSONResponse(status_code=200, content={"success": True, "data": data})
 
 
-@router.get("/balance/info")
+@router.post("/balance/info")
 @verify_jwt_token
 async def get_user_balance_information(request: Request, timeInfo: TimeInfo):
     """
@@ -125,6 +125,7 @@ async def get_user_balance_information(request: Request, timeInfo: TimeInfo):
     user_name = payload.get("username")
     line_user_id = payload.get("line_user_id")
 
+    # 判斷上個月狀況使用
     utc_time = convert_to_utc_time(timeInfo.user_time_data, timeInfo.timezone)
     end_time = utc_time.replace(
         day=1, hour=0, minute=0, second=0, microsecond=0)
@@ -165,3 +166,116 @@ async def get_user_balance_information(request: Request, timeInfo: TimeInfo):
     except Exception as e:
         print(f'error: {e}')
         return JSONResponse(status_code=500, content={"success": False, "message": "無法取得使用者儀錶板資料"})
+
+
+@router.post("/income/info")
+@verify_jwt_token
+async def get_user_income_information(request: Request, params: DashboardMenuInfo):
+    """
+    取得儀錶板收入資料 (需攜帶時間資訊驗證是否合理)
+
+    Args:
+        menu (str): 選單日期資訊
+
+    Returns:
+        data, 總餘額頁面所需的資訊
+    """
+    if not verify_utc_time(user_utc_time=params.current_utc_time):
+        return JSONResponse(status_code=403, content={"success": False, "message": "使用者時區或使用者本地時間有誤"})
+
+    # 使用者參數處理
+    payload = request.state.payload
+    user_name = payload.get("username")
+    line_user_id = payload.get("line_user_id")
+    menu: str = params.menu  # "全部" | "yyyy-mm"
+    utc_time = convert_to_utc_time(params.user_time_data, params.timezone).replace(
+        day=1, hour=0, minute=0, second=0, microsecond=0)
+    #
+
+    data = {
+        "total_income": 0, "incr_percent": 0.0,
+        "incr_income": 0, "total_salary": 0,
+        "total_bouns": 0, "others": 0
+    }
+
+    if menu == "全部":
+        # 本月份時間範圍
+        current_start_time = utc_time
+        current_end_time = utc_time + relativedelta(months=1)
+        income_data = IncomeAccounting.objects(user_name=user_name, unit="TWD")
+    else:
+        # 本月份時間範圍
+        current_start_time = datetime.strptime(menu, "%Y-%m")
+        current_end_time = current_start_time + relativedelta(months=1)
+        income_data = IncomeAccounting.objects(
+            user_name=user_name, unit="TWD", created_at__gte=current_start_time, created_at__lt=current_end_time)
+
+    # 計算全部收入, 薪資, 獎金, 其他 (含本月收入)
+    current_month_income = 0
+    for d in income_data:
+        amount = d.amount
+        if d.income_kind == "薪資":
+            data["total_salary"] += amount
+        elif d.income_kind == "獎金":
+            data["total_bouns"] += amount
+        else:
+            data["others"] += amount
+        data["total_income"] += amount
+
+        if current_start_time <= d.created_at < current_end_time:
+            current_month_income += amount
+    #
+
+    # 上個月份時間範圍 (計算成長率 & 成長金額)
+    last_start_time = current_start_time - relativedelta(months=1)
+    last_month_income = IncomeAccounting.objects(
+        user_name=user_name, unit="TWD", created_at__gte=last_start_time, created_at__lt=current_start_time).sum('amount')
+
+    data["incr_income"] = current_month_income - last_month_income
+    data["incr_percent"] = round(
+        data["incr_income"] / last_month_income, 2) if last_month_income > 0 else 0.0
+    #
+
+    return JSONResponse(status_code=200, content={"success": True, "data": data})
+
+
+@router.post("/expense/info")
+@verify_jwt_token
+async def get_user_expense_information(request: Request, params: DashboardMenuInfo):
+    """
+    取得儀錶板支出資料 (需攜帶時間資訊驗證是否合理)
+
+    Args:
+        menu (str): 選單日期資訊
+
+    Returns:
+        data, 總餘額頁面所需的資訊
+    """
+    if not verify_utc_time(user_utc_time=params.current_utc_time):
+        return JSONResponse(status_code=403, content={"success": False, "message": "使用者時區或使用者本地時間有誤"})
+
+    # 使用者參數處理
+    payload = request.state.payload
+    user_name = payload.get("username")
+    line_user_id = payload.get("line_user_id")
+
+
+@router.post("/year/statistics/info")
+@verify_jwt_token
+async def get_user_year_statistics_information(request: Request, params: DashboardMenuInfo):
+    """
+    取得儀錶板收入資料 (需攜帶時間資訊驗證是否合理)
+
+    Args:
+        menu (str): 選單日期資訊
+
+    Returns:
+        data, 總餘額頁面所需的資訊
+    """
+    if not verify_utc_time(user_utc_time=params.current_utc_time):
+        return JSONResponse(status_code=403, content={"success": False, "message": "使用者時區或使用者本地時間有誤"})
+
+    # 使用者參數處理
+    payload = request.state.payload
+    user_name = payload.get("username")
+    line_user_id = payload.get("line_user_id")

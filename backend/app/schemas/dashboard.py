@@ -11,5 +11,5 @@ class TimeInfo(BaseModel):
     current_utc_time: str
 
 
-class DashboardBalanceInfo(TimeInfo):
-    pass
+class DashboardMenuInfo(TimeInfo):
+    menu: str
