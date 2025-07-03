@@ -125,6 +125,35 @@ export async function getUserIncome(menu: string) {
   return json_data.data;
 }
 
+/* 儀錶板: 輸出 */
+export async function getUserExpense(menu: string) {
+  /* 取得使用者時間資訊 */
+  const now = new Date();
+  const accounting_date = now.toISOString().split("T")[0]; // e.g., "2025-07-03"
+  const accounting_time = now.toTimeString().split(" ")[0]; // e.g., "14:33:22"
+  const userTime = await userTimeConvert(accounting_date, accounting_time);
+
+  const response = await fetchWithRefresh(`/app/dashboard/expense/info`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      current_utc_time: userTime.currentUTCTime,
+      user_time_data: userTime.user_time_data,
+      timezone: userTime.timezoneString,
+      menu,
+    }),
+  });
+
+  const json_data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(json_data.message || "取得選單資料失敗");
+  }
+  return json_data.data;
+}
+
 /* 儀錶板: 年度統計 */
 export async function getYearStatistics(menu: string) {
   /* 取得使用者時間資訊 */

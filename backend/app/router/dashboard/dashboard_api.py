@@ -242,6 +242,7 @@ async def get_user_income_information(request: Request, params: DashboardMenuInf
 async def get_user_expense_information(request: Request, params: DashboardMenuInfo):
     """
     取得儀錶板支出資料 (需攜帶時間資訊驗證是否合理)
+    (預算尚未處理)
 
     Args:
         menu (str): 選單日期資訊
@@ -256,6 +257,58 @@ async def get_user_expense_information(request: Request, params: DashboardMenuIn
     payload = request.state.payload
     user_name = payload.get("username")
     line_user_id = payload.get("line_user_id")
+    menu: str = params.menu  # "全部" | "yyyy-mm"
+    utc_time = convert_to_utc_time(params.user_time_data, params.timezone).replace(
+        day=1, hour=0, minute=0, second=0, microsecond=0)
+    #
+
+    data = {
+        "total_expense": 0, "incr_expense_percent": 0.0,
+        "top_expense_kind": "", "top_expense_amout": 0,
+        "month_budget": 0, "budget_use_percent": 0.0
+    }
+    if menu == "全部":
+        # 本月份時間範圍
+        current_start_time = utc_time
+        current_end_time = utc_time + relativedelta(months=1)
+        expense_data = Accounting.objects(user_name=user_name, unit="TWD")
+    else:
+        # 本月份時間範圍
+        current_start_time = datetime.strptime(menu, "%Y-%m")
+        current_end_time = current_start_time + relativedelta(months=1)
+        expense_data = Accounting.objects(
+            user_name=user_name, unit="TWD", created_at__gte=current_start_time, created_at__lt=current_end_time)
+
+    # 計算全部支出, 各類別支出 (含本月支出)
+    current_month_expense = 0
+    each_expense_kind = dict()
+
+    for d in expense_data:
+        statistics_kind, cost = d.statistics_kind, d.cost
+
+        data["total_expense"] += cost
+        each_expense_kind[statistics_kind] = each_expense_kind.get(
+            statistics_kind, 0) + cost
+
+        if current_start_time <= d.created_at < current_end_time:
+            current_month_expense += cost
+
+    top_expense_item: tuple = sorted(
+        each_expense_kind.items(), key=lambda item: item[1], reverse=True)[0]
+    data["top_expense_kind"], data["top_expense_amout"] = top_expense_item[0], top_expense_item[1]
+    #
+
+    # 上個月份時間範圍 (計算支出成長率)
+    last_start_time = current_start_time - relativedelta(months=1)
+    last_month_expense = Accounting.objects(
+        user_name=user_name, unit="TWD", created_at__gte=last_start_time, created_at__lt=current_start_time).sum('cost')
+
+    diff_expense = current_month_expense - last_month_expense
+    data["incr_expense_percent"] = round(
+        diff_expense * 100 / last_month_expense, 2) if last_month_expense > 0 else 0.0
+    #
+
+    return JSONResponse(status_code=200, content={"success": True, "data": data})
 
 
 @router.post("/year/statistics/info")
@@ -299,5 +352,4 @@ async def get_user_year_statistics_information(request: Request, params: Dashboa
         'income': _get_year_data(IncomeAccounting),
         'expense': _get_year_data(Accounting)
     }
-    print(f'[DEBUG] {data}')
     return JSONResponse(status_code=200, content={"success": True, "data": data})

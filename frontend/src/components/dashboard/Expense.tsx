@@ -1,3 +1,8 @@
+import { useState, useEffect } from "react";
+
+/* API */
+import { getUserExpense } from "../../services/dashboardUser";
+
 // My Expense Components
 type ExpenseInfoCardProps = {
   iconSrc: string;
@@ -28,6 +33,37 @@ type MyExpenseProps = {
 };
 
 const MyExpense = ({ menu }: MyExpenseProps) => {
+  /* 支出資訊 */
+  const [selectMenu, setSelectMenu] = useState<string>("");
+  useEffect(() => {
+    setSelectMenu(menu[0]);
+  }, [menu]);
+
+  const [expenseInfo, setExpenseInfo] = useState({
+    total_expense: 0,
+    incr_expense_percent: 0.0,
+    top_expense_kind: "",
+    top_expense_amout: 0,
+    month_budget: 0,
+    budget_use_percent: 0.0,
+  });
+
+  useEffect(() => {
+    if (selectMenu === "" || !selectMenu) return;
+    const fetchExpenseData = async () => {
+      const data = await getUserExpense(selectMenu);
+      setExpenseInfo({
+        total_expense: data.total_expense,
+        incr_expense_percent: data.incr_expense_percent,
+        top_expense_kind: data.top_expense_kind,
+        top_expense_amout: data.top_expense_amout,
+        month_budget: data.month_budget,
+        budget_use_percent: data.budget_use_percent,
+      });
+    };
+    fetchExpenseData();
+  }, [selectMenu]);
+
   return (
     <div className="h-full flex flex-col justify-between">
       <div className="py-2 flex items-center justify-between">
@@ -35,6 +71,8 @@ const MyExpense = ({ menu }: MyExpenseProps) => {
         <select
           className="bg-slate-100 border border-gray-300 text-sm rounded-lg px-3 py-1 shadow-sm transition-all duration-150 hover:cursor-pointer "
           aria-label="時間範圍"
+          value={selectMenu}
+          onChange={(e) => setSelectMenu(e.target.value)}
         >
           {menu.map((item, index) => (
             <option value={item} key={"expense" + item + index}>
@@ -45,20 +83,22 @@ const MyExpense = ({ menu }: MyExpenseProps) => {
       </div>
       <div className="py-2">
         <h4 className="font-bold text-gray-600 py-0.5">全部支出</h4>
-        <h1 className="font-bold text-4xl">{"$74503.00"}</h1>
+        <h1 className="font-bold text-4xl">{`$${expenseInfo.total_expense}`}</h1>
       </div>
 
       <div className="flex">
         <ExpenseInfo
           iconSrc="/dashboard-arpu-dark.png"
           label="支出成長率"
-          value="+2.41%"
+          value={`${expenseInfo.incr_expense_percent >= 0 ? "+" : ""} ${
+            expenseInfo.incr_expense_percent
+          }%`}
           valueColor="text-emerald-500"
         />
         <ExpenseInfo
           iconSrc="/dashboard-bonus-dark.png"
           label="支出最高類別"
-          value="食 ⇀ $12,111"
+          value={`${expenseInfo.top_expense_kind} ⇀ $${expenseInfo.top_expense_amout}`}
           valueColor="text-red-500"
         />
       </div>
@@ -80,8 +120,12 @@ const MyExpense = ({ menu }: MyExpenseProps) => {
           ))}
         </div>
         <div className="flex justify-between items-center mt-4 text-base">
-          <span className="text-gray-800">本月預算上限 {"$20,000"}</span>
-          <span className="text-gray-800">已使用預算 {"75.4%"}</span>
+          <span className="text-gray-800">
+            本月預算上限 {`$${expenseInfo.month_budget}`}
+          </span>
+          <span className="text-gray-800">
+            已使用預算 {`${expenseInfo.budget_use_percent}%`}
+          </span>
         </div>
       </div>
     </div>
