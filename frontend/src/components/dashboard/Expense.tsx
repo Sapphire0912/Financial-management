@@ -37,7 +37,7 @@ const MyExpense = ({ menu }: MyExpenseProps) => {
           aria-label="時間範圍"
         >
           {menu.map((item, index) => (
-            <option value={item} key={index}>
+            <option value={item} key={"expense" + item + index}>
               {item}
             </option>
           ))}

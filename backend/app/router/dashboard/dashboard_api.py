@@ -131,8 +131,6 @@ async def get_user_balance_information(request: Request, timeInfo: TimeInfo):
         day=1, hour=0, minute=0, second=0, microsecond=0)
     start_time = end_time - relativedelta(months=1)
     #
-    print(f'line_user_id: {line_user_id}')
-    print(f'[DEBUG] start: {start_time}, end: {end_time}. utc: {utc_time}')
 
     def _in_last_month(created_at: datetime):
         """判斷是否在當前月份內"""
@@ -264,7 +262,7 @@ async def get_user_expense_information(request: Request, params: DashboardMenuIn
 @verify_jwt_token
 async def get_user_year_statistics_information(request: Request, params: DashboardMenuInfo):
     """
-    取得儀錶板收入資料 (需攜帶時間資訊驗證是否合理)
+    取得儀錶板年度統計資料 (需攜帶時間資訊驗證是否合理)
 
     Args:
         menu (str): 選單日期資訊
@@ -279,3 +277,27 @@ async def get_user_year_statistics_information(request: Request, params: Dashboa
     payload = request.state.payload
     user_name = payload.get("username")
     line_user_id = payload.get("line_user_id")
+    menu: str = params.menu  # "yyyy-mm"
+    #
+
+    start_time = datetime.strptime(menu, "%Y")
+    end_time = start_time + relativedelta(years=1)
+
+    def _get_year_data(collection: Accounting | IncomeAccounting):
+        each_month_amount = [0] * 12
+        datas = collection.objects(user_name=user_name, unit="TWD",
+                                   created_at__lt=end_time, created_at__gte=start_time)
+        for data in datas:
+            month = data.created_at.month
+            if hasattr(data, "amount"):
+                each_month_amount[month - 1] += data.amount
+            else:
+                each_month_amount[month - 1] += data.cost
+        return each_month_amount
+
+    data = {
+        'income': _get_year_data(IncomeAccounting),
+        'expense': _get_year_data(Accounting)
+    }
+    print(f'[DEBUG] {data}')
+    return JSONResponse(status_code=200, content={"success": True, "data": data})

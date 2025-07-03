@@ -1,3 +1,8 @@
+import { useState, useEffect } from "react";
+
+/* API */
+import { getYearStatistics } from "../../services/dashboardUser";
+
 /* chart.js */
 import { Bar } from "react-chartjs-2";
 import {
@@ -10,45 +15,6 @@ import {
 } from "chart.js";
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
-
-const data = {
-  labels: [
-    "一月",
-    "二月",
-    "三月",
-    "四月",
-    "五月",
-    "六月",
-    "七月",
-    "八月",
-    "九月",
-    "十月",
-    "十一月",
-    "十二月",
-  ],
-  datasets: [
-    {
-      label: "收入",
-      data: [
-        35000, 37000, 34000, 33000, 39560, 34800, 31000, 32000, 33000, 34000,
-        34560, 33434,
-      ],
-      backgroundColor: "#235F45",
-      borderRadius: 8,
-      stack: "stack1",
-    },
-    {
-      label: "支出",
-      data: [
-        -22100, -23000, -22500, -21500, -22000, -22200, -22000, -23000, -22500,
-        -21500, -22000, -20000,
-      ],
-      backgroundColor: "#C3EB4D",
-      borderRadius: 8,
-      stack: "stack1",
-    },
-  ],
-};
 
 const options = {
   responsive: true,
@@ -94,13 +60,6 @@ const options = {
   },
   maintainAspectRatio: false,
 };
-function StackedBarChart() {
-  return (
-    <div className="w-full h-full">
-      <Bar options={options} data={data} />
-    </div>
-  );
-}
 
 // Component Props
 type MyYearStatisticsProps = {
@@ -108,6 +67,26 @@ type MyYearStatisticsProps = {
 };
 
 const MyYearStatistics = ({ menu }: MyYearStatisticsProps) => {
+  /* 選單設定 */
+  const [selectMenu, setSelectMenu] = useState<string>("");
+  useEffect(() => {
+    if (menu.length > 0 && !selectMenu) {
+      setSelectMenu(menu[0]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [menu]);
+
+  /* Chart 設定 */
+  const [chartData, setChartData] = useState(null);
+  useEffect(() => {
+    if (selectMenu == "" || !selectMenu) return;
+    const fetchYearStatisticsChart = async () => {
+      const data = await getYearStatistics(selectMenu);
+      setChartData(data);
+    };
+    fetchYearStatisticsChart();
+  }, [selectMenu]);
+
   return (
     <div className="h-full flex flex-col justify-between">
       <div className="py-2 flex items-center justify-between">
@@ -115,15 +94,19 @@ const MyYearStatistics = ({ menu }: MyYearStatisticsProps) => {
         <select
           className="bg-slate-100 border border-gray-300 text-sm rounded-lg px-3 py-1 shadow-sm transition-all duration-150 hover:cursor-pointer"
           aria-label="時間範圍"
+          value={selectMenu}
+          onChange={(e) => setSelectMenu(e.target.value)}
         >
           {menu.map((item, index) => (
-            <option value={item} key={index}>
+            <option value={item} key={"year" + item + index}>
               {item}
             </option>
           ))}
         </select>
       </div>
-      <StackedBarChart />
+      <div className="w-full h-full">
+        {chartData && <Bar options={options} data={chartData} />}
+      </div>
     </div>
   );
 };

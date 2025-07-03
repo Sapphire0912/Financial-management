@@ -53,7 +53,7 @@ const MyIncome = ({ menu }: MyIncomeProps) => {
 
   // 根據選擇項目請求後端
   useEffect(() => {
-    if (!selectMenu) return; // 確保 selectMenu 有值才執行
+    if (selectMenu === "" || !selectMenu) return; // 確保 selectMenu 有值才執行
 
     const fetchIncomeInfo = async () => {
       try {
@@ -85,7 +85,7 @@ const MyIncome = ({ menu }: MyIncomeProps) => {
           onChange={(e) => setSelectMenu(e.target.value)}
         >
           {menu.map((item, index) => (
-            <option value={item} key={index}>
+            <option value={item} key={"income" + item + index}>
               {item}
             </option>
           ))}
