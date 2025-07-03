@@ -4,8 +4,17 @@ from datetime import datetime, date
 
 
 # -- Accounting Router 相關 --
+
+class TimeInfo(BaseModel):
+    # 用於處理時差與判斷時間是否合理
+    # 註: (user_time_data + timezone) covert to utc time = created_at.
+    user_time_data: str  # form time
+    timezone: str
+    current_utc_time: str
+
+
 # 使用者記帳支出相關
-class AccountingCreate(BaseModel):
+class AccountingCreate(TimeInfo):
     statistics_kind: Optional[str] = "其他"
     category: Optional[str] = "其他"
     user_name: str
@@ -21,19 +30,13 @@ class AccountingCreate(BaseModel):
     created_at: Optional[datetime] = datetime.utcnow()
     updated_at: Optional[datetime] = datetime.utcnow()
 
-    # 用於處理時差與判斷時間是否合理
-    # 註: (user_time_data + timezone) covert to utc time = created_at.
-    user_time_data: str  # form time
-    timezone: str
-    current_utc_time: str
 
-
-class AccountingUpdate(BaseModel):
+class AccountingUpdate(TimeInfo):
     id: str  # mongo document id
     statistics_kind: Optional[str] = "其他"
     category: Optional[str] = None
     user_name: str
-    user_id: Optional[str]  # 使用者 line id
+    user_id: Optional[str] = None  # 使用者 line id
     cost_name: Optional[str] = None
     cost_status: int = 0
     cost: int
@@ -45,12 +48,6 @@ class AccountingUpdate(BaseModel):
     created_at: Optional[datetime] = datetime.utcnow()
     updated_at: Optional[datetime] = datetime.utcnow()
 
-    # 用於處理時差與判斷時間是否合理
-    # 註: (user_time_data + timezone) covert to utc time = created_at.
-    user_time_data: str  # form time
-    timezone: str
-    current_utc_time: str
-
 
 class AccountingDelete(BaseModel):
     id: str  # mongo document id
@@ -60,11 +57,11 @@ class AccountingDelete(BaseModel):
 
 
 # -- 使用者記帳收入相關 --
-class IncomeCreate(BaseModel):
+class IncomeCreate(TimeInfo):
     income_kind: str
-    category: Optional[str]
+    category: Optional[str] = None
     user_name: str
-    user_id: Optional[str]  # 使用者 line id
+    user_id: Optional[str] = None  # 使用者 line id
     amount: int
     unit: str
     payer: str
@@ -73,32 +70,20 @@ class IncomeCreate(BaseModel):
     created_at: Optional[datetime] = datetime.utcnow()
     updated_at: Optional[datetime] = datetime.utcnow()
 
-    # 用於處理時差與判斷時間是否合理
-    # 註: (user_time_data + timezone) covert to utc time = created_at.
-    user_time_data: str  # form time
-    timezone: str
-    current_utc_time: str
 
-
-class IncomeUpdate(BaseModel):
+class IncomeUpdate(TimeInfo):
     id: str
     income_kind: str
-    category: Optional[str]
+    category: Optional[str] = None
     user_name: str
-    user_id: Optional[str]  # 使用者 line id
+    user_id: Optional[str] = None  # 使用者 line id
     amount: int
     unit: str
     payer: str
     pay_account: str
-    description: Optional[str]
+    description: Optional[str] = ""
     created_at: Optional[datetime] = datetime.utcnow()
     updated_at: Optional[datetime] = datetime.utcnow()
-
-    # 用於處理時差與判斷時間是否合理
-    # 註: (user_time_data + timezone) covert to utc time = created_at.
-    user_time_data: str  # form time
-    timezone: str
-    current_utc_time: str
 
 
 class IncomeDelete(BaseModel):

@@ -23,7 +23,11 @@ const ExpenseInfo: React.FC<ExpenseInfoCardProps> = ({
   );
 };
 
-const MyExpense = () => {
+type MyExpenseProps = {
+  menu: string[];
+};
+
+const MyExpense = ({ menu }: MyExpenseProps) => {
   return (
     <div className="h-full flex flex-col justify-between">
       <div className="py-2 flex items-center justify-between">
@@ -32,8 +36,11 @@ const MyExpense = () => {
           className="bg-slate-100 border border-gray-300 text-sm rounded-lg px-3 py-1 shadow-sm transition-all duration-150 hover:cursor-pointer "
           aria-label="時間範圍"
         >
-          <option value="all">全部</option>
-          <option value="2025-07">{"2025-07"}</option>
+          {menu.map((item, index) => (
+            <option value={item} key={index}>
+              {item}
+            </option>
+          ))}
         </select>
       </div>
       <div className="py-2">

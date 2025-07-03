@@ -10,11 +10,11 @@ def transaction_key_builder(func, namespace, request, *args, **kwargs):
     fastapi-cache:_get_transaction_data:IncomeAccounting:alice:fdc2ab...:73bc99...
 
     參數說明：
-    - func: 被快取的函式本身，例如 _get_transaction_data
-    - namespace: 快取命名空間（通常是 fastapi-cache）
-    - request: FastAPI 的 Request 物件，可用於取登入者、路徑等
-    - *args: 傳入函式的位置參數（例如 collection、user_name、start_index）
-    - **kwargs: 傳入函式的命名參數（如 query dict、sort_order list）
+        - func: 被快取的函式本身，例如 _get_transaction_data
+        - namespace: 快取命名空間（通常是 fastapi-cache）
+        - request: FastAPI 的 Request 物件，可用於取登入者、路徑等
+        - *args: 傳入函式的位置參數（例如 collection、user_name、start_index）
+        - **kwargs: 傳入函式的命名參數（如 query dict、sort_order list）
     """
 
     # 將所有位置參數轉為字串，作為 key 的一部分
@@ -32,3 +32,11 @@ def transaction_key_builder(func, namespace, request, *args, **kwargs):
 
     # 將命名空間、函式名稱與參數片段組成完整 Redis 快取 key
     return f"{namespace}:{func.__name__}:{':'.join(key_parts)}"
+
+
+def dashboard_balance_key_builder(func, namespace, request, *args, **kwargs):
+    """
+    設定'儀錶板總餘額'的快取 key，用於 fastapi-cache 快取系統。
+    """
+    key_parts = [str(a) for a in args]
+    return f"{namespace}:{func.__name__}:{','.join(key_parts)}"

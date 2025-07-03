@@ -102,7 +102,12 @@ function StackedBarChart() {
   );
 }
 
-const MyYearStatistics = () => {
+// Component Props
+type MyYearStatisticsProps = {
+  menu: string[];
+};
+
+const MyYearStatistics = ({ menu }: MyYearStatisticsProps) => {
   return (
     <div className="h-full flex flex-col justify-between">
       <div className="py-2 flex items-center justify-between">
@@ -111,8 +116,11 @@ const MyYearStatistics = () => {
           className="bg-slate-100 border border-gray-300 text-sm rounded-lg px-3 py-1 shadow-sm transition-all duration-150 hover:cursor-pointer"
           aria-label="時間範圍"
         >
-          <option value="2025">2025</option>
-          <option value="2024">2024</option>
+          {menu.map((item, index) => (
+            <option value={item} key={index}>
+              {item}
+            </option>
+          ))}
         </select>
       </div>
       <StackedBarChart />

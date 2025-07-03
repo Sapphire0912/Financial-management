@@ -2,7 +2,7 @@
 from fastapi import APIRouter, Query, Request, Response
 from fastapi.responses import JSONResponse
 
-# Databases
+# Databases & Schemas
 from app.models.mongo_model import Accounting, IncomeAccounting
 from app.schemas.accounting import AccountingCreate, AccountingUpdate, AccountingDelete, IncomeCreate, IncomeUpdate, IncomeDelete, FilterRequest
 
@@ -296,7 +296,6 @@ async def update_income_accounting(request: Request, data: IncomeUpdate):
             "pay_account": data.pay_account,
             "description": data.description,
             "created_at": utc_time,
-            # "updated_at": utc_time
         }
         record.update(**{f"set__{k}": v for k, v in update_fields.items()})
 
