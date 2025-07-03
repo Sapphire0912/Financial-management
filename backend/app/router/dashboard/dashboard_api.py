@@ -233,7 +233,7 @@ async def get_user_income_information(request: Request, params: DashboardMenuInf
 
     data["incr_income"] = current_month_income - last_month_income
     data["incr_percent"] = round(
-        data["incr_income"] / last_month_income, 2) if last_month_income > 0 else 0.0
+        data["incr_income"] * 100 / last_month_income, 2) if last_month_income > 0 else 0.0
     #
 
     return JSONResponse(status_code=200, content={"success": True, "data": data})
