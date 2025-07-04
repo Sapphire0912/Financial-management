@@ -20,6 +20,7 @@ from app.models.sql_model import Base
 from app.router.accounting import users_accounting, transaction
 from app.router.login import auth
 from app.router.dashboard import dashboard_api
+from app.router.setting import user_setting
 
 # error handling
 from app.utils.error_handle import AuthorizationError
@@ -67,9 +68,11 @@ def init_app() -> FastAPI:
         jwt_exception_log.delay(exc.client_ip, exc.user_agent, exc.token)
         return JSONResponse(status_code=401, content={"message": "Unauthorized"})
 
+    # router register
     app.include_router(auth.router, prefix="/app")
     app.include_router(dashboard_api.router, prefix="/app")
     app.include_router(users_accounting.router, prefix="/app")
     app.include_router(transaction.router, prefix="/app")
+    app.include_router(user_setting.router, prefix="/app")
 
     return app

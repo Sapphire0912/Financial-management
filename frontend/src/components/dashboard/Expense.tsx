@@ -83,7 +83,7 @@ const MyExpense = ({ menu }: MyExpenseProps) => {
       </div>
       <div className="py-2">
         <h4 className="font-bold text-gray-600 py-0.5">全部支出</h4>
-        <h1 className="font-bold text-4xl">{`$${expenseInfo.total_expense}`}</h1>
+        <h1 className="font-bold text-4xl">{`$ ${expenseInfo.total_expense}`}</h1>
       </div>
 
       <div className="flex">

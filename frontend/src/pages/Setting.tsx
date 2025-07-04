@@ -8,6 +8,7 @@ import { userData, userLogout } from "../services/dashboardUser";
 /* Components */
 import TitleSection from "../components/screen/TitleProps";
 import Sidebar from "../components/screen/Sidebar";
+import UserSetting from "../components/setting/UserSetting";
 
 /* CSS */
 import "../styles/page.css";
@@ -46,7 +47,11 @@ const SettingPage = () => {
           title="使用者設定"
           description="調整你的偏好設定，打造最適合你的理財體驗"
         />
-        Setting Page Enter~!
+        <div className="dashboard-outside flex items-center ">
+          <div className="w-[80%]">
+            <UserSetting />
+          </div>
+        </div>
       </div>
     </div>
   );

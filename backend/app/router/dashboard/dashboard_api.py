@@ -21,7 +21,6 @@ from typing import List, Tuple
 
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
-
 _CACHE_MEMORY_TIME = 300  # (s)
 
 
@@ -106,6 +105,7 @@ async def get_user_dashboard_date_menu(request: Request, timeInfo: TimeInfo):
     return JSONResponse(status_code=200, content={"success": True, "data": data})
 
 
+# -- TODO: 以下 Route 的 DB 連線與 時間可以包裝成共用的 cache function --
 @router.post("/balance/info")
 @verify_jwt_token
 async def get_user_balance_information(request: Request, timeInfo: TimeInfo):

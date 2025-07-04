@@ -8,6 +8,7 @@ import { userData, userLogout } from "../services/dashboardUser";
 /* Components */
 import TitleSection from "../components/screen/TitleProps";
 import Sidebar from "../components/screen/Sidebar";
+import InvestingPlanTable from "../components/investing/PlanTable";
 
 /* CSS */
 import "../styles/page.css";
@@ -43,10 +44,14 @@ const InvestingPage = () => {
         <TitleSection
           userInfo={userInfo}
           dropdownEvent={{ logout: handleLogout }}
-          title="投資&存錢計畫"
+          title="理財規劃"
           description="規劃你的財務未來，掌握風險與報酬，穩健邁向財務目標"
         />
-        Investing Page Enter~!
+        <div className="dashboard-outside flex items-center justify-center">
+          <div className="w-[60%]">
+            <InvestingPlanTable />
+          </div>
+        </div>
       </div>
     </div>
   );

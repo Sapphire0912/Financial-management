@@ -290,3 +290,38 @@ export const TransactionTitle = ({
     </button>
   </div>
 );
+
+/* 設定的 Toggle 元件 */
+type ToggleProps = {
+  isActive: boolean;
+  onToggle: () => void;
+  disabled?: boolean;
+};
+
+export const Toggle = ({
+  isActive,
+  onToggle,
+  disabled = false,
+}: ToggleProps) => {
+  return (
+    <div
+      onClick={() => {
+        if (!disabled) onToggle();
+      }}
+      className={`relative w-12 h-6 rounded-full transition-colors duration-300 ${
+        disabled
+          ? "bg-gray-500 cursor-not-allowed"
+          : isActive
+          ? "bg-green-400"
+          : "bg-slate-300 cursor-pointer"
+      }`}
+    >
+      <div
+        className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-300 transform
+          ${isActive ? "translate-x-6" : "translate-x-1"}
+          ${disabled && "bg-gray-100"}
+        `}
+      ></div>
+    </div>
+  );
+};

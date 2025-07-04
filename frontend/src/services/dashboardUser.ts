@@ -125,7 +125,7 @@ export async function getUserIncome(menu: string) {
   return json_data.data;
 }
 
-/* 儀錶板: 輸出 */
+/* 儀錶板: 支出 */
 export async function getUserExpense(menu: string) {
   /* 取得使用者時間資訊 */
   const now = new Date();
