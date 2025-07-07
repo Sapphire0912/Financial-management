@@ -2,12 +2,18 @@ import { useState, useEffect } from "react";
 
 /* Components */
 import { Toggle } from "../componentProps";
+import { ToastBox } from "../../components/componentProps";
 
 /* API */
-import { getMsgNotifySetting } from "../../services/settingUser";
+import {
+  getMsgNotifySetting,
+  updateMsgNotifySetting,
+} from "../../services/settingUser";
 
 /* Style */
 const tableTh: string = "py-2 text-center text-lg text-gray-700";
+const submitBtnHover: string =
+  "hover:text-black hover:bg-white hover:border-blue-500 transition-all duration-200";
 
 type MsgNotifySettingProps = {
   sort: number;
@@ -37,8 +43,13 @@ const UserSetting = () => {
   useEffect(() => {
     const fetchMsgNotifySetting = async () => {
       const data = await getMsgNotifySetting();
-      setMsgNotifySetting(data.content);
       setPeriodMenu(data.periodMenu);
+      setMsgNotifySetting(
+        data.content.map((item) => ({
+          ...item,
+          frequency: item.frequency ?? 0,
+        }))
+      );
     };
     fetchMsgNotifySetting();
   }, []);
@@ -54,10 +65,38 @@ const UserSetting = () => {
     );
   };
 
+  // 彈跳視窗提示
+  const [toast, setToast] = useState({
+    show: false,
+    message: "",
+    kind: "info" as "success" | "error" | "info",
+  });
+
+  const showToast = (msg: string, kind: typeof toast.kind) => {
+    setToast({ show: true, message: msg, kind });
+  };
+
   return (
     <div className="">
       <div className="py-2">
-        <h2 className="text-2xl font-semibold mb-2">訊息通知設定</h2>
+        <div className="flex items-center justify-between w-60 mb-2">
+          <h2 className="text-2xl font-semibold mr-4">訊息通知設定</h2>
+          <button
+            type="button"
+            className={`bg-blue-500 border text-white text-sm px-4 py-0.5 rounded-2xl ${submitBtnHover}`}
+            onClick={async (e) => {
+              e.preventDefault();
+              try {
+                await updateMsgNotifySetting(msgNotifySetting);
+                showToast("訊息通知設定已成功儲存！", "success");
+              } catch (error: any) {
+                showToast(error.message || "儲存失敗，請稍後再試", "error");
+              }
+            }}
+          >
+            儲存
+          </button>
+        </div>
         <table className="table-auto w-full">
           <colgroup>
             <col className="w-[20%]" />
@@ -88,9 +127,11 @@ const UserSetting = () => {
                     <Toggle
                       isActive={row.isActive}
                       disabled={false}
-                      onToggle={() =>
-                        updateField(index, "isActive", !row.isActive)
-                      }
+                      onToggle={() => {
+                        updateField(index, "isActive", !row.isActive);
+                        updateField(index, "isEmail", !row.isActive); // 默認當啟用時, Line/Email 通知都開啟
+                        updateField(index, "isLine", !row.isActive);
+                      }}
                     />
                   </div>
                 </td>
@@ -98,7 +139,7 @@ const UserSetting = () => {
                   <select
                     aria-label="frequency"
                     className="border rounded px-2 py-1"
-                    value={row.frequency !== null ? row.frequency : ""}
+                    value={row.frequency ?? 0}
                     onChange={(e) =>
                       updateField(
                         index,
@@ -164,7 +205,7 @@ const UserSetting = () => {
                     />
                   </div>
                 </td>
-                <td className="text-center py-2 ">
+                <td className="text-center py-2">
                   <div className="flex items-center justify-center h-full">
                     <Toggle
                       isActive={row.isLine}
@@ -177,9 +218,24 @@ const UserSetting = () => {
             ))}
           </tbody>
         </table>
+        {toast.show && (
+          <ToastBox
+            message={toast.message}
+            kind={toast.kind}
+            onClose={() => setToast({ ...toast, show: false })}
+          />
+        )}
       </div>
       <div className="py-2">
-        <h2 className="text-2xl font-semibold">帳號設定</h2>
+        <div className="flex items-center justify-between w-60 mb-2">
+          <h2 className="text-2xl font-semibold mr-4">帳號設定</h2>
+          <button
+            type="button"
+            className={`bg-blue-500 border text-white text-sm px-4 py-0.5 rounded-2xl ${submitBtnHover}`}
+          >
+            儲存
+          </button>
+        </div>
       </div>
     </div>
   );

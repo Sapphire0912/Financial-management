@@ -26,6 +26,27 @@ router = APIRouter(prefix="/prefer/setting", tags=["prefer_setting"])
 _CACHE_MEMORY_TIME = 300  # (s)
 
 
+def conv_time_to_utc(notify_time: time, timezone: str):
+    """
+    轉換時間 (Time 格式) 為 UTC 時間
+    Args:
+        notify_time (time): 表格時間 (HH:MM:SS)
+        timezone (str): UTC 時區格式 (UTC+8)
+    Returns:
+        utc_time, 僅轉換後的時間格式 (HH:MM:SS)
+    """
+    match = re.match(r"UTC([+-])(\d{1,2})", timezone)
+    if not match:
+        return JSONResponse(status_code=403, content={"success": False, "message": "含非法的字元"})
+
+    sign, hours = match.groups()
+    offset_hours = int(hours) * (-1 if sign == "+" else 1)
+
+    local_dt = datetime.combine(datetime.today(), notify_time)
+    utc_dt = local_dt + timedelta(hours=offset_hours)
+    return utc_dt.time()
+
+
 @router.get("/{timezone}", response_model=dict)
 @verify_jwt_token
 async def get_message_notify_setting(request: Request, timezone: str, sqldb: Session = Depends(connect_mysql)):
@@ -46,24 +67,12 @@ async def get_message_notify_setting(request: Request, timezone: str, sqldb: Ses
 
     def build_notify(index: int, label: str, isActive: bool, frequency: int, notify_time: time,
                      threshold: int = None, isEmail=False, isLine=False) -> NotifyContent:
-
-        # 調整時區時間
-        match = re.match(r"UTC([+-])(\d{1,2})", timezone)
-        if not match:
-            return JSONResponse(status_code=403, content={"success": False, "message": "含非法的字元"})
-
-        sign, hours = match.groups()
-        offset_hours = int(hours) * (-1 if sign == "-" else 1)
-
-        conv_date = datetime.combine(datetime.today(), notify_time)
-        hours = (conv_date + timedelta(hours=offset_hours)).time()
-
         return NotifyContent(
             sort=index,
             label=label,
             isActive=isActive,
             frequency=frequency,
-            time=hours,
+            time=conv_time_to_utc(notify_time, timezone),
             threshold=threshold,
             isEmail=isEmail,
             isLine=isLine
@@ -201,3 +210,72 @@ async def get_message_notify_setting(request: Request, timezone: str, sqldb: Ses
             "warningMenu": menu,
         }
     })
+
+
+@router.put("/update/{timezone}")
+@verify_jwt_token
+async def update_message_notify_setting(request: Request, content: List[NotifyContent], timezone: str, sqldb: Session = Depends(connect_mysql)):
+    """
+    更新訊息通知設定 
+    註: 利用 sort 來判斷當前更新的 table 位置 (若 sort 改變此處需要更新)
+    """
+    payload = request.state.payload
+    user = sqldb.query(User).filter(
+        User.username == payload["username"]).first()
+    if not user:
+        # TODO: 需新增通知訊息 Log
+        return JSONResponse(status_code=401, content={"success": False, "message": "使用者名稱錯誤"})
+
+    def _update_period_data(target_data, target_content):
+        """更新定期通知的資料"""
+        target_data.is_period_notify = target_content.isActive
+        target_data.period_frequency = target_content.frequency
+        target_data.period_notify_time = conv_time_to_utc(
+            target_content.time, timezone)
+        target_data.is_period_email_notify = target_content.isEmail
+        target_data.is_period_line_notify = target_content.isLine
+
+    def _update_warning_data(target_data, target_content, field: str = "lower"):
+        """更新警示通知的資料"""
+        target_data.is_warning_notify = target_content.isActive
+        target_data.warning_frequency = target_content.frequency
+        target_data.warning_notify_time = conv_time_to_utc(
+            target_content.time, timezone)
+
+        if field == "lower":
+            target_data.lower_warning_percent = target_content.threshold
+        else:
+            target_data.upper_warning_percent = target_content.threshold
+
+        target_data.is_warning_email_notify = target_content.isEmail
+        target_data.is_warning_line_notify = target_content.isLine
+
+    # 更新 預算通知 相關
+    try:
+        budget_setting = sqldb.query(UserBudgetSetting).filter(
+            UserBudgetSetting.user_id == user.id).first()
+        _update_period_data(budget_setting, content[0])  # 定期預算通知
+        _update_warning_data(budget_setting, content[1], "lower")  # 警示預算通知
+
+        # 3 & 4. 更新存錢計畫 & 目標達成通知
+        savings_plan = sqldb.query(UserSavingsPlan).filter(
+            UserSavingsPlan.user_id == user.id).first()
+        _update_period_data(savings_plan, content[2])  # 定期存錢計畫通知
+        _update_warning_data(savings_plan, content[3], "upper")  # 目標達成通知
+
+        # 5 & 6. 更新 定期支出/收入統計
+        expense_notify = sqldb.query(UserExpenseNotifySetting).filter(
+            UserExpenseNotifySetting.user_id == user.id).first()
+        _update_period_data(expense_notify, content[4])
+
+        income_notify = sqldb.query(UserIncomeNotifySetting).filter(
+            UserIncomeNotifySetting.user_id == user.id).first()
+        _update_period_data(income_notify, content[5])
+
+        sqldb.commit()
+        return JSONResponse(status_code=200, content={"success": True, "message": "更新訊息通知設定成功"})
+
+    except Exception as e:
+        print(f'更新訊息通知設定失敗, {e}')
+
+    return JSONResponse(status_code=500, content={"success": False, "message": "更新訊息通知設定失敗"})
