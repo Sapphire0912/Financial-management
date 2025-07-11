@@ -188,7 +188,7 @@ class UserBudgetSetting(PeriodNotifySchema, WarningNotifySchema):
             - 3: 每一季 
             - 4: 每半年
             - 5: 每年
-        is_warning_notify (bool): 是否開啟預算警示通知
+        is_open_plan (bool): 是否開啟預算設定功能
         lower_warning_percent (int): 預算'低於多少'發出警示通知
     """
     __tablename__ = 'user_budget_setting'
@@ -197,7 +197,8 @@ class UserBudgetSetting(PeriodNotifySchema, WarningNotifySchema):
 
     # 預算設定
     budget = Column(Numeric(10, 2), nullable=True)  # 採用 Numeric 較符合金融上的計算
-    budget_period = Column(Integer, nullable=True)
+    budget_period = Column(Integer, default=0)
+    is_open_plan = Column(Boolean, default=False)
 
     # 警示預算設定
     lower_warning_percent = Column(Integer, default=0)
@@ -216,16 +217,17 @@ class UserSavingsPlan(PeriodNotifySchema, WarningNotifySchema):
         user_id (int): 關聯 User table ID
         target_amount (float): 目標金額
         reach_time (datetime): 達成時間
-        upper_warning_percent (int): 
-        is_finish_notify (bool): 是否在目標完成後通知
+        is_open_plan (bool): 是否開啟存錢計畫功能
+        upper_warning_percent (int): 目標高於多少 % 通知
     """
     __tablename__ = 'user_savings_plan'
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
 
-    # 目標設定
+    # 目標 - 存錢計畫設定
     target_amount = Column(Numeric(10, 2), nullable=True)
-    reach_time = Column(DateTime, nullable=True)
+    reach_time = Column(DateTime, default=datetime.utcnow)
+    is_open_plan = Column(Boolean, default=False)
 
     # 目標高於多少 % 通知
     upper_warning_percent = Column(Integer, default=100)

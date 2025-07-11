@@ -21,6 +21,8 @@ from app.router.accounting import users_accounting, transaction
 from app.router.login import auth
 from app.router.dashboard import dashboard_api
 from app.router.setting import user_setting
+from app.router.plan import user_plan
+
 
 # error handling
 from app.utils.error_handle import AuthorizationError
@@ -74,5 +76,6 @@ def init_app() -> FastAPI:
     app.include_router(users_accounting.router, prefix="/app")
     app.include_router(transaction.router, prefix="/app")
     app.include_router(user_setting.router, prefix="/app")
+    app.include_router(user_plan.router, prefix="/app")
 
     return app

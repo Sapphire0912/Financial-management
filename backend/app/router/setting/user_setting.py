@@ -15,7 +15,7 @@ from app.schemas.users_setting import NotifyContent
 from app.utils.jwt_verification import verify_jwt_token
 
 # Tools
-from app.utils.attach_info import verify_utc_time, convert_to_utc_time
+from app.utils.attach_info import convert_time_to_utc_time
 from datetime import datetime, timedelta, time
 from dateutil.relativedelta import relativedelta
 from typing import List, Tuple
@@ -26,32 +26,11 @@ router = APIRouter(prefix="/prefer/setting", tags=["prefer_setting"])
 _CACHE_MEMORY_TIME = 300  # (s)
 
 
-def conv_time_to_utc(notify_time: time, timezone: str):
-    """
-    轉換時間 (Time 格式) 為 UTC 時間
-    Args:
-        notify_time (time): 表格時間 (HH:MM:SS)
-        timezone (str): UTC 時區格式 (UTC+8)
-    Returns:
-        utc_time, 僅轉換後的時間格式 (HH:MM:SS)
-    """
-    match = re.match(r"UTC([+-])(\d{1,2})", timezone)
-    if not match:
-        return JSONResponse(status_code=403, content={"success": False, "message": "含非法的字元"})
-
-    sign, hours = match.groups()
-    offset_hours = int(hours) * (-1 if sign == "+" else 1)
-
-    local_dt = datetime.combine(datetime.today(), notify_time)
-    utc_dt = local_dt + timedelta(hours=offset_hours)
-    return utc_dt.time()
-
-
 @router.get("/{timezone}", response_model=dict)
 @verify_jwt_token
 async def get_message_notify_setting(request: Request, timezone: str, sqldb: Session = Depends(connect_mysql)):
     """
-    取得使用者訊息通知設定資料
+    取得使用者訊息通知設定表格資料
 
     Returns:
         data.content: 輸出由上到下內容顯示格式與使用者的設定資料
@@ -60,7 +39,6 @@ async def get_message_notify_setting(request: Request, timezone: str, sqldb: Ses
     user = sqldb.query(User).filter(
         User.username == payload["username"]).first()
     if not user:
-        # TODO: 需新增通知訊息 Log
         return JSONResponse(status_code=401, content={"success": False, "message": "使用者名稱錯誤"})
 
     content: List[NotifyContent] = []
@@ -72,7 +50,7 @@ async def get_message_notify_setting(request: Request, timezone: str, sqldb: Ses
             label=label,
             isActive=isActive,
             frequency=frequency,
-            time=conv_time_to_utc(notify_time, timezone),
+            time=convert_time_to_utc_time(notify_time, timezone),
             threshold=threshold,
             isEmail=isEmail,
             isLine=isLine
@@ -230,7 +208,7 @@ async def update_message_notify_setting(request: Request, content: List[NotifyCo
         """更新定期通知的資料"""
         target_data.is_period_notify = target_content.isActive
         target_data.period_frequency = target_content.frequency
-        target_data.period_notify_time = conv_time_to_utc(
+        target_data.period_notify_time = convert_time_to_utc_time(
             target_content.time, timezone)
         target_data.is_period_email_notify = target_content.isEmail
         target_data.is_period_line_notify = target_content.isLine
@@ -239,7 +217,7 @@ async def update_message_notify_setting(request: Request, content: List[NotifyCo
         """更新警示通知的資料"""
         target_data.is_warning_notify = target_content.isActive
         target_data.warning_frequency = target_content.frequency
-        target_data.warning_notify_time = conv_time_to_utc(
+        target_data.warning_notify_time = convert_time_to_utc_time(
             target_content.time, timezone)
 
         if field == "lower":

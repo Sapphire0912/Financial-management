@@ -14,7 +14,7 @@ from fastapi_cache.decorator import cache
 from app.utils.cachekey import transaction_key_builder
 
 # Tools
-from app.utils.attach_info import verify_utc_time, convert_to_utc_time
+from app.utils.attach_info import verify_utc_time, convert_to_utc_datetime
 from app.utils.query_map import handle_filter_query
 from datetime import date, datetime
 from bson import ObjectId
@@ -140,7 +140,7 @@ async def create_users_accounting(request: Request, data: AccountingCreate):
         return JSONResponse(status_code=403, content={"success": False, "message": "使用者時區或使用者本地時間有誤"})
 
     try:
-        utc_time = convert_to_utc_time(data.user_time_data, data.timezone)
+        utc_time = convert_to_utc_datetime(data.user_time_data, data.timezone)
 
         # 以後可以做序列化的方式處理
         record = Accounting(
@@ -181,7 +181,7 @@ async def update_users_accounting(request: Request, data: AccountingUpdate):
         # 先限定只有本人可以更新資料
         record = Accounting.objects.get(id=ObjectId(
             data.id), user_name=data.user_name)
-        utc_time = convert_to_utc_time(data.user_time_data, data.timezone)
+        utc_time = convert_to_utc_datetime(data.user_time_data, data.timezone)
 
         update_fields = {
             "statistics_kind": data.statistics_kind,
@@ -244,7 +244,7 @@ async def create_income_accounting(request: Request, data: IncomeCreate):
     if not verify_utc_time(user_utc_time=data.current_utc_time):
         return JSONResponse(status_code=403, content={"success": False, "message": "使用者時區或使用者本地時間有誤"})
     try:
-        utc_time = convert_to_utc_time(data.user_time_data, data.timezone)
+        utc_time = convert_to_utc_datetime(data.user_time_data, data.timezone)
 
         # 以後可以做序列化的方式處理
         record = IncomeAccounting(
@@ -283,7 +283,7 @@ async def update_income_accounting(request: Request, data: IncomeUpdate):
         # 先限定只有本人可以更新資料
         record = IncomeAccounting.objects.get(id=ObjectId(
             data.id), user_name=data.user_name)
-        utc_time = convert_to_utc_time(data.user_time_data, data.timezone)
+        utc_time = convert_to_utc_datetime(data.user_time_data, data.timezone)
 
         update_fields = {
             "income_kind": data.income_kind,

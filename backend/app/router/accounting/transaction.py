@@ -19,7 +19,7 @@ from app.utils.cachekey import transaction_key_builder
 from app.schemas.accounting import FilterRequest
 
 # Tools
-from app.utils.attach_info import verify_utc_time, convert_to_utc_time
+from app.utils.attach_info import verify_utc_time, convert_to_utc_datetime
 from app.utils.query_map import handle_filter_query
 from datetime import date, datetime
 from bson import ObjectId

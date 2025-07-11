@@ -14,7 +14,7 @@ from fastapi_cache.decorator import cache
 from app.utils.cachekey import dashboard_balance_key_builder
 
 # Tools
-from app.utils.attach_info import verify_utc_time, convert_to_utc_time
+from app.utils.attach_info import verify_utc_time, convert_to_utc_datetime
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from typing import List, Tuple
@@ -126,7 +126,8 @@ async def get_user_balance_information(request: Request, timeInfo: TimeInfo):
     line_user_id = payload.get("line_user_id")
 
     # 判斷上個月狀況使用
-    utc_time = convert_to_utc_time(timeInfo.user_time_data, timeInfo.timezone)
+    utc_time = convert_to_utc_datetime(
+        timeInfo.user_time_data, timeInfo.timezone)
     end_time = utc_time.replace(
         day=1, hour=0, minute=0, second=0, microsecond=0)
     start_time = end_time - relativedelta(months=1)
@@ -186,7 +187,7 @@ async def get_user_income_information(request: Request, params: DashboardMenuInf
     user_name = payload.get("username")
     line_user_id = payload.get("line_user_id")
     menu: str = params.menu  # "全部" | "yyyy-mm"
-    utc_time = convert_to_utc_time(params.user_time_data, params.timezone).replace(
+    utc_time = convert_to_utc_datetime(params.user_time_data, params.timezone).replace(
         day=1, hour=0, minute=0, second=0, microsecond=0)
     #
 
@@ -258,7 +259,7 @@ async def get_user_expense_information(request: Request, params: DashboardMenuIn
     user_name = payload.get("username")
     line_user_id = payload.get("line_user_id")
     menu: str = params.menu  # "全部" | "yyyy-mm"
-    utc_time = convert_to_utc_time(params.user_time_data, params.timezone).replace(
+    utc_time = convert_to_utc_datetime(params.user_time_data, params.timezone).replace(
         day=1, hour=0, minute=0, second=0, microsecond=0)
     #
 

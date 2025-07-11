@@ -47,8 +47,8 @@ const InvestingPage = () => {
           title="理財規劃"
           description="規劃你的財務未來，掌握風險與報酬，穩健邁向財務目標"
         />
-        <div className="dashboard-outside flex items-center justify-center">
-          <div className="w-[60%]">
+        <div className="dashboard-outside flex items-center">
+          <div className="w-[80%]">
             <InvestingPlanTable />
           </div>
         </div>

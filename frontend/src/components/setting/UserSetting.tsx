@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 
 /* Components */
 import { Toggle } from "../componentProps";
-import { ToastBox } from "../../components/componentProps";
+import { ToastBox } from "../componentProps";
 
 /* API */
 import {
@@ -45,7 +45,7 @@ const UserSetting = () => {
       const data = await getMsgNotifySetting();
       setPeriodMenu(data.periodMenu);
       setMsgNotifySetting(
-        data.content.map((item) => ({
+        data.content.map((item: MsgNotifySettingProps) => ({
           ...item,
           frequency: item.frequency ?? 0,
         }))
@@ -163,7 +163,7 @@ const UserSetting = () => {
                     value={row.time ?? ""}
                     onChange={(e) => updateField(index, "time", e.target.value)}
                     className="border rounded px-2 py-1"
-                    disabled={!msgNotifySetting[index].isActive}
+                    disabled={!row.isActive}
                   />
                 </td>
                 <td className="text-center py-2">
