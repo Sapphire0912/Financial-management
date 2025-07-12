@@ -164,7 +164,7 @@ class WarningNotifySchema(Base):
 
 
 class PlanningPeriod(IntEnum):
-    """預算設定週期"""
+    """預算設定週期 (暫不使用)"""
     DAILY = 0
     WEEKLY = 1
     MONTHLY = 2
@@ -181,7 +181,7 @@ class UserBudgetSetting(PeriodNotifySchema, WarningNotifySchema):
         id (int): 資料庫自增屬性
         user_id (int): 關聯 User table ID
         budget (float): 預算設定
-        budget_period (int): 週期 (例如: 每個月預算 10000)
+        budget_period (int): 週期 (例如: 每個月預算 10000)  # 暫時只設定每個月的功能
             - 0: 每天
             - 1: 每周
             - 2: 每個月
@@ -197,7 +197,7 @@ class UserBudgetSetting(PeriodNotifySchema, WarningNotifySchema):
 
     # 預算設定
     budget = Column(Numeric(10, 2), nullable=True)  # 採用 Numeric 較符合金融上的計算
-    budget_period = Column(Integer, default=0)
+    budget_period = Column(Integer, default=2)  # 暫不使用 (默認每個月)
     is_open_plan = Column(Boolean, default=False)
 
     # 警示預算設定

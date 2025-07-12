@@ -255,5 +255,6 @@ async def update_message_notify_setting(request: Request, content: List[NotifyCo
 
     except Exception as e:
         print(f'更新訊息通知設定失敗, {e}')
+        sqldb.rollback()
 
     return JSONResponse(status_code=500, content={"success": False, "message": "更新訊息通知設定失敗"})

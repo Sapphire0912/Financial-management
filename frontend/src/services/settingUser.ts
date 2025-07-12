@@ -48,7 +48,6 @@ export async function updateMsgNotifySetting(
   const userTime = await userTimeConvert(accounting_date, accounting_time);
 
   /*  更新訊息通知設定 */
-  console.log("userTime: ", userTime.timezoneString);
   const response = await fetchWithRefresh(
     `/app/prefer/setting/update/${userTime.timezoneString}`,
     {

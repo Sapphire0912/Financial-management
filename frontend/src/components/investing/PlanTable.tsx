@@ -26,20 +26,13 @@ type PlanSettingProps = {
   isLine: boolean;
 };
 
-type menuProp = {
-  label: string;
-  value: number;
-};
-
 const InvestingPlanTable = () => {
   /* 理財計畫表格資料設定 */
   const [planSetting, setPlanSetting] = useState<PlanSettingProps[]>([]);
-  const [periodMenu, setPeriodMenu] = useState<menuProp[]>([]);
 
   useEffect(() => {
     const fetchPlanSetting = async () => {
       const data = await getPlanSetting();
-      setPeriodMenu(data.periodMenu);
       setPlanSetting(data.content);
       console.log(data.content);
     };
@@ -78,6 +71,7 @@ const InvestingPlanTable = () => {
           onClick={async (e) => {
             e.preventDefault();
             try {
+              await updatePlanSetting(planSetting);
               showToast("計畫項目設定已成功儲存！", "success");
             } catch (error: any) {
               showToast(error.message || "儲存失敗，請稍後再試", "error");
@@ -108,23 +102,13 @@ const InvestingPlanTable = () => {
             <tr key={index}>
               {row.sort === 0 ? (
                 <td className="flex items-center justify-end py-2">
-                  <select
-                    className="bg-slate-100 border border-gray-300 rounded-lg px-2 py-1 shadow-sm transition-all duration-150 hover:cursor-pointer"
-                    aria-label="budget_setting_menu"
-                  >
-                    {periodMenu.map((option_item, _i) => (
-                      <option value={option_item.value} key={_i}>
-                        {option_item.label}
-                      </option>
-                    ))}
-                  </select>
                   <p className="text-right text-lg py-2 mx-4">{row.label}</p>
                   <input
                     placeholder="金額"
                     type="number"
                     value={row.threshold ?? 0}
                     min={0}
-                    className="border-b border-gray-800 text-right px-2 py-1 w-16 focus:outline-none focus:border-b-black"
+                    className="border-b border-gray-800 text-right px-2 py-1 w-20 focus:outline-none focus:border-b-black"
                     onChange={(e) =>
                       updateField(
                         index,
@@ -153,7 +137,7 @@ const InvestingPlanTable = () => {
                     type="number"
                     value={row.threshold ?? 0}
                     min={0}
-                    className="border-b border-gray-800 text-right px-2 py-1 w-16 focus:outline-none focus:border-b-black"
+                    className="border-b border-gray-800 text-right px-2 py-1 w-20 focus:outline-none focus:border-b-black"
                     onChange={(e) =>
                       updateField(
                         index,
@@ -197,6 +181,13 @@ const InvestingPlanTable = () => {
           ))}
         </tbody>
       </table>
+      {toast.show && (
+        <ToastBox
+          message={toast.message}
+          kind={toast.kind}
+          onClose={() => setToast({ ...toast, show: false })}
+        />
+      )}
     </div>
   );
 };

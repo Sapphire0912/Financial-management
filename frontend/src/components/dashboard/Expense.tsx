@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 /* API */
 import { getUserExpense } from "../../services/dashboardUser";
 
+const BAR_TICKS = 25; // 長條圖 ticks 數量
+
 // My Expense Components
 type ExpenseInfoCardProps = {
   iconSrc: string;
@@ -32,6 +34,19 @@ type MyExpenseProps = {
   menu: string[];
 };
 
+function calculate_bar_width(percent: number, ticks: number) {
+  const interval = 100 / ticks;
+  let safe_width = Math.round(percent / interval);
+  let exceed_width = 0;
+
+  if (safe_width > ticks) {
+    exceed_width = safe_width - ticks;
+    safe_width = ticks;
+  }
+
+  return { safe_width, exceed_width };
+}
+
 const MyExpense = ({ menu }: MyExpenseProps) => {
   /* 支出資訊 */
   const [selectMenu, setSelectMenu] = useState<string>("");
@@ -44,6 +59,7 @@ const MyExpense = ({ menu }: MyExpenseProps) => {
     incr_expense_percent: 0.0,
     top_expense_kind: "",
     top_expense_amout: 0,
+    is_open_budget_setting: false,
     month_budget: 0,
     budget_use_percent: 0.0,
   });
@@ -57,12 +73,20 @@ const MyExpense = ({ menu }: MyExpenseProps) => {
         incr_expense_percent: data.incr_expense_percent,
         top_expense_kind: data.top_expense_kind,
         top_expense_amout: data.top_expense_amout,
+        is_open_budget_setting: data.is_open_budget_setting,
         month_budget: data.month_budget,
         budget_use_percent: data.budget_use_percent,
       });
     };
     fetchExpenseData();
   }, [selectMenu]);
+
+  /* 更新長條圖寬度 */
+  const [barWidth, setBarWidth] = useState({ safe_width: 0, exceed_width: 0 });
+
+  useEffect(() => {
+    setBarWidth(calculate_bar_width(expenseInfo.budget_use_percent, BAR_TICKS));
+  }, [expenseInfo]);
 
   return (
     <div className="h-full flex flex-col justify-between">
@@ -102,32 +126,39 @@ const MyExpense = ({ menu }: MyExpenseProps) => {
           valueColor="text-red-500"
         />
       </div>
-
-      <div className="mt-4">
-        <div className="flex justify-between">
-          <span className="font-semibold">0</span>
-          <span className="font-semibold">50</span>
-          <span className="font-semibold">100</span>
+      {expenseInfo.is_open_budget_setting ? (
+        <div className="mt-4">
+          <div className="flex justify-between">
+            <span className="font-semibold">0</span>
+            <span className="font-semibold">50</span>
+            <span className="font-semibold">100</span>
+          </div>
+          <div className="flex items-center w-full h-16 gap-2">
+            {[...Array(BAR_TICKS)].map((_, i) => (
+              <div
+                key={i}
+                className={`h-full flex-1 rounded-xl ${
+                  i < barWidth.exceed_width
+                    ? "bg-red-600 opacity-80"
+                    : i < barWidth.safe_width
+                    ? "bg-green-700 opacity-80"
+                    : "bg-green-200 opacity-40"
+                }`}
+              ></div>
+            ))}
+          </div>
+          <div className="flex justify-between items-center mt-4 text-base">
+            <span className="text-gray-800">
+              本月預算上限 {`$${expenseInfo.month_budget}`}
+            </span>
+            <span className="text-gray-800">
+              已使用預算 {`${expenseInfo.budget_use_percent}%`}
+            </span>
+          </div>
         </div>
-        <div className="flex items-center w-full h-16 gap-2">
-          {[...Array(25)].map((_, i) => (
-            <div
-              key={i}
-              className={`h-full flex-1 rounded-xl ${
-                i < 10 ? "bg-green-700 opacity-80" : "bg-green-200 opacity-40"
-              }`}
-            ></div>
-          ))}
-        </div>
-        <div className="flex justify-between items-center mt-4 text-base">
-          <span className="text-gray-800">
-            本月預算上限 {`$${expenseInfo.month_budget}`}
-          </span>
-          <span className="text-gray-800">
-            已使用預算 {`${expenseInfo.budget_use_percent}%`}
-          </span>
-        </div>
-      </div>
+      ) : (
+        <div className="mt-4"></div>
+      )}
     </div>
   );
 };

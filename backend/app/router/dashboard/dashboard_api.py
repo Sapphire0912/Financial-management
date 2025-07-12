@@ -6,6 +6,11 @@ from fastapi.responses import JSONResponse
 from app.schemas.dashboard import TimeInfo, DashboardMenuInfo
 from app.models.mongo_model import Accounting, IncomeAccounting
 
+from app.databases.mysql_setting import connect_mysql
+from app.models.sql_model import User, UserBudgetSetting
+from sqlalchemy.orm import Session
+from sqlalchemy import select
+
 # JWT
 from app.utils.jwt_verification import verify_jwt_token
 
@@ -240,10 +245,9 @@ async def get_user_income_information(request: Request, params: DashboardMenuInf
 
 @router.post("/expense/info")
 @verify_jwt_token
-async def get_user_expense_information(request: Request, params: DashboardMenuInfo):
+async def get_user_expense_information(request: Request, params: DashboardMenuInfo, sqldb: Session = Depends(connect_mysql)):
     """
     取得儀錶板支出資料 (需攜帶時間資訊驗證是否合理)
-    (預算尚未處理)
 
     Args:
         menu (str): 選單日期資訊
@@ -266,6 +270,7 @@ async def get_user_expense_information(request: Request, params: DashboardMenuIn
     data = {
         "total_expense": 0, "incr_expense_percent": 0.0,
         "top_expense_kind": "", "top_expense_amout": 0,
+        "is_open_budget_setting": False,
         "month_budget": 0, "budget_use_percent": 0.0
     }
     if menu == "全部":
@@ -273,6 +278,7 @@ async def get_user_expense_information(request: Request, params: DashboardMenuIn
         current_start_time = utc_time
         current_end_time = utc_time + relativedelta(months=1)
         expense_data = Accounting.objects(user_name=user_name, unit="TWD")
+
     else:
         # 本月份時間範圍
         current_start_time = datetime.strptime(menu, "%Y-%m")
@@ -308,6 +314,23 @@ async def get_user_expense_information(request: Request, params: DashboardMenuIn
     data["incr_expense_percent"] = round(
         diff_expense * 100 / last_month_expense, 2) if last_month_expense > 0 else 0.0
     #
+
+    # 預算設定相關
+    join_sql = (
+        select(
+            UserBudgetSetting.is_open_plan,
+            UserBudgetSetting.budget
+        )
+        .select_from(User)
+        .join(UserBudgetSetting, User.id == UserBudgetSetting.user_id)
+        .where(User.username == user_name)
+    )
+    is_open_plan, budget = sqldb.execute(join_sql).first()
+    data["is_open_budget_setting"] = is_open_plan
+    data["month_budget"] = int(budget)
+
+    data["budget_use_percent"] = round(
+        current_month_expense * 100 / data["month_budget"], 2)
 
     return JSONResponse(status_code=200, content={"success": True, "data": data})
 

@@ -15,7 +15,7 @@ from app.schemas.users_plan import PlanContent
 from app.utils.jwt_verification import verify_jwt_token
 
 # Tools
-from app.utils.attach_info import convert_datetime_to_date_string
+from app.utils.attach_info import convert_datetime_to_date_string, convert_to_utc_datetime
 from datetime import time, datetime
 from dateutil.relativedelta import relativedelta
 from typing import List
@@ -28,6 +28,7 @@ router = APIRouter(prefix="/planning", tags=["planning"])
 async def get_user_planning_menu(request: Request, timezone: str, sqldb: Session = Depends(connect_mysql)):
     """
     取得使用者理財規劃表格資料
+    註: frequency 此處僅保留此欄位但不使用 (默認都為 2 => 每個月預算設定)
 
     Returns:
         data.content: 輸出由上到下內容顯示格式與使用者的設定資料
@@ -67,7 +68,7 @@ async def get_user_planning_menu(request: Request, timezone: str, sqldb: Session
     if budget_setting:
         content.append(build_plan(
             index=0,
-            label="預算花費設定⭢$",
+            label="每個月預算花費設定⭢$",
             isActive=budget_setting.is_open_plan,
             frequency=budget_setting.budget_period,
             threshold=budget_setting.budget,
@@ -80,7 +81,7 @@ async def get_user_planning_menu(request: Request, timezone: str, sqldb: Session
         _add_sql_data(UserBudgetSetting, user.id)
         content.append(
             PlanContent(
-                sort=0, label="預算花費設定⭢$", isActive=False, threshold=0,
+                sort=0, label="當月預算花費設定⭢$", isActive=False, threshold=0,
                 frequency=0, reach_time=None, isEmail=False, isLine=False
             )
         )
@@ -112,19 +113,63 @@ async def get_user_planning_menu(request: Request, timezone: str, sqldb: Session
         ))
 
     # - 處理選單資訊 -
-    menu = [
-        {"label": "每天", "value": 0},
-        {"label": "每周", "value": 1},
-        {"label": "每月", "value": 2},
-        {"label": "每季", "value": 3},
-        {"label": "每半年", "value": 4},
-        {"label": "每年", "value": 5}
-    ]
+    # menu = [
+    #     {"label": "每天", "value": 0},
+    #     {"label": "每周", "value": 1},
+    #     {"label": "每月", "value": 2},
+    #     {"label": "每季", "value": 3},
+    #     {"label": "每半年", "value": 4},
+    #     {"label": "每年", "value": 5}
+    # ]
 
     return JSONResponse(status_code=200, content={
         "success": True,
         "data": {
             "content": jsonable_encoder(content),
-            "periodMenu": menu
+            # "periodMenu": menu
         }
     })
+
+
+@router.put("/update/{timezone}")
+@verify_jwt_token
+async def update_user_plan_setting(request: Request, content: List[PlanContent], timezone: str, sqldb: Session = Depends(connect_mysql)):
+    """
+    更新理財計畫設定
+    """
+    payload = request.state.payload
+    user = sqldb.query(User).filter(
+        User.username == payload["username"]).first()
+    if not user:
+        # TODO: 需新增通知訊息 Log
+        return JSONResponse(status_code=401, content={"success": False, "message": "使用者名稱錯誤"})
+
+    try:
+        # 更新預算設定
+        budget_setting = sqldb.query(UserBudgetSetting).filter(
+            UserBudgetSetting.user_id == user.id).first()
+        budget_content, plan_content = content[0], content[1]
+
+        budget_setting.is_open_plan = budget_content.isActive
+        budget_setting.budget = budget_content.threshold
+        budget_setting.is_period_email_notify = budget_content.isEmail
+        budget_setting.is_period_line_notify = budget_content.isLine
+
+        # 更新存錢計畫設定
+        plan_setting = sqldb.query(UserSavingsPlan).filter(
+            UserSavingsPlan.user_id == user.id).first()
+        plan_setting.is_open_plan = plan_content.isActive
+        plan_setting.target_amount = plan_content.threshold
+        plan_setting.reach_time = convert_to_utc_datetime(
+            plan_content.reach_time, timezone)
+        plan_setting.is_period_email_notify = plan_content.isEmail
+        plan_setting.is_period_line_notify = plan_content.isLine
+
+        sqldb.commit()
+        return JSONResponse(status_code=200, content={"success": True, "message": "更新理財計畫設定成功"})
+
+    except Exception as e:
+        print(f'更新理財計畫設定失敗, {e}')
+        sqldb.rollback()
+
+    return JSONResponse(status_code=500, content={"success": False, "message": "更新理財計畫設定失敗"})

@@ -321,7 +321,7 @@ async def delete_income_accounting(request: Request, data: IncomeDelete):
     try:
         # 先判斷只有使用者本人才可以做刪除操作
         record = IncomeAccounting.objects(id=ObjectId(
-            data.id), user_name=data.user_name, line_user_id=data.user_id).first()
+            data.id), user_name=data.user_name).first()
         if record:
             record.delete()
         else:
