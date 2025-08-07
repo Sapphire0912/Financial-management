@@ -30,11 +30,11 @@ export const defaultMenuItems: MenuItem[] = [
     text: "記帳",
     path: "/accounting",
   },
-  {
-    img: "/analyze-dark.png",
-    text: "分析",
-    path: "/analyze",
-  },
+  // {
+  //   img: "/analyze-dark.png",
+  //   text: "分析",
+  //   path: "/analyze",
+  // },
   {
     img: "/transaction-dark.png",
     text: "交易紀錄",

@@ -152,6 +152,7 @@ async def update_user_plan_setting(request: Request, content: List[PlanContent],
 
         budget_setting.is_open_plan = budget_content.isActive
         budget_setting.budget = budget_content.threshold
+        budget_setting.is_period_notify = budget_content.isEmail or budget_content.isLine
         budget_setting.is_period_email_notify = budget_content.isEmail
         budget_setting.is_period_line_notify = budget_content.isLine
 
@@ -162,6 +163,7 @@ async def update_user_plan_setting(request: Request, content: List[PlanContent],
         plan_setting.target_amount = plan_content.threshold
         plan_setting.reach_time = convert_to_utc_datetime(
             plan_content.reach_time, timezone)
+        plan_setting.is_period_notify = plan_content.isEmail or plan_content.isLine
         plan_setting.is_period_email_notify = plan_content.isEmail
         plan_setting.is_period_line_notify = plan_content.isLine
 

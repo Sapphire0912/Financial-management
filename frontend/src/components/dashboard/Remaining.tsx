@@ -1,6 +1,28 @@
 /* CSS */
 import "../../styles/component.css";
 
+/* API */
+import { getMonthlyBalance } from "../../services/dashboardUser";
+
+/* Hooks */
+import { useState, useEffect } from "react";
+
+// API Type
+type RemainingInfo = {
+  reduce_budget: number;
+  expect_expense_per_day: number;
+  expense_per_day: number;
+  top_expense_data: TopExpenseData[];
+};
+
+type TopExpenseData = {
+  kind: string;
+  percent: number;
+  total_expense: number;
+  necessary: number;
+  want: number;
+};
+
 // My Remaining Components
 type RemainingInfoCardProps = {
   iconSrc: string;
@@ -87,6 +109,18 @@ const ExpenseTopInfo: React.FC<ExpenseTopInfoProps> = ({
 };
 
 const MyRemaining = () => {
+  const [remainingInfo, setRemainingInfo] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchRemainingInfo = async () => {
+      const remainingInfo = await getMonthlyBalance();
+      setRemainingInfo(remainingInfo);
+    };
+    fetchRemainingInfo();
+  }, []);
+
+  if (!remainingInfo) return <div>Loading...</div>;
+
   return (
     <div className="h-full flex flex-col justify-between">
       <div className="py-2 flex items-center justify-between">
@@ -102,7 +136,9 @@ const MyRemaining = () => {
       </div>
 
       <div className="flex items-end">
-        <h1 className="font-bold text-5xl mr-1">75.40</h1>
+        <h1 className="font-bold text-5xl mr-1">
+          {remainingInfo.reduce_budget}
+        </h1>
         <span className="text-3xl text-gray-700">%</span>
       </div>
 
@@ -110,46 +146,38 @@ const MyRemaining = () => {
         <RemainingInfo
           iconSrc="/dashboard-expect-dark.png"
           label="預期每日支出"
-          value="$2,000"
+          value={`$${remainingInfo.expect_expense_per_day}`}
           valueColor="text-emerald-500"
         />
         <RemainingInfo
           iconSrc="/dashboard-expense-daily-dark.png"
           label="平均每日支出"
-          value="$368"
+          value={`$${remainingInfo.expense_per_day}`}
           valueColor="text-red-500"
         />
       </div>
 
       <div className="mt-4 grid grid-cols-3 gap-2 items-end">
-        <ExpenseTopInfo
-          expenseType="食"
-          expensePercent="60"
-          expenseValue="8000"
-          necessaryExpenseValue="5000"
-          wantToExpenseValue="3000"
-          barColor="bg-green-900"
-          height="240px"
-          isShowDetail={true}
-        />
-        <ExpenseTopInfo
-          expenseType="教育"
-          expensePercent="50"
-          expenseValue="7000"
-          necessaryExpenseValue="3500"
-          wantToExpenseValue="3500"
-          barColor="bg-green-700"
-          height="180px"
-        />
-        <ExpenseTopInfo
-          expenseType="娛樂"
-          expensePercent="30"
-          expenseValue="5000"
-          necessaryExpenseValue="1500"
-          wantToExpenseValue="3500"
-          barColor="bg-green-500"
-          height="120px"
-        />
+        {remainingInfo.top_expense_data.map(
+          (item: TopExpenseData, index: number) => (
+            <ExpenseTopInfo
+              expenseType={item.kind}
+              expensePercent={item.percent.toString()}
+              expenseValue={item.total_expense.toString()}
+              necessaryExpenseValue={item.necessary.toString()}
+              wantToExpenseValue={item.want.toString()}
+              barColor={
+                index === 0
+                  ? "bg-green-900"
+                  : index === 1
+                  ? "bg-green-700"
+                  : "bg-green-500"
+              }
+              height={index === 0 ? "240px" : index === 1 ? "200px" : "160px"}
+              isShowDetail={index !== 2}
+            />
+          )
+        )}
       </div>
     </div>
   );

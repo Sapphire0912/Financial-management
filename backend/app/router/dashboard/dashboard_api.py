@@ -62,7 +62,7 @@ async def get_user_dashboard_date_menu(request: Request, timeInfo: TimeInfo):
     # 使用者參數處理
     payload = request.state.payload
     user_name = payload.get("username")
-    line_user_id = payload.get("line_user_id")
+    line_user_id = payload.get("line_user_id", "")
     #
 
     def _get_menu(collection: Accounting | IncomeAccounting) -> Tuple[List[str], List[str]]:
@@ -128,7 +128,7 @@ async def get_user_balance_information(request: Request, timeInfo: TimeInfo):
     # 使用者參數處理
     payload = request.state.payload
     user_name = payload.get("username")
-    line_user_id = payload.get("line_user_id")
+    line_user_id = payload.get("line_user_id", "")
 
     # 判斷上個月狀況使用
     utc_time = convert_to_utc_datetime(
@@ -190,7 +190,7 @@ async def get_user_income_information(request: Request, params: DashboardMenuInf
     # 使用者參數處理
     payload = request.state.payload
     user_name = payload.get("username")
-    line_user_id = payload.get("line_user_id")
+    line_user_id = payload.get("line_user_id", "")
     menu: str = params.menu  # "全部" | "yyyy-mm"
     utc_time = convert_to_utc_datetime(params.user_time_data, params.timezone).replace(
         day=1, hour=0, minute=0, second=0, microsecond=0)
@@ -261,7 +261,7 @@ async def get_user_expense_information(request: Request, params: DashboardMenuIn
     # 使用者參數處理
     payload = request.state.payload
     user_name = payload.get("username")
-    line_user_id = payload.get("line_user_id")
+    line_user_id = payload.get("line_user_id", "")
     menu: str = params.menu  # "全部" | "yyyy-mm"
     utc_time = convert_to_utc_datetime(params.user_time_data, params.timezone).replace(
         day=1, hour=0, minute=0, second=0, microsecond=0)
@@ -376,4 +376,91 @@ async def get_user_year_statistics_information(request: Request, params: Dashboa
         'income': _get_year_data(IncomeAccounting),
         'expense': _get_year_data(Accounting)
     }
+    return JSONResponse(status_code=200, content={"success": True, "data": data})
+
+
+@router.post("/remaining/info")
+@verify_jwt_token
+async def get_user_remaining_information(request: Request, timeinfo: TimeInfo, sqldb: Session = Depends(connect_mysql)):
+    """
+    取得儀錶板剩餘區塊資訊
+    (需攜帶時間驗證)
+
+    Returns:
+        data: 剩餘區塊資訊資料
+            - 本月餘額
+            - 預期每日支出
+            - 平均每日支出
+            - 支出前三類別名稱, 占比, 金額 (必要 & 想要)
+    """
+    if not verify_utc_time(user_utc_time=timeinfo.current_utc_time):
+        return JSONResponse(status_code=403, content={"success": False, "message": "使用者時區或使用者本地時間有誤"})
+
+    # 使用者參數處理
+    payload = request.state.payload
+    user_name = payload.get("username")
+    line_user_id = payload.get("line_user_id", "")
+    utc_time = convert_to_utc_datetime(timeinfo.user_time_data, timeinfo.timezone).replace(
+        day=1, hour=0, minute=0, second=0, microsecond=0)
+    #
+
+    # 取得預算設定
+    join_sql = (
+        select(
+            UserBudgetSetting.is_open_plan,
+            UserBudgetSetting.budget
+        )
+        .select_from(User)
+        .join(UserBudgetSetting, User.id == UserBudgetSetting.user_id)
+        .where(User.username == user_name)
+    )
+    is_open_plan, budget = sqldb.execute(join_sql).first()
+    budget = int(budget)
+
+    # 取得本月目前支出 (預期/平均 每日支出)
+    current_end_time = utc_time + relativedelta(months=1)
+    total_expense = Accounting.objects(
+        user_name=user_name, unit="TWD", created_at__gte=utc_time, created_at__lt=current_end_time).sum('cost')
+
+    data = dict()
+    data["reduce_budget"] = round((budget - total_expense) * 100 / budget, 2)
+
+    max_day = (current_end_time - timedelta(days=1)).day
+    data["expect_expense_per_day"] = round(budget / max_day, 0)
+    data["expense_per_day"] = round(total_expense / max_day, 0)
+
+    # 取得當月支出前三高類別以及分別必要或想要的資料
+    top_expense_kind = Accounting.objects.aggregate(
+        {
+            "$match": {
+                "user_name": user_name, "unit": "TWD",
+                "created_at": {
+                    "$gte": utc_time,
+                    "$lt": current_end_time
+                }
+            }
+        },
+        {"$group": {"_id": "$statistics_kind", "total_expense": {"$sum": "$cost"}}},
+        {"$sort": {"total_expense": -1}},
+        {"$limit": 3}
+    )
+
+    data["top_expense_data"] = list()
+    for top_kind in top_expense_kind:
+        # 必要花費
+        necessary = Accounting.objects(statistics_kind=top_kind["_id"], cost_status__in=[
+                                       0, 2], unit="TWD", created_at__gte=utc_time, created_at__lt=current_end_time).sum('cost')
+        want = Accounting.objects(statistics_kind=top_kind["_id"], cost_status__in=[
+                                  1, 3], unit="TWD", created_at__gte=utc_time, created_at__lt=current_end_time).sum("cost")
+
+        data["top_expense_data"].append({
+            "kind": top_kind["_id"],
+            "total_expense": top_kind["total_expense"],
+            "percent": round((necessary + want) * 100 / total_expense, 0),
+            "necessary": necessary,
+            "want": want
+        })
+
+    print(data["top_expense_data"])
+
     return JSONResponse(status_code=200, content={"success": True, "data": data})

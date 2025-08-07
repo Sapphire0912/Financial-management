@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 
 import "../../styles/page.css";
 import "../../styles/component.css";
@@ -53,6 +54,9 @@ const UserDropDownUI = ({ userInfo, dropdownEvent }: userInfoProp) => {
     }
   };
 
+  // 使用者跳轉頁面
+  const navigate = useNavigate();
+
   return (
     <div
       className={`relative inline-block text-left bg-slate-100 border border-slate-300 min-w-60 px-4 py-2 ${
@@ -93,7 +97,13 @@ const UserDropDownUI = ({ userInfo, dropdownEvent }: userInfoProp) => {
             <span className="text-gray-800">個人資料</span>
           </button>
 
-          <button type="button" className="dropdown-item">
+          <button
+            type="button"
+            className="dropdown-item"
+            onClick={() => {
+              navigate("/setting");
+            }}
+          >
             <img
               src="/setting-dark.png"
               alt="設定"

@@ -129,8 +129,6 @@ const UserSetting = () => {
                       disabled={false}
                       onToggle={() => {
                         updateField(index, "isActive", !row.isActive);
-                        updateField(index, "isEmail", !row.isActive); // 默認當啟用時, Line/Email 通知都開啟
-                        updateField(index, "isLine", !row.isActive);
                       }}
                     />
                   </div>

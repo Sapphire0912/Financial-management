@@ -111,7 +111,7 @@ const MyIncome = ({ menu }: MyIncomeProps) => {
           iconSrc="/dashboard-bonus-dark.png"
           label="成長金額"
           value={`${incomeInfo.incr_income >= 0 ? "+$" : "-$"}${
-            incomeInfo.incr_income
+            Math.abs(incomeInfo.incr_income)
           }`}
           valueColor={`${
             incomeInfo.incr_income >= 0 ? "text-emerald-500" : "text-red-500"

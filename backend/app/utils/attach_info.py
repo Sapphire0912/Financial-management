@@ -44,7 +44,7 @@ def convert_time_to_utc_time(notify_time: time, timezone: str) -> time:
         return None
 
     sign, hours = match.groups()
-    offset_hours = int(hours) * (-1 if sign == "+" else 1)
+    offset_hours = int(hours) * (-1 if sign == "-" else 1)
 
     local_dt = datetime.combine(datetime.today(), notify_time)
     utc_dt = local_dt + timedelta(hours=offset_hours)
