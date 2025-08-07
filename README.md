@@ -30,12 +30,12 @@
 
 - **前端:** React + Vite + Tailwind CSS
 - **後端 API:** FastAPI
-- **資料庫:** MongoDB（主）、MySQL（輔助處理）、Redis（快取）
+- **資料庫:** MongoDB、MySQL、Redis（快取）
 - **容器化:** Docker、Docker Compose
 - **非同步任務:** Celery
 - **雲端服務:**
   - EC2：後端服務與 Celery 任務部署
-  - S3：儲存備份資料與報表
+  - S3：儲存備份資料、報表、使用者圖片
   - DynamoDB：儲存記帳資料
   - Lambda + API Gateway：串接 Line Webhook
 - **第三方整合:**
@@ -47,7 +47,7 @@
 
 - 使用 Docker Compose 快速部署整體應用（含資料庫、FastAPI、前端）
 - Webhook 採用 AWS Lambda + API Gateway 設定，支援 HTTPS 與高可用
-- EC2 執行主應用與非同步任務，資料備份至 S3
+- EC2 執行主應用與非同步任務，將資料庫資料與 S3、Dynamo DB 進行同步
 
 ---
 
@@ -56,14 +56,6 @@
 <!-- - Line 記帳畫面（待補）
 - 前端報表截圖（待補）
 - Demo Link：[https://your-demo-link](https://your-demo-link)（可選） -->
-
----
-
-## 測試與開發細節
-
-- API 測試使用 Postman 進行驗證
-- Celery 任務以模擬資料進行效能測試
-- 可擴充為 Pytest 自動化測試流程（未來規劃）
 
 ---
 
