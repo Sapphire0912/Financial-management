@@ -461,6 +461,4 @@ async def get_user_remaining_information(request: Request, timeinfo: TimeInfo, s
             "want": want
         })
 
-    print(data["top_expense_data"])
-
     return JSONResponse(status_code=200, content={"success": True, "data": data})
