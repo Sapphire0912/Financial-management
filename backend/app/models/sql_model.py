@@ -161,6 +161,7 @@ class WarningNotifySchema(Base):
     warning_notify_time = Column(Time, nullable=False, default=time(10, 0))
     is_warning_email_notify = Column(Boolean, default=False)
     is_warning_line_notify = Column(Boolean, default=False)
+    # TODO 若有想要每日/每周 通知當日/當周的花費需要再設計一個 UI 和 DB
 
 
 class PlanningPeriod(IntEnum):
@@ -278,3 +279,13 @@ class UserIncomeNotifySetting(PeriodNotifySchema):
                         onupdate=datetime.utcnow)
 
 # ----- End. -----
+
+
+# class UserNotifyLog(Base):
+#     """
+#     使用者通知頁面資料
+
+#     # TODO 儲存使用者記帳操作/通知設定管理
+#     # TODO 前端先處理模板
+#     """
+#     pass

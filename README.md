@@ -30,7 +30,7 @@
 
 - **前端:** React + Vite + Tailwind CSS
 - **後端 API:** FastAPI
-- **資料庫:** MongoDB、MySQL、Redis（快取）
+- **資料庫:** MongoDB、MySQL、Redis
 - **容器化:** Docker、Docker Compose
 - **非同步任務:** Celery
 - **雲端服務:**

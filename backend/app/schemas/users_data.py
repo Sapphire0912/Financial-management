@@ -8,8 +8,6 @@ from typing import Optional
 class UserLogin(BaseModel):
     email: Optional[str]
     password: Optional[str]
-    line_user_name: Optional[str]
-    line_user_id: Optional[str]
     login_status: int
 
 

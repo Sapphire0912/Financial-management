@@ -1,6 +1,7 @@
 # Fastapi
-from fastapi import APIRouter, Depends, Request, Response, Header
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends, Request, Response
+from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.exceptions import HTTPException
 
 # Databases
 from sqlalchemy import or_, and_
@@ -19,10 +20,14 @@ from app.tasks.tasks import log_user_login
 # User api schema
 from app.schemas.users_data import UserLogin, UserVerifyAccount, UserSignUp, UserAccountSupports, UserResetPassword, UserDeleteAccount
 
+# Line Login
+from app.router.login.line_oauth import get_line_login_url, get_line_access_token_params, verify_line_id_token
+
 # Gmail SMTP services
 from app.services.smtp_services import send_email, verify_digital_code
 
 # other tools
+import requests
 from datetime import datetime
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
@@ -30,7 +35,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")  # 使用者�
 
 
 @router.post("/login")
-async def login(response: Response, data: UserLogin, sqldb: Session = Depends(connect_mysql), ip: str = Depends(get_client_ip)):
+async def login(request: Request, response: Response, data: UserLogin, sqldb: Session = Depends(connect_mysql), ip: str = Depends(get_client_ip)):
     """
       使用者登入驗證
 
@@ -41,8 +46,6 @@ async def login(response: Response, data: UserLogin, sqldb: Session = Depends(co
     _log_data = {
         "ip": ip,
         "email": data.email,
-        "line_user_name": data.line_user_name,
-        "line_user_id": data.line_user_id
     }
     now = datetime.utcnow()
 
@@ -86,8 +89,7 @@ async def login(response: Response, data: UserLogin, sqldb: Session = Depends(co
         return response
 
     elif data.login_status == 2:
-        # TODO: Line 登入
-        pass
+        return JSONResponse(status_code=200, content={"success": True, "url": get_line_login_url()})
 
     else:
         return JSONResponse(status_code=500, content={"success": False, "message": "登入參數錯誤"})
@@ -119,10 +121,6 @@ async def signup(data: UserSignUp, sqldb: Session = Depends(connect_mysql)):
             except Exception as e:
                 sqldb.rollback()  # 避免 session 卡住
                 return JSONResponse(status_code=500, content={"success": False, "message": f"伺服器錯誤: {str(e)}"})
-
-    elif data.login_status == 2:
-        # TODO: Line 註冊
-        pass
 
     else:
         return JSONResponse(status_code=500, content={"success": False, "message": "註冊參數錯誤"})
@@ -246,6 +244,40 @@ async def refresh_token(request: Request):
         return JSONResponse(status_code=200, content={"success": True, "token": new_access_token})
     else:
         return JSONResponse(status_code=401, content={"success": False, "message": "Token 已過期，請重新登入"})
+
+
+@router.get("/line/login/callback")
+async def line_login_callback(request: Request, code: str | None = None, state: str | None = None, error: str | None = None):
+    """
+      Line Login 的 callback
+    """
+    if error:
+        return JSONResponse(status_code=400, content={"success": False, "message": f"LINE 授權失敗: {error}"})
+    if not code or not state:
+        return JSONResponse(status_code=400, content={"success": False, "message": "缺少必要參數 code 或 state"})
+
+    # 取得 Line Access Token 參數與連結
+    access_url, params, nonce = get_line_access_token_params(code, state)
+    if not params:
+        return JSONResponse(status_code=400, content={"success": False, "message": "授權登入狀態已過期"})
+
+    # 取得使用者 Access Token
+    response = requests.post(access_url, data=params)
+    if response.status_code != 200:
+        return JSONResponse(status_code=400, content={"success": False, "message": "取得使用者 Access Token 失敗"})
+
+    # 驗證 Line ID Token
+    token_data = response.json()
+    id_token = token_data.get("id_token", None)
+    print(token_data)  # TODO
+    # if not id_token or not verify_line_id_token(id_token, nonce):
+    # return JSONResponse(status_code=400, content={"success": False, "message": "Line ID Token 驗證失敗"})
+
+    # 取得使用者資料 TODO
+    # user_data = verify_line_id_token(id_token, nonce)
+    # print(user_data)
+
+    return JSONResponse(status_code=200, content={"success": True, "message": "Line Login 成功"})
 
 
 @router.post("/logout")

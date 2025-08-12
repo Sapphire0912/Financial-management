@@ -29,16 +29,15 @@ const user_login = async (
   e: React.FormEvent,
   email: string | null,
   password: string | null,
-  line_user_name: string | null,
-  line_user_id: string | null,
   login_status: number = 1,
   showToast: (msg: string, kind: "success" | "error" | "info") => void
 ): Promise<boolean> => {
   e.preventDefault();
 
-  if (login_status === 3) {
-    showToast("尚未實作 Line 登入功能", "info");
-    return false;
+  if (login_status === 2) {
+    const result = await userLogin(email, password, 2);
+    window.location.href = result.url; // 跳轉到 Line Login 頁面
+    return true;
   }
 
   if (login_status === 1) {
@@ -48,17 +47,11 @@ const user_login = async (
 
     if (missingFields.length > 0) {
       showToast(`${missingFields.join("、")}不可為空`, "error");
-      return false; // ✅ 中斷流程
+      return false;
     }
 
     try {
-      const result = await userLogin(
-        email,
-        password,
-        line_user_name,
-        line_user_id,
-        login_status
-      );
+      const result = await userLogin(email, password, 1);
 
       showToast(
         result.success ? "登入成功" : result.message,
@@ -261,15 +254,7 @@ const LoginFormUI = () => {
   // 登入成功後跳轉到 Dashboard 頁面
   const navigate = useNavigate();
   const handle_login = async (e: React.FormEvent) => {
-    const login_status = await user_login(
-      e,
-      email,
-      password,
-      null,
-      null,
-      1,
-      showToast
-    );
+    const login_status = await user_login(e, email, password, 1, showToast);
     if (login_status) {
       navigate("/dashboard");
     }
@@ -482,6 +467,11 @@ const ForgetFormUI = ({
 // Page
 const LoginPage = () => {
   const [showFormUI, setShowFormUI] = useState<number>(FORM_LOGIN);
+  const [toast, setToast] = useState({
+    show: false,
+    message: "",
+    kind: "info" as "success" | "error" | "info",
+  });
 
   const ShowToLoginButton = () => {
     return (
@@ -517,6 +507,10 @@ const LoginPage = () => {
         忘記密碼？
       </button>
     );
+  };
+
+  const showToast = (msg: string, kind: "success" | "error" | "info") => {
+    setToast({ show: true, message: msg, kind });
   };
 
   return (
@@ -560,10 +554,20 @@ const LoginPage = () => {
           <button
             type="button"
             className="button-hover w-full bg-green-700 text-white py-2 rounded-2xl font-semibold"
+            onClick={async (e) => {
+              user_login(e, null, null, 2, showToast);
+            }}
           >
             使用 Line 登入
           </button>
         </div>
+        {toast.show && (
+          <ToastBox
+            message={toast.message}
+            kind={toast.kind}
+            onClose={() => setToast({ ...toast, show: false })}
+          />
+        )}
       </div>
     </div>
   );

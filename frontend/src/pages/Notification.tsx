@@ -46,7 +46,12 @@ const NotificationPage = () => {
           title="通知中心"
           description="即時掌握系統提醒與財務異動，重要資訊不漏接！"
         />
-        Notification Page Enter~!
+        <div className="dashboard-outside flex flex-col">
+          <div className="grid grid-cols-2 gap-4">
+            <div>記帳操作通知</div>
+            <div>設定提醒通知</div>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -227,12 +227,22 @@ const UserSetting = () => {
       <div className="py-2">
         <div className="flex items-center justify-between w-60 mb-2">
           <h2 className="text-2xl font-semibold mr-4">帳號設定</h2>
-          <button
-            type="button"
-            className={`bg-blue-500 border text-white text-sm px-4 py-0.5 rounded-2xl ${submitBtnHover}`}
-          >
-            儲存
-          </button>
+        </div>
+        <div className="flex flex-col">
+          <div>
+            <button
+              type="button"
+              className="bg-blue-500 border text-white px-4 py-2 rounded-2xl"
+            >
+              修改密碼
+            </button>
+            <button
+              type="button"
+              className="bg-red-500 border text-white px-4 py-2 rounded-2xl"
+            >
+              刪除帳號
+            </button>
+          </div>
         </div>
       </div>
     </div>

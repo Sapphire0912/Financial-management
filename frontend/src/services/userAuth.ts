@@ -3,8 +3,6 @@
 export async function userLogin(
   email: string | null,
   password: string | null,
-  line_user_name: string | null = null,
-  line_user_id: string | null = null,
   login_status: number = 1
 ) {
   const response = await fetch("/app/auth/login", {
@@ -16,8 +14,6 @@ export async function userLogin(
     body: JSON.stringify({
       email,
       password,
-      line_user_name,
-      line_user_id,
       login_status,
     }),
   });
