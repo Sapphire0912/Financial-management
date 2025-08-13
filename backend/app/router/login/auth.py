@@ -27,6 +27,7 @@ from app.router.login.line_oauth import get_line_login_url, get_line_access_toke
 from app.services.smtp_services import send_email, verify_digital_code
 
 # other tools
+import os
 import requests
 from datetime import datetime
 
@@ -247,7 +248,7 @@ async def refresh_token(request: Request):
 
 
 @router.get("/line/login/callback")
-async def line_login_callback(request: Request, code: str | None = None, state: str | None = None, error: str | None = None):
+async def line_login_callback(code: str | None = None, state: str | None = None, error: str | None = None, sqldb: Session = Depends(connect_mysql)):
     """
       Line Login 的 callback
     """
@@ -269,15 +270,58 @@ async def line_login_callback(request: Request, code: str | None = None, state: 
     # 驗證 Line ID Token
     token_data = response.json()
     id_token = token_data.get("id_token", None)
-    print(token_data)  # TODO
-    # if not id_token or not verify_line_id_token(id_token, nonce):
-    # return JSONResponse(status_code=400, content={"success": False, "message": "Line ID Token 驗證失敗"})
+    if not id_token or not verify_line_id_token(id_token, nonce):
+        return JSONResponse(status_code=400, content={"success": False, "message": "Line ID Token 驗證失敗"})
 
-    # 取得使用者資料 TODO
-    # user_data = verify_line_id_token(id_token, nonce)
-    # print(user_data)
+    # 取得使用者資料
+    # sub: line_user_id
+    # name: line_user_name
+    # picture: line_user_picture
+    user_data = verify_line_id_token(id_token, nonce)
+    if not user_data:
+        return JSONResponse(status_code=400, content={"success": False, "message": "Line ID Token 驗證失敗"})
 
-    return JSONResponse(status_code=200, content={"success": True, "message": "Line Login 成功"})
+    line_user_id = user_data.get("sub")
+    user = sqldb.query(User).filter(User.line_user_id == line_user_id).first()
+    if not user:
+        user = User(
+            line_user_id=user_data.get("sub"),
+            line_user_name=user_data.get("name"),
+            line_user_picture=user_data.get("picture"),
+            is_active=False
+        )
+        sqldb.add(user)
+        sqldb.commit()
+    else:
+        user.line_user_name = user_data.get("name")
+        user.line_user_picture = user_data.get("picture")
+        sqldb.commit()
+
+    # - 新增 refresh token 來更新 access token -
+    jwt_token = create_jwt_token(data={
+        "username": user.username,
+        "email": user.email,
+        "line_user_name": user.line_user_name,
+        "line_user_id": user.line_user_id,
+        "is_active": user.is_active
+    })
+
+    jwt_refresh_token = create_refresh_token(data={
+        "username": user.username,
+        "email": user.email,
+        "line_user_name": user.line_user_name,
+        "line_user_id": user.line_user_id,
+        "is_active": user.is_active
+    })
+
+    print("[DEBUG] APP_URL:", os.getenv('APP_URL'))
+
+    redirect_response = RedirectResponse(
+        url=f"{os.getenv('APP_URL')}/app/auth/redirect?token={jwt_token}", status_code=302)
+    set_cookies(redirect_response, token=jwt_refresh_token, expired_days=3)
+    # - End. -
+
+    return redirect_response
 
 
 @router.post("/logout")

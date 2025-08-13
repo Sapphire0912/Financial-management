@@ -37,7 +37,6 @@ const user_login = async (
   if (login_status === 2) {
     const result = await userLogin(email, password, 2);
     window.location.href = result.url; // 跳轉到 Line Login 頁面
-    return true;
   }
 
   if (login_status === 1) {

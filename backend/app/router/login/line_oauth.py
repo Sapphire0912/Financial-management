@@ -97,8 +97,7 @@ def get_line_access_token_params(code: str, state: str) -> tuple[str, dict] | No
         "grant_type": "authorization_code",
         "code": code,
         "client_id": LINE_LOGIN_CHANNEL_ID,
-        # NOTE 若攜帶 client_secret 簽名, 會產生 HS256 簽名而非 RS256
-        # "client_secret": LINE_LOGIN_CHANNEL_SECRET,
+        "client_secret": LINE_LOGIN_CHANNEL_SECRET,
         "code_verifier": code_verifier,
         "redirect_uri": LINE_LOGIN_REDIRECT_URI,
     }, nonce
@@ -115,26 +114,18 @@ def verify_line_id_token(id_token: str, nonce: str) -> dict | None:
     if not id_token:
         return None
 
-    # 1. 取簽章金鑰並驗簽
-    jwk_client = PyJWKClient(LINE_JWKS_URL)
-    signing_key = jwk_client.get_signing_key_from_jwt(id_token).key
-    print(signing_key)
-
-    # 2. 檢查 JWT token
-    # NOTE 若取得 Access Token 時, 攜帶 client_secret 簽名, 會產生 HS256 簽名而非 RS256.
-    # NOTE 此時解 JWT token 的 secret key 要和 "client_secret" 相同.
-    # TODO Line Developer 查看 Access Token 簽名方式
+    # 檢查 JWT token
     claims = jwt.decode(
         id_token,
-        signing_key,
-        algorithms=["RS256"],
+        LINE_LOGIN_CHANNEL_SECRET,
+        algorithms=["HS256"],
         audience=LINE_LOGIN_CHANNEL_ID,
         issuer="https://access.line.me",
         options={"require": ["exp", "iat", "aud", "iss"]},
         leeway=30,
     )
 
-    # 3. 比對 nonce（防重放）
+    # 比對 nonce（防重放）
     if claims.get("nonce") != nonce:
         return None
 

@@ -12,6 +12,7 @@ import TransactionPage from "./pages/Transaction";
 import NotificationPage from "./pages/Notification";
 import InvestingPage from "./pages/Investing";
 import SettingPage from "./pages/Setting";
+import RedirectPage from "./pages/RedirectPage";
 
 /* CSS */
 import "./styles/index.css";
@@ -22,9 +23,10 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<LoginPage />} />
+          <Route path="/app/auth/redirect" element={<RedirectPage />} />
           <Route path="/dashboard" element={<DashBoard />} />
           <Route path="/accounting" element={<AccountingPage />} />
-          {/* <Route path="/analyze" element={<AnalyzePage />} /> */}
+          <Route path="/analyze" element={<AnalyzePage />} />
           <Route path="/history" element={<TransactionPage />} />
           <Route path="/notification" element={<NotificationPage />} />
           <Route path="/investing" element={<InvestingPage />} />

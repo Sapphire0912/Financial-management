@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Numeric, Time
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, ForeignKey, Numeric, Time, CheckConstraint
 from sqlalchemy.ext.declarative import declarative_base
 from enum import IntEnum
 from datetime import datetime, date, time
@@ -19,6 +19,7 @@ class User(Base):
         is_active (bool): 是否已啟用 / 綁定。
         line_user_name (str): 使用者 Line 名稱。
         line_user_id (str): 使用者 Line ID。
+        line_user_picture (str): 使用者 Line 頭像。
         created_at (datetime): 建立時間。
         updated_at (datetime): 更新時間。
         last_login_at (datetime): 最後登入時間。
@@ -26,16 +27,29 @@ class User(Base):
 
     __tablename__ = "users"
     id = Column(Integer, primary_key=True)
-    username = Column(String(50), unique=True, nullable=False)
-    email = Column(String(100), unique=True, nullable=False)
-    password = Column(String(255), nullable=False)
+    username = Column(String(50), unique=True, nullable=True)
+    email = Column(String(100), unique=True, nullable=True)
+    password = Column(String(255), nullable=True)
     is_active = Column(Boolean, default=False)
     line_user_name = Column(String(100), nullable=True)
     line_user_id = Column(String(100), unique=True, nullable=True)
+    line_user_picture = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow,
                         onupdate=datetime.utcnow)
     last_login_at = Column(DateTime, default=datetime.utcnow)
+
+    # 限制 mysql 參數設定
+    __table_args__ = (
+        CheckConstraint(
+            "(line_user_id IS NOT NULL) OR (username IS NOT NULL)",
+            name="username_required_if_no_line_user_id"
+        ),
+        CheckConstraint(
+            "(username IS NOT NULL) AND (email IS NOT NULL) AND (password IS NOT NULL)",
+            name="username_email_password_required"
+        )
+    )
 
     def __repr__(self):
         return f"<User (id={self.id}, username='{self.username}')>"
