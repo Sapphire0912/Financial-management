@@ -300,9 +300,12 @@ async def get_user_expense_information(request: Request, params: DashboardMenuIn
         if current_start_time <= d.created_at < current_end_time:
             current_month_expense += cost
 
-    top_expense_item: tuple = sorted(
-        each_expense_kind.items(), key=lambda item: item[1], reverse=True)[0]
-    data["top_expense_kind"], data["top_expense_amout"] = top_expense_item[0], top_expense_item[1]
+    if each_expense_kind.items():
+        top_expense_item: tuple = sorted(
+            each_expense_kind.items(), key=lambda item: item[1], reverse=True)[0]
+        data["top_expense_kind"], data["top_expense_amout"] = top_expense_item[0], top_expense_item[1]
+    else:
+        data["top_expense_kind"], data["top_expense_amout"] = "", 0
     #
 
     # 上個月份時間範圍 (計算支出成長率)
@@ -327,10 +330,13 @@ async def get_user_expense_information(request: Request, params: DashboardMenuIn
     )
     is_open_plan, budget = sqldb.execute(join_sql).first()
     data["is_open_budget_setting"] = is_open_plan
-    data["month_budget"] = int(budget)
+    data["month_budget"] = int(budget) if budget else 0
 
-    data["budget_use_percent"] = round(
-        current_month_expense * 100 / data["month_budget"], 2)
+    if data["month_budget"] > 0:
+        data["budget_use_percent"] = round(
+            current_month_expense * 100 / data["month_budget"], 2)
+    else:
+        data["budget_use_percent"] = 0.0
 
     return JSONResponse(status_code=200, content={"success": True, "data": data})
 
@@ -415,7 +421,7 @@ async def get_user_remaining_information(request: Request, timeinfo: TimeInfo, s
         .where(User.username == user_name)
     )
     is_open_plan, budget = sqldb.execute(join_sql).first()
-    budget = int(budget)
+    budget = int(budget) if budget else 0
 
     # 取得本月目前支出 (預期/平均 每日支出)
     current_end_time = utc_time + relativedelta(months=1)
@@ -423,10 +429,12 @@ async def get_user_remaining_information(request: Request, timeinfo: TimeInfo, s
         user_name=user_name, unit="TWD", created_at__gte=utc_time, created_at__lt=current_end_time).sum('cost')
 
     data = dict()
-    data["reduce_budget"] = round((budget - total_expense) * 100 / budget, 2)
+    data["reduce_budget"] = round(
+        (budget - total_expense) * 100 / budget, 2) if budget > 0 else 0.0
 
     max_day = (current_end_time - timedelta(days=1)).day
-    data["expect_expense_per_day"] = round(budget / max_day, 0)
+    data["expect_expense_per_day"] = round(
+        budget / max_day, 0) if budget > 0 else 0
     data["expense_per_day"] = round(total_expense / max_day, 0)
 
     # 取得當月支出前三高類別以及分別必要或想要的資料

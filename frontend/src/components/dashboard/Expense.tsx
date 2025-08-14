@@ -126,7 +126,8 @@ const MyExpense = ({ menu }: MyExpenseProps) => {
           valueColor="text-red-500"
         />
       </div>
-      {expenseInfo.is_open_budget_setting ? (
+
+      {expenseInfo.is_open_budget_setting && expenseInfo.month_budget > 0 ? (
         <div className="mt-4">
           <div className="flex justify-between">
             <span className="font-semibold">0</span>
@@ -157,7 +158,9 @@ const MyExpense = ({ menu }: MyExpenseProps) => {
           </div>
         </div>
       ) : (
-        <div className="mt-4"></div>
+        <div className="mt-4 min-h-[8rem] flex items-center justify-center">
+          <p className="text-gray-500">目前沒有預算資料</p>
+        </div>
       )}
     </div>
   );

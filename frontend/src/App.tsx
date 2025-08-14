@@ -23,7 +23,7 @@ function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<LoginPage />} />
-          <Route path="/app/auth/redirect" element={<RedirectPage />} />
+          <Route path="/line/auth/callback" element={<RedirectPage />} />
           <Route path="/dashboard" element={<DashBoard />} />
           <Route path="/accounting" element={<AccountingPage />} />
           <Route path="/analyze" element={<AnalyzePage />} />

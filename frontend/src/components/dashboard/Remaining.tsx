@@ -157,28 +157,34 @@ const MyRemaining = () => {
         />
       </div>
 
-      <div className="mt-4 grid grid-cols-3 gap-2 items-end">
-        {remainingInfo.top_expense_data.map(
-          (item: TopExpenseData, index: number) => (
-            <ExpenseTopInfo
-              expenseType={item.kind}
-              expensePercent={item.percent.toString()}
-              expenseValue={item.total_expense.toString()}
-              necessaryExpenseValue={item.necessary.toString()}
-              wantToExpenseValue={item.want.toString()}
-              barColor={
-                index === 0
-                  ? "bg-green-900"
-                  : index === 1
-                  ? "bg-green-700"
-                  : "bg-green-500"
-              }
-              height={index === 0 ? "240px" : index === 1 ? "200px" : "160px"}
-              isShowDetail={index !== 2}
-            />
-          )
-        )}
-      </div>
+      {remainingInfo.top_expense_data.length > 0 ? (
+        <div className="mt-4 grid grid-cols-3 gap-2 items-end">
+          {remainingInfo.top_expense_data.map(
+            (item: TopExpenseData, index: number) => (
+              <ExpenseTopInfo
+                expenseType={item.kind}
+                expensePercent={item.percent.toString()}
+                expenseValue={item.total_expense.toString()}
+                necessaryExpenseValue={item.necessary.toString()}
+                wantToExpenseValue={item.want.toString()}
+                barColor={
+                  index === 0
+                    ? "bg-green-900"
+                    : index === 1
+                    ? "bg-green-700"
+                    : "bg-green-500"
+                }
+                height={index === 0 ? "240px" : index === 1 ? "200px" : "160px"}
+                isShowDetail={index !== 2}
+              />
+            )
+          )}
+        </div>
+      ) : (
+        <div className="mt-4 min-h-[15rem] flex items-center justify-center">
+          <p className="text-gray-500">目前沒有支出資料</p>
+        </div>
+      )}
     </div>
   );
 };

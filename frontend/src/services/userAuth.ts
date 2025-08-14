@@ -26,6 +26,26 @@ export async function userLogin(
   return data;
 }
 
+export async function userLineLogin(code: string, state: string) {
+  const response = await fetch("/app/auth/line/login/callback", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      state: state,
+      code: code,
+    }),
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || "Line 登入失敗");
+  }
+  return data;
+}
+
 export async function verificationAccount(
   username: string,
   email: string,

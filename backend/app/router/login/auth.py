@@ -247,11 +247,15 @@ async def refresh_token(request: Request):
         return JSONResponse(status_code=401, content={"success": False, "message": "Token 已過期，請重新登入"})
 
 
-@router.get("/line/login/callback")
-async def line_login_callback(code: str | None = None, state: str | None = None, error: str | None = None, sqldb: Session = Depends(connect_mysql)):
+@router.post("/line/login/callback")
+async def line_login_callback(request: Request, parms: dict, sqldb: Session = Depends(connect_mysql)):
     """
       Line Login 的 callback
     """
+    code = parms.get("code")
+    state = parms.get("state")
+    error = parms.get("error")
+
     if error:
         return JSONResponse(status_code=400, content={"success": False, "message": f"LINE 授權失敗: {error}"})
     if not code or not state:
@@ -314,14 +318,14 @@ async def line_login_callback(code: str | None = None, state: str | None = None,
         "is_active": user.is_active
     })
 
-    print("[DEBUG] APP_URL:", os.getenv('APP_URL'))
-
-    redirect_response = RedirectResponse(
-        url=f"{os.getenv('APP_URL')}/app/auth/redirect?token={jwt_token}", status_code=302)
-    set_cookies(redirect_response, token=jwt_refresh_token, expired_days=3)
+    json_response = JSONResponse(status_code=200, content={
+        "success": True,
+        "token": jwt_token
+    })
+    set_cookies(json_response, token=jwt_refresh_token, expired_days=3)
     # - End. -
 
-    return redirect_response
+    return json_response
 
 
 @router.post("/logout")

@@ -50,7 +50,10 @@ const TransactionPage = () => {
     const fetchData = async () => {
       try {
         const data = await userData(localStorage.getItem("token"));
-        setUserInfo({ username: data.username, email: data.email });
+        setUserInfo({
+          username: data.username || data.line_user_name,
+          email: data.email || data.line_user_id,
+        });
       } catch (err) {
         console.error("取得使用者資料失敗：", err);
         // 未來要改成 ErrorPage.tsx 的設計
