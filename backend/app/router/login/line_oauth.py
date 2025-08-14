@@ -31,8 +31,8 @@ LINE_LOGIN_CODE_CHALLENGE_METHOD = "S256"
 LINE_LOGIN_AUTH_URL = "https://access.line.me/oauth2/v2.1/authorize"   # 授權登入
 LINE_ACCESS_TOKEN_URL = "https://api.line.me/oauth2/v2.1/token"        # 取得 Access Token
 LINE_PROFILE_URL = "https://api.line.me/v2/profile"                    # 取得 User 資料
-# 驗證 JWT token (JWKS)
-LINE_JWKS_URL = "https://api.line.me/oauth2/v2.1/certs"
+# 驗證 JWT token (JWKS, RS256 加密才需要)
+# LINE_JWKS_URL = "https://api.line.me/oauth2/v2.1/certs"
 
 
 def get_line_login_url() -> str:

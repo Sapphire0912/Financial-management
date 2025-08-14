@@ -13,6 +13,7 @@ import IncomeAccountingForm from "../components/accounting/IncomeAccountingForm"
 import { BoardButtonItems } from "../components/componentProps";
 import TransactionTable from "../components/transactions/TransactionTable";
 import FilterForm from "../components/FilterForm";
+import AccountingChart from "../components/accounting/AccountingChart";
 
 /* CSS */
 import "../styles/page.css";
@@ -130,14 +131,10 @@ const AccountingPage = () => {
             </div>
           </div>
 
-          <div
-            className={`dashboard-content ${
-              userOperation !== 3 ? "justify-between" : ""
-            }`}
-          >
+          <div className="dashboard-content">
             <div
               className={`h-full ${
-                userOperation === 3 ? "min-w-full overflow-x-auto" : ""
+                userOperation === 3 ? "min-w-full overflow-x-auto" : "w-1/2"
               }`}
             >
               {userOperation === 1 && <AddAccountingForm />}
@@ -153,7 +150,17 @@ const AccountingPage = () => {
               )}
             </div>
             {userOperation !== 3 && (
-              <div className="dashboard-right">Figure Details</div>
+              <div className="h-full w-1/2 flex flex-col items-center">
+                <div className="w-1/2 flex flex-col p-4 space-y-4">
+                  <div className="border rounded-lg p-4 flex justify-center items-center">
+                    <AccountingChart filterStatus={filterStatus} />
+                  </div>
+
+                  <div className="border rounded-lg p-4 overflow-auto">
+                    Tables, 總類別的資料
+                  </div>
+                </div>
+              </div>
             )}
           </div>
         </div>

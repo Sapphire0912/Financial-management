@@ -111,7 +111,7 @@ const TransactionPage = () => {
             </div>
           </div>
 
-          <div className="dashboard-content">
+          <div className="dashboard-content items-center">
             <div className="h-full min-w-full overflow-x-auto">
               <TransactionTable
                 per_page={18}
