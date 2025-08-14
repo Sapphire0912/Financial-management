@@ -28,7 +28,9 @@ function App() {
           <Route path="/accounting" element={<AccountingPage />} />
           <Route path="/analyze" element={<AnalyzePage />} />
           <Route path="/history" element={<TransactionPage />} />
-          <Route path="/notification" element={<NotificationPage />} />
+          {/*可能會移除 */}
+          {/* <Route path="/notification" element={<NotificationPage />} /> */}
+
           <Route path="/investing" element={<InvestingPage />} />
           <Route path="/setting" element={<SettingPage />} />
         </Routes>

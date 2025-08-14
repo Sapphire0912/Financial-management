@@ -285,6 +285,7 @@ async def line_login_callback(request: Request, parms: dict, sqldb: Session = De
     if not user_data:
         return JSONResponse(status_code=400, content={"success": False, "message": "Line ID Token 驗證失敗"})
 
+    # TODO 這段邏輯需要重新設計, 前端要多一個讓使用者選擇綁定現有帳號還是建立新帳號的選項 (需綁定 Line 帳號才可以使用 Line Message Bot 功能)
     line_user_id = user_data.get("sub")
     user = sqldb.query(User).filter(User.line_user_id == line_user_id).first()
     if not user:

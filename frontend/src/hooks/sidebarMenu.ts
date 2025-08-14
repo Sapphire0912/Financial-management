@@ -41,12 +41,12 @@ export const defaultMenuItems: MenuItem[] = [
     path: "/history",
     amount: 0,
   },
-  {
-    img: "/notification-dark.png",
-    text: "通知",
-    path: "/notification",
-    amount: 0,
-  },
+  // {
+  //   img: "/notification-dark.png",
+  //   text: "通知",
+  //   path: "/notification",
+  //   amount: 0,
+  // },
   {
     img: "/investing-dark.png",
     text: "理財規劃",
