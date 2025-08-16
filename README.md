@@ -22,7 +22,7 @@
 - **資料雲端同步**：所有記錄自動儲存於 DynamoDB，支援跨設備查詢
 - **Web 管理後台**：提供 React 打造的前端介面供用戶瀏覽、管理財務紀錄
 - **定期背景任務**：透過 Celery 處理定期備份與提醒任務
-- **資料視覺化（可選）**：可整合 Chart.js 顯示收支圖表
+- **資料視覺化**：可整合 Chart.js 顯示收支圖表
 
 ---
 
@@ -45,8 +45,8 @@
 
 ## 專案部署
 
-- 使用 Docker Compose 快速部署整體應用（含資料庫、FastAPI、前端）
-- Webhook 採用 AWS Lambda + API Gateway 設定，支援 HTTPS 與高可用
+- 使用 EC2 透過 Docker Compose 快速部署整體應用（含資料庫、FastAPI、前端）
+- LINE Webhook 採用 AWS Lambda + API Gateway 設定，接收使用者記帳資訊 (資料存於 Dynamo DB 與 S3)
 - EC2 執行主應用與非同步任務，將資料庫資料與 S3、Dynamo DB 進行同步
 
 ---
