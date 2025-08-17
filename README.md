@@ -49,13 +49,11 @@
 - LINE Webhook 採用 AWS Lambda + API Gateway 設定，接收使用者記帳資訊 (資料存於 Dynamo DB 與 S3)
 - EC2 執行主應用與非同步任務，將資料庫資料與 S3、Dynamo DB 進行同步
 
----
+<!-- ---
 
 ## 專案畫面 / Demo
 
-<!-- - Line 記帳畫面（待補）
-- 前端報表截圖（待補）
-- Demo Link：[https://your-demo-link](https://your-demo-link)（可選） -->
+- 目前進度 -->
 
 ---
 
