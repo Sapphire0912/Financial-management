@@ -335,7 +335,7 @@ async def get_user_expense_information(request: Request, params: DashboardMenuIn
         is_open_plan, budget = False, 0
 
     data["is_open_budget_setting"] = is_open_plan
-    data["month_budget"] = budget
+    data["month_budget"] = int(budget) if budget else 0
 
     if data["month_budget"] > 0:
         data["budget_use_percent"] = round(
@@ -437,13 +437,13 @@ async def get_user_remaining_information(request: Request, timeinfo: TimeInfo, s
         user_name=user_name, unit="TWD", created_at__gte=utc_time, created_at__lt=current_end_time).sum('cost')
 
     data = dict()
-    data["reduce_budget"] = round(
-        (budget - total_expense) * 100 / budget, 2) if budget > 0 else 0.0
+    data["reduce_budget"] = float(round(
+        (budget - total_expense) * 100 / budget, 2)) if budget and budget > 0 else 0.0
 
     max_day = (current_end_time - timedelta(days=1)).day
-    data["expect_expense_per_day"] = round(
-        budget / max_day, 0) if budget > 0 else 0
-    data["expense_per_day"] = round(total_expense / max_day, 0)
+    data["expect_expense_per_day"] = int(
+        round(budget / max_day, 0)) if budget and budget > 0 else 0
+    data["expense_per_day"] = int(round(total_expense / max_day, 0))
 
     # 取得當月支出前三高類別以及分別必要或想要的資料
     top_expense_kind = Accounting.objects.aggregate(
@@ -464,9 +464,9 @@ async def get_user_remaining_information(request: Request, timeinfo: TimeInfo, s
     data["top_expense_data"] = list()
     for top_kind in top_expense_kind:
         # 必要花費
-        necessary = Accounting.objects(statistics_kind=top_kind["_id"], cost_status__in=[
+        necessary = Accounting.objects(user_name=user_name, statistics_kind=top_kind["_id"], cost_status__in=[
                                        0, 2], unit="TWD", created_at__gte=utc_time, created_at__lt=current_end_time).sum('cost')
-        want = Accounting.objects(statistics_kind=top_kind["_id"], cost_status__in=[
+        want = Accounting.objects(user_name=user_name, statistics_kind=top_kind["_id"], cost_status__in=[
                                   1, 3], unit="TWD", created_at__gte=utc_time, created_at__lt=current_end_time).sum("cost")
 
         data["top_expense_data"].append({
@@ -477,4 +477,5 @@ async def get_user_remaining_information(request: Request, timeinfo: TimeInfo, s
             "want": want
         })
 
+    # print(f'[DEBUG] data: {data}')
     return JSONResponse(status_code=200, content={"success": True, "data": data})
