@@ -328,9 +328,14 @@ async def get_user_expense_information(request: Request, params: DashboardMenuIn
         .join(UserBudgetSetting, User.id == UserBudgetSetting.user_id)
         .where(User.username == user_name)
     )
-    is_open_plan, budget = sqldb.execute(join_sql).first()
+    result = sqldb.execute(join_sql).first()
+    if result:
+        is_open_plan, budget = result
+    else:
+        is_open_plan, budget = False, 0
+
     data["is_open_budget_setting"] = is_open_plan
-    data["month_budget"] = int(budget) if budget else 0
+    data["month_budget"] = budget
 
     if data["month_budget"] > 0:
         data["budget_use_percent"] = round(
@@ -420,8 +425,11 @@ async def get_user_remaining_information(request: Request, timeinfo: TimeInfo, s
         .join(UserBudgetSetting, User.id == UserBudgetSetting.user_id)
         .where(User.username == user_name)
     )
-    is_open_plan, budget = sqldb.execute(join_sql).first()
-    budget = int(budget) if budget else 0
+    result = sqldb.execute(join_sql).first()
+    if result:
+        is_open_plan, budget = result
+    else:
+        is_open_plan, budget = False, 0
 
     # 取得本月目前支出 (預期/平均 每日支出)
     current_end_time = utc_time + relativedelta(months=1)

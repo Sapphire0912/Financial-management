@@ -224,7 +224,7 @@ const UserSetting = () => {
           />
         )}
       </div>
-      <div className="py-2">
+      {/* <div className="py-2">
         <div className="flex items-center justify-between w-60 mb-2">
           <h2 className="text-2xl font-semibold mr-4">帳號設定</h2>
         </div>
@@ -244,7 +244,7 @@ const UserSetting = () => {
             </button>
           </div>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };
