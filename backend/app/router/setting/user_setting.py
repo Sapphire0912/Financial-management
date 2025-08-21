@@ -15,7 +15,7 @@ from app.schemas.users_setting import NotifyContent
 from app.utils.jwt_verification import verify_jwt_token
 
 # Tools
-from app.utils.attach_info import convert_time_to_utc_time
+from app.utils.attach_info import convert_time_to_utc_time, check_user_login_method
 from datetime import datetime, timedelta, time
 from dateutil.relativedelta import relativedelta
 from typing import List, Tuple
@@ -36,8 +36,12 @@ async def get_message_notify_setting(request: Request, timezone: str, sqldb: Ses
         data.content: 輸出由上到下內容顯示格式與使用者的設定資料
     """
     payload = request.state.payload
+    user_name = payload.get("username")
+    line_user_id = payload.get("line_user_id", None)
+    login_method = check_user_login_method(payload)
+
     user = sqldb.query(User).filter(
-        User.username == payload["username"]).first()
+        User.username == user_name).first()
     if not user:
         return JSONResponse(status_code=401, content={"success": False, "message": "使用者名稱錯誤"})
 
@@ -198,8 +202,12 @@ async def update_message_notify_setting(request: Request, content: List[NotifyCo
     註: 利用 sort 來判斷當前更新的 table 位置 (若 sort 改變此處需要更新)
     """
     payload = request.state.payload
+    user_name = payload.get("username")
+    line_user_id = payload.get("line_user_id", None)
+    login_method = check_user_login_method(payload)
+
     user = sqldb.query(User).filter(
-        User.username == payload["username"]).first()
+        User.username == user_name).first()
     if not user:
         # TODO: 需新增通知訊息 Log
         return JSONResponse(status_code=401, content={"success": False, "message": "使用者名稱錯誤"})

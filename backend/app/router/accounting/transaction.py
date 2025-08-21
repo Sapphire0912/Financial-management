@@ -19,7 +19,7 @@ from app.utils.cachekey import transaction_key_builder
 from app.schemas.accounting import FilterRequest
 
 # Tools
-from app.utils.attach_info import verify_utc_time, convert_to_utc_datetime
+from app.utils.attach_info import verify_utc_time, convert_to_utc_datetime, check_user_login_method
 from app.utils.query_map import handle_filter_query
 from datetime import date, datetime
 from bson import ObjectId
@@ -53,6 +53,8 @@ async def get_transaction_history(request: Request, query: FilterRequest):
     def _get_transaction_data(
         collection: Accounting | IncomeAccounting,
         user_name: str,
+        line_user_id: str,
+        login_method: str,
         query: Dict[str, Any],
         sort_order: List[Tuple[str, int]],
         start_index: int,
@@ -65,9 +67,18 @@ async def get_transaction_history(request: Request, query: FilterRequest):
             response_data: 記帳資料
             max_page, 最大頁數
         """
+        # 根據登入方式設定查詢條件
+        if login_method == "bind":
+            match_condition = {"user_name": user_name,
+                               "line_user_id": line_user_id, **query}
+        elif login_method == "line":
+            match_condition = {"line_user_id": line_user_id, **query}
+        else:
+            match_condition = {"user_name": user_name, **query}
+
         # 採用 aggregate 查詢
         pipeline = [
-            {"$match": {"user_name": user_name, **query}},
+            {"$match": match_condition},
         ]
         if sort_order:
             for field, order in sort_order:
@@ -113,11 +124,19 @@ async def get_transaction_history(request: Request, query: FilterRequest):
         return response_data, max_page
 
     try:
+        # 檢查使用者登入方式
+        payload = request.state.payload
+        user_name = payload.get("username")
+        line_user_id = payload.get("line_user_id", None)
+        login_method = check_user_login_method(payload)
+
         oper = query.oper
         if oper in "01":
             response_data, max_page = await _get_transaction_data(
                 Accounting if oper == "0" else IncomeAccounting,
-                request.state.payload['username'],
+                user_name,
+                line_user_id,
+                login_method,
                 query_conditions,
                 sort_order,
                 start_index,
@@ -139,7 +158,11 @@ async def get_new_record(request: Request, sqldb: Session = Depends(connect_mysq
     """
     取得使用者距離上次瀏覽交易紀錄頁面時, 新增了幾筆紀錄
     """
-    username = request.state.payload["username"]
+    payload = request.state.payload
+    username = payload.get("username")
+    line_user_id = payload.get("line_user_id", None)
+    login_method = check_user_login_method(payload)
+
     user = sqldb.query(User).filter(User.username == username).first()
 
     if not user:
@@ -152,14 +175,33 @@ async def get_new_record(request: Request, sqldb: Session = Depends(connect_mysq
         # 如果有瀏覽紀錄: 則支出 + 收入的筆數做總和
         last_view_at = user_record.history_last_view_at if user_record and user_record.history_last_view_at else datetime.utcnow()
 
-        expense_count = Accounting.objects(
-            user_name=username,
-            updated_at__gt=last_view_at
-        ).count()
-        income_count = IncomeAccounting.objects(
-            user_name=username,
-            updated_at__gt=last_view_at
-        ).count()
+        if login_method == "bind":
+            expense_count = Accounting.objects(
+                user_name=username, line_user_id=line_user_id,
+                updated_at__gt=last_view_at
+            ).count()
+            income_count = IncomeAccounting.objects(
+                user_name=username, line_user_id=line_user_id,
+                updated_at__gt=last_view_at
+            ).count()
+        elif login_method == "line":
+            expense_count = Accounting.objects(
+                line_user_id=line_user_id,
+                updated_at__gt=last_view_at
+            ).count()
+            income_count = IncomeAccounting.objects(
+                line_user_id=line_user_id,
+                updated_at__gt=last_view_at
+            ).count()
+        else:
+            expense_count = Accounting.objects(
+                user_name=username,
+                updated_at__gt=last_view_at
+            ).count()
+            income_count = IncomeAccounting.objects(
+                user_name=username,
+                updated_at__gt=last_view_at
+            ).count()
         new_record_count = expense_count + income_count
 
         return JSONResponse(
@@ -180,8 +222,12 @@ async def get_new_record(request: Request, sqldb: Session = Depends(connect_mysq
 async def update_last_browser_time(request: Request, sqldb: Session = Depends(connect_mysql)):
     """
     紀錄使用者瀏覽交易紀錄頁面的時間
-    """
-    username = request.state.payload["username"]
+        """
+    payload = request.state.payload
+    username = payload.get("username")
+    line_user_id = payload.get("line_user_id", None)
+    login_method = check_user_login_method(payload)
+
     user = sqldb.query(User).filter(User.username == username).first()
 
     if not user:

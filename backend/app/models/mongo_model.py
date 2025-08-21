@@ -60,7 +60,7 @@ class Accounting(BaseModel):
     category = me.StringField(default="其他")
 
     user_name = me.StringField(required=True)
-    line_user_id = me.StringField(default="")
+    line_user_id = me.StringField(default=None)
     cost_name = me.StringField(required=True)
     cost_status = me.IntField(required=True)
     unit = me.StringField(required=True, default="TWD")
@@ -121,7 +121,7 @@ class IncomeAccounting(BaseModel):
     income_kind = me.StringField(required=True, default="其他")
     category = me.StringField(default="")
     user_name = me.StringField(required=True)
-    line_user_id = me.StringField(default="")
+    line_user_id = me.StringField(default=None)
     amount = me.IntField(required=True)
     unit = me.StringField(required=True)
     payer = me.StringField(required=True)

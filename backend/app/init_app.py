@@ -17,7 +17,7 @@ from app.databases.mysql_setting import engine
 from app.models.sql_model import Base
 
 # router setting
-from app.router.accounting import users_accounting, transaction
+from app.router.accounting import users_accounting, transaction, figure
 from app.router.login import auth
 from app.router.dashboard import dashboard_api
 from app.router.setting import user_setting
@@ -75,6 +75,7 @@ def init_app() -> FastAPI:
     app.include_router(dashboard_api.router, prefix="/app")
     app.include_router(users_accounting.router, prefix="/app")
     app.include_router(transaction.router, prefix="/app")
+    app.include_router(figure.router, prefix="/app")
     app.include_router(user_setting.router, prefix="/app")
     app.include_router(user_plan.router, prefix="/app")
 

@@ -36,7 +36,15 @@ def transaction_key_builder(func, namespace, request, *args, **kwargs):
 
 def dashboard_balance_key_builder(func, namespace, request, *args, **kwargs):
     """
-    設定'儀錶板總餘額'的快取 key，用於 fastapi-cache 快取系統。
+    設定'儀錶板總餘額'的快取 key
+    """
+    key_parts = [str(a) for a in args]
+    return f"{namespace}:{func.__name__}:{','.join(key_parts)}"
+
+
+def accounting_figure_key_builder(func, namespace, request, *args, **kwargs):
+    """
+    設定'記帳圖表'的快取 key
     """
     key_parts = [str(a) for a in args]
     return f"{namespace}:{func.__name__}:{','.join(key_parts)}"

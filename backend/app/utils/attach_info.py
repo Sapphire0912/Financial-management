@@ -154,3 +154,18 @@ def clear_cookies(response: Response):
         key="refresh_token",
         path="/"
     )
+
+
+def check_user_login_method(payload: dict) -> str:
+    """
+    檢查使用者採用哪種方式登入
+
+    Args:
+        payload (dict): 使用者 payload
+    """
+    if payload.get("is_active", False):
+        return "bind"
+    elif payload.get("line_user_id", None):
+        return "line"
+    else:
+        return "password"

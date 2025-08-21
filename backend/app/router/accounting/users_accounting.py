@@ -14,7 +14,7 @@ from fastapi_cache.decorator import cache
 from app.utils.cachekey import transaction_key_builder
 
 # Tools
-from app.utils.attach_info import verify_utc_time, convert_to_utc_datetime
+from app.utils.attach_info import verify_utc_time, convert_to_utc_datetime, check_user_login_method
 from app.utils.query_map import handle_filter_query
 from datetime import date, datetime
 from bson import ObjectId
@@ -49,6 +49,8 @@ async def get_transaction_history(request: Request, query: FilterRequest):
     def _get_transaction_data(
         collection: Accounting | IncomeAccounting,
         user_name: str,
+        line_user_id: str,
+        login_method: str,
         query: Dict[str, Any],
         sort_order: List[Tuple[str, int]],
         start_index: int,
@@ -61,9 +63,18 @@ async def get_transaction_history(request: Request, query: FilterRequest):
             response_data: 記帳資料
             max_page, 最大頁數
         """
+        # 根據登入方式設定查詢條件
+        if login_method == "bind":
+            match_condition = {"user_name": user_name,
+                               "line_user_id": line_user_id, **query}
+        elif login_method == "line":
+            match_condition = {"line_user_id": line_user_id, **query}
+        else:
+            match_condition = {"user_name": user_name, **query}
+
         # 採用 aggregate 查詢
         pipeline = [
-            {"$match": {"user_name": user_name, **query}},
+            {"$match": match_condition},
         ]
         if sort_order:
             for field, order in sort_order:
@@ -109,11 +120,19 @@ async def get_transaction_history(request: Request, query: FilterRequest):
         return response_data, max_page
 
     try:
+        # 檢查使用者登入方式
+        payload = request.state.payload
+        user_name = payload.get("username")
+        line_user_id = payload.get("line_user_id", None)
+        login_method = check_user_login_method(payload)
+
         oper = query.oper
         if oper in "01":
             response_data, max_page = await _get_transaction_data(
                 Accounting if oper == "0" else IncomeAccounting,
-                request.state.payload['username'],
+                user_name,
+                line_user_id,
+                login_method,
                 query_conditions,
                 sort_order,
                 start_index,
@@ -140,14 +159,22 @@ async def create_users_accounting(request: Request, data: AccountingCreate):
         return JSONResponse(status_code=403, content={"success": False, "message": "使用者時區或使用者本地時間有誤"})
 
     try:
+        # 檢查使用者登入方式
+        payload = request.state.payload
+        login_method = check_user_login_method(payload)
+
         utc_time = convert_to_utc_datetime(data.user_time_data, data.timezone)
+
+        # 根據登入方式設定 line_user_id
+        line_user_id = data.user_id if login_method in [
+            "bind", "line"] else None
 
         # 以後可以做序列化的方式處理
         record = Accounting(
             statistics_kind=data.statistics_kind,
             category=data.category,
             user_name=data.user_name,
-            line_user_id=data.user_id,
+            line_user_id=line_user_id,
             cost_name=data.cost_name,
             cost_status=data.cost_status,
             unit=data.unit,
@@ -178,16 +205,24 @@ async def update_users_accounting(request: Request, data: AccountingUpdate):
         return JSONResponse(status_code=403, content={"success": False, "message": "使用者時區或使用者本地時間有誤"})
 
     try:
+        # 檢查使用者登入方式
+        payload = request.state.payload
+        login_method = check_user_login_method(payload)
+
         # 先限定只有本人可以更新資料
         record = Accounting.objects.get(id=ObjectId(
             data.id), user_name=data.user_name)
         utc_time = convert_to_utc_datetime(data.user_time_data, data.timezone)
 
+        # 根據登入方式設定 line_user_id
+        line_user_id = data.user_id if login_method in [
+            "bind", "line"] else None
+
         update_fields = {
             "statistics_kind": data.statistics_kind,
             "category": data.category,
             "user_name": data.user_name,
-            # "line_user_id": data.user_id,
+            "line_user_id": line_user_id,
             "cost_name": data.cost_name,
             "cost_status": data.cost_status,
             "unit": data.unit,
@@ -244,14 +279,22 @@ async def create_income_accounting(request: Request, data: IncomeCreate):
     if not verify_utc_time(user_utc_time=data.current_utc_time):
         return JSONResponse(status_code=403, content={"success": False, "message": "使用者時區或使用者本地時間有誤"})
     try:
+        # 檢查使用者登入方式
+        payload = request.state.payload
+        login_method = check_user_login_method(payload)
+
         utc_time = convert_to_utc_datetime(data.user_time_data, data.timezone)
+
+        # 根據登入方式設定 line_user_id
+        line_user_id = data.user_id if login_method in [
+            "bind", "line"] else None
 
         # 以後可以做序列化的方式處理
         record = IncomeAccounting(
             income_kind=data.income_kind,
             category=data.category,
             user_name=data.user_name,
-            line_user_id=data.user_id,
+            line_user_id=line_user_id,
             unit=data.unit,
             amount=data.amount,
             payer=data.payer,
@@ -280,16 +323,24 @@ async def update_income_accounting(request: Request, data: IncomeUpdate):
         return JSONResponse(status_code=403, content={"success": False, "message": "使用者時區或使用者本地時間有誤"})
 
     try:
+        # 檢查使用者登入方式
+        payload = request.state.payload
+        login_method = check_user_login_method(payload)
+
         # 先限定只有本人可以更新資料
         record = IncomeAccounting.objects.get(id=ObjectId(
             data.id), user_name=data.user_name)
         utc_time = convert_to_utc_datetime(data.user_time_data, data.timezone)
 
+        # 根據登入方式設定 line_user_id
+        line_user_id = data.user_id if login_method in [
+            "bind", "line"] else None
+
         update_fields = {
             "income_kind": data.income_kind,
             "category": data.category,
             "user_name": data.user_name,
-            # "line_user_id": data.user_id,
+            "line_user_id": line_user_id,
             "unit": data.unit,
             "amount": data.amount,
             "payer": data.payer,

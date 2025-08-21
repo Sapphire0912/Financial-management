@@ -19,7 +19,7 @@ from fastapi_cache.decorator import cache
 from app.utils.cachekey import dashboard_balance_key_builder
 
 # Tools
-from app.utils.attach_info import verify_utc_time, convert_to_utc_datetime
+from app.utils.attach_info import verify_utc_time, convert_to_utc_datetime, check_user_login_method
 from datetime import datetime, timedelta
 from dateutil.relativedelta import relativedelta
 from typing import List, Tuple
@@ -62,7 +62,10 @@ async def get_user_dashboard_date_menu(request: Request, timeInfo: TimeInfo):
     # 使用者參數處理
     payload = request.state.payload
     user_name = payload.get("username")
-    line_user_id = payload.get("line_user_id", "")
+    line_user_id = payload.get("line_user_id", None)
+
+    # 檢查使用者登入方式
+    login_method = check_user_login_method(payload)
     #
 
     def _get_menu(collection: Accounting | IncomeAccounting) -> Tuple[List[str], List[str]]:
@@ -72,7 +75,14 @@ async def get_user_dashboard_date_menu(request: Request, timeInfo: TimeInfo):
         Returns:
             (month_menu, year_menu)
         """
-        query = collection.objects(user_name=user_name).only("created_at")
+        if login_method == "bind":
+            query = collection.objects(
+                user_name=user_name, line_user_id=line_user_id).only("created_at")
+        elif login_method == "line":
+            query = collection.objects(
+                line_user_id=line_user_id).only("created_at")
+        else:
+            query = collection.objects(user_name=user_name).only("created_at")
 
         first_data = query.order_by("created_at").first()
         last_data = query.order_by("-created_at").first()
@@ -128,7 +138,10 @@ async def get_user_balance_information(request: Request, timeInfo: TimeInfo):
     # 使用者參數處理
     payload = request.state.payload
     user_name = payload.get("username")
-    line_user_id = payload.get("line_user_id", "")
+    line_user_id = payload.get("line_user_id", None)
+
+    # 檢查使用者登入方式
+    login_method = check_user_login_method(payload)
 
     # 判斷上個月狀況使用
     utc_time = convert_to_utc_datetime(
@@ -145,8 +158,19 @@ async def get_user_balance_information(request: Request, timeInfo: TimeInfo):
     try:
         data = dict()
         # - 此處未來需要處理匯率類型, 先以 TWD 為主 -
-        expenses = Accounting.objects(user_name=user_name, unit="TWD")
-        incomes = IncomeAccounting.objects(user_name=user_name, unit="TWD")
+        if login_method == "bind":
+            expenses = Accounting.objects(
+                user_name=user_name, line_user_id=line_user_id, unit="TWD")
+            incomes = IncomeAccounting.objects(
+                user_name=user_name, line_user_id=line_user_id, unit="TWD")
+        elif login_method == "line":
+            expenses = Accounting.objects(
+                line_user_id=line_user_id, unit="TWD")
+            incomes = IncomeAccounting.objects(
+                line_user_id=line_user_id, unit="TWD")
+        else:
+            expenses = Accounting.objects(user_name=user_name, unit="TWD")
+            incomes = IncomeAccounting.objects(user_name=user_name, unit="TWD")
 
         # 總餘額
         total_expenses = sum(x.cost for x in expenses)
@@ -190,7 +214,11 @@ async def get_user_income_information(request: Request, params: DashboardMenuInf
     # 使用者參數處理
     payload = request.state.payload
     user_name = payload.get("username")
-    line_user_id = payload.get("line_user_id", "")
+    line_user_id = payload.get("line_user_id", None)
+
+    # 檢查使用者登入方式
+    login_method = check_user_login_method(payload)
+
     menu: str = params.menu  # "全部" | "yyyy-mm"
     utc_time = convert_to_utc_datetime(params.user_time_data, params.timezone).replace(
         day=1, hour=0, minute=0, second=0, microsecond=0)
@@ -206,13 +234,28 @@ async def get_user_income_information(request: Request, params: DashboardMenuInf
         # 本月份時間範圍
         current_start_time = utc_time
         current_end_time = utc_time + relativedelta(months=1)
-        income_data = IncomeAccounting.objects(user_name=user_name, unit="TWD")
+        if login_method == "bind":
+            income_data = IncomeAccounting.objects(
+                user_name=user_name, line_user_id=line_user_id, unit="TWD")
+        elif login_method == "line":
+            income_data = IncomeAccounting.objects(
+                line_user_id=line_user_id, unit="TWD")
+        else:
+            income_data = IncomeAccounting.objects(
+                user_name=user_name, unit="TWD")
     else:
         # 本月份時間範圍
         current_start_time = datetime.strptime(menu, "%Y-%m")
         current_end_time = current_start_time + relativedelta(months=1)
-        income_data = IncomeAccounting.objects(
-            user_name=user_name, unit="TWD", created_at__gte=current_start_time, created_at__lt=current_end_time)
+        if login_method == "bind":
+            income_data = IncomeAccounting.objects(
+                user_name=user_name, line_user_id=line_user_id, unit="TWD", created_at__gte=current_start_time, created_at__lt=current_end_time)
+        elif login_method == "line":
+            income_data = IncomeAccounting.objects(
+                line_user_id=line_user_id, unit="TWD", created_at__gte=current_start_time, created_at__lt=current_end_time)
+        else:
+            income_data = IncomeAccounting.objects(
+                user_name=user_name, unit="TWD", created_at__gte=current_start_time, created_at__lt=current_end_time)
 
     # 計算全部收入, 薪資, 獎金, 其他 (含本月收入)
     current_month_income = 0
@@ -232,8 +275,15 @@ async def get_user_income_information(request: Request, params: DashboardMenuInf
 
     # 上個月份時間範圍 (計算成長率 & 成長金額)
     last_start_time = current_start_time - relativedelta(months=1)
-    last_month_income = IncomeAccounting.objects(
-        user_name=user_name, unit="TWD", created_at__gte=last_start_time, created_at__lt=current_start_time).sum('amount')
+    if login_method == "bind":
+        last_month_income = IncomeAccounting.objects(
+            user_name=user_name, line_user_id=line_user_id, unit="TWD", created_at__gte=last_start_time, created_at__lt=current_start_time).sum('amount')
+    elif login_method == "line":
+        last_month_income = IncomeAccounting.objects(
+            line_user_id=line_user_id, unit="TWD", created_at__gte=last_start_time, created_at__lt=current_start_time).sum('amount')
+    else:
+        last_month_income = IncomeAccounting.objects(
+            user_name=user_name, unit="TWD", created_at__gte=last_start_time, created_at__lt=current_start_time).sum('amount')
 
     data["incr_income"] = current_month_income - last_month_income
     data["incr_percent"] = round(
@@ -261,7 +311,11 @@ async def get_user_expense_information(request: Request, params: DashboardMenuIn
     # 使用者參數處理
     payload = request.state.payload
     user_name = payload.get("username")
-    line_user_id = payload.get("line_user_id", "")
+    line_user_id = payload.get("line_user_id", None)
+
+    # 檢查使用者登入方式
+    login_method = check_user_login_method(payload)
+
     menu: str = params.menu  # "全部" | "yyyy-mm"
     utc_time = convert_to_utc_datetime(params.user_time_data, params.timezone).replace(
         day=1, hour=0, minute=0, second=0, microsecond=0)
@@ -277,14 +331,28 @@ async def get_user_expense_information(request: Request, params: DashboardMenuIn
         # 本月份時間範圍
         current_start_time = utc_time
         current_end_time = utc_time + relativedelta(months=1)
-        expense_data = Accounting.objects(user_name=user_name, unit="TWD")
+        if login_method == "bind":
+            expense_data = Accounting.objects(
+                user_name=user_name, line_user_id=line_user_id, unit="TWD")
+        elif login_method == "line":
+            expense_data = Accounting.objects(
+                line_user_id=line_user_id, unit="TWD")
+        else:
+            expense_data = Accounting.objects(user_name=user_name, unit="TWD")
 
     else:
         # 本月份時間範圍
         current_start_time = datetime.strptime(menu, "%Y-%m")
         current_end_time = current_start_time + relativedelta(months=1)
-        expense_data = Accounting.objects(
-            user_name=user_name, unit="TWD", created_at__gte=current_start_time, created_at__lt=current_end_time)
+        if login_method == "bind":
+            expense_data = Accounting.objects(
+                user_name=user_name, line_user_id=line_user_id, unit="TWD", created_at__gte=current_start_time, created_at__lt=current_end_time)
+        elif login_method == "line":
+            expense_data = Accounting.objects(
+                line_user_id=line_user_id, unit="TWD", created_at__gte=current_start_time, created_at__lt=current_end_time)
+        else:
+            expense_data = Accounting.objects(
+                user_name=user_name, unit="TWD", created_at__gte=current_start_time, created_at__lt=current_end_time)
 
     # 計算全部支出, 各類別支出 (含本月支出)
     current_month_expense = 0
@@ -310,8 +378,15 @@ async def get_user_expense_information(request: Request, params: DashboardMenuIn
 
     # 上個月份時間範圍 (計算支出成長率)
     last_start_time = current_start_time - relativedelta(months=1)
-    last_month_expense = Accounting.objects(
-        user_name=user_name, unit="TWD", created_at__gte=last_start_time, created_at__lt=current_start_time).sum('cost')
+    if login_method == "bind":
+        last_month_expense = Accounting.objects(
+            user_name=user_name, line_user_id=line_user_id, unit="TWD", created_at__gte=last_start_time, created_at__lt=current_start_time).sum('cost')
+    elif login_method == "line":
+        last_month_expense = Accounting.objects(
+            line_user_id=line_user_id, unit="TWD", created_at__gte=last_start_time, created_at__lt=current_start_time).sum('cost')
+    else:
+        last_month_expense = Accounting.objects(
+            user_name=user_name, unit="TWD", created_at__gte=last_start_time, created_at__lt=current_start_time).sum('cost')
 
     diff_expense = current_month_expense - last_month_expense
     data["incr_expense_percent"] = round(
@@ -361,10 +436,14 @@ async def get_user_year_statistics_information(request: Request, params: Dashboa
     if not verify_utc_time(user_utc_time=params.current_utc_time):
         return JSONResponse(status_code=403, content={"success": False, "message": "使用者時區或使用者本地時間有誤"})
 
-    # 使用者參數處理
+        # 使用者參數處理
     payload = request.state.payload
     user_name = payload.get("username")
-    line_user_id = payload.get("line_user_id")
+    line_user_id = payload.get("line_user_id", None)
+
+    # 檢查使用者登入方式
+    login_method = check_user_login_method(payload)
+
     menu: str = params.menu  # "yyyy-mm"
     #
 
@@ -373,8 +452,15 @@ async def get_user_year_statistics_information(request: Request, params: Dashboa
 
     def _get_year_data(collection: Accounting | IncomeAccounting):
         each_month_amount = [0] * 12
-        datas = collection.objects(user_name=user_name, unit="TWD",
-                                   created_at__lt=end_time, created_at__gte=start_time)
+        if login_method == "bind":
+            datas = collection.objects(user_name=user_name, line_user_id=line_user_id, unit="TWD",
+                                       created_at__lt=end_time, created_at__gte=start_time)
+        elif login_method == "line":
+            datas = collection.objects(line_user_id=line_user_id, unit="TWD",
+                                       created_at__lt=end_time, created_at__gte=start_time)
+        else:
+            datas = collection.objects(user_name=user_name, unit="TWD",
+                                       created_at__lt=end_time, created_at__gte=start_time)
         for data in datas:
             month = data.created_at.month
             if hasattr(data, "amount"):
@@ -407,10 +493,14 @@ async def get_user_remaining_information(request: Request, timeinfo: TimeInfo, s
     if not verify_utc_time(user_utc_time=timeinfo.current_utc_time):
         return JSONResponse(status_code=403, content={"success": False, "message": "使用者時區或使用者本地時間有誤"})
 
-    # 使用者參數處理
+        # 使用者參數處理
     payload = request.state.payload
     user_name = payload.get("username")
-    line_user_id = payload.get("line_user_id", "")
+    line_user_id = payload.get("line_user_id", None)
+
+    # 檢查使用者登入方式
+    login_method = check_user_login_method(payload)
+
     utc_time = convert_to_utc_datetime(timeinfo.user_time_data, timeinfo.timezone).replace(
         day=1, hour=0, minute=0, second=0, microsecond=0)
     #
@@ -433,8 +523,15 @@ async def get_user_remaining_information(request: Request, timeinfo: TimeInfo, s
 
     # 取得本月目前支出 (預期/平均 每日支出)
     current_end_time = utc_time + relativedelta(months=1)
-    total_expense = Accounting.objects(
-        user_name=user_name, unit="TWD", created_at__gte=utc_time, created_at__lt=current_end_time).sum('cost')
+    if login_method == "bind":
+        total_expense = Accounting.objects(
+            user_name=user_name, line_user_id=line_user_id, unit="TWD", created_at__gte=utc_time, created_at__lt=current_end_time).sum('cost')
+    elif login_method == "line":
+        total_expense = Accounting.objects(
+            line_user_id=line_user_id, unit="TWD", created_at__gte=utc_time, created_at__lt=current_end_time).sum('cost')
+    else:
+        total_expense = Accounting.objects(
+            user_name=user_name, unit="TWD", created_at__gte=utc_time, created_at__lt=current_end_time).sum('cost')
 
     data = dict()
     data["reduce_budget"] = float(round(
@@ -446,16 +543,33 @@ async def get_user_remaining_information(request: Request, timeinfo: TimeInfo, s
     data["expense_per_day"] = int(round(total_expense / max_day, 0))
 
     # 取得當月支出前三高類別以及分別必要或想要的資料
-    top_expense_kind = Accounting.objects.aggregate(
-        {
-            "$match": {
-                "user_name": user_name, "unit": "TWD",
-                "created_at": {
-                    "$gte": utc_time,
-                    "$lt": current_end_time
-                }
+    if login_method == "bind":
+        match_condition = {
+            "user_name": user_name, "line_user_id": line_user_id, "unit": "TWD",
+            "created_at": {
+                "$gte": utc_time,
+                "$lt": current_end_time
             }
-        },
+        }
+    elif login_method == "line":
+        match_condition = {
+            "line_user_id": line_user_id, "unit": "TWD",
+            "created_at": {
+                "$gte": utc_time,
+                "$lt": current_end_time
+            }
+        }
+    else:
+        match_condition = {
+            "user_name": user_name, "unit": "TWD",
+            "created_at": {
+                "$gte": utc_time,
+                "$lt": current_end_time
+            }
+        }
+
+    top_expense_kind = Accounting.objects.aggregate(
+        {"$match": match_condition},
         {"$group": {"_id": "$statistics_kind", "total_expense": {"$sum": "$cost"}}},
         {"$sort": {"total_expense": -1}},
         {"$limit": 3}
@@ -464,10 +578,21 @@ async def get_user_remaining_information(request: Request, timeinfo: TimeInfo, s
     data["top_expense_data"] = list()
     for top_kind in top_expense_kind:
         # 必要花費
-        necessary = Accounting.objects(user_name=user_name, statistics_kind=top_kind["_id"], cost_status__in=[
-                                       0, 2], unit="TWD", created_at__gte=utc_time, created_at__lt=current_end_time).sum('cost')
-        want = Accounting.objects(user_name=user_name, statistics_kind=top_kind["_id"], cost_status__in=[
-                                  1, 3], unit="TWD", created_at__gte=utc_time, created_at__lt=current_end_time).sum("cost")
+        if login_method == "bind":
+            necessary = Accounting.objects(user_name=user_name, line_user_id=line_user_id, statistics_kind=top_kind["_id"], cost_status__in=[
+                                           0, 2], unit="TWD", created_at__gte=utc_time, created_at__lt=current_end_time).sum('cost')
+            want = Accounting.objects(user_name=user_name, line_user_id=line_user_id, statistics_kind=top_kind["_id"], cost_status__in=[
+                                      1, 3], unit="TWD", created_at__gte=utc_time, created_at__lt=current_end_time).sum("cost")
+        elif login_method == "line":
+            necessary = Accounting.objects(line_user_id=line_user_id, statistics_kind=top_kind["_id"], cost_status__in=[
+                                           0, 2], unit="TWD", created_at__gte=utc_time, created_at__lt=current_end_time).sum('cost')
+            want = Accounting.objects(line_user_id=line_user_id, statistics_kind=top_kind["_id"], cost_status__in=[
+                                      1, 3], unit="TWD", created_at__gte=utc_time, created_at__lt=current_end_time).sum("cost")
+        else:
+            necessary = Accounting.objects(user_name=user_name, statistics_kind=top_kind["_id"], cost_status__in=[
+                                           0, 2], unit="TWD", created_at__gte=utc_time, created_at__lt=current_end_time).sum('cost')
+            want = Accounting.objects(user_name=user_name, statistics_kind=top_kind["_id"], cost_status__in=[
+                                      1, 3], unit="TWD", created_at__gte=utc_time, created_at__lt=current_end_time).sum("cost")
 
         data["top_expense_data"].append({
             "kind": top_kind["_id"],

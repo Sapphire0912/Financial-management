@@ -15,7 +15,7 @@ from app.schemas.users_plan import PlanContent
 from app.utils.jwt_verification import verify_jwt_token
 
 # Tools
-from app.utils.attach_info import convert_datetime_to_date_string, convert_to_utc_datetime
+from app.utils.attach_info import convert_datetime_to_date_string, convert_to_utc_datetime, check_user_login_method
 from datetime import time, datetime
 from dateutil.relativedelta import relativedelta
 from typing import List
@@ -34,8 +34,12 @@ async def get_user_planning_menu(request: Request, timezone: str, sqldb: Session
         data.content: 輸出由上到下內容顯示格式與使用者的設定資料
     """
     payload = request.state.payload
+    user_name = payload.get("username")
+    line_user_id = payload.get("line_user_id", None)
+    login_method = check_user_login_method(payload)
+
     user = sqldb.query(User).filter(
-        User.username == payload["username"]).first()
+        User.username == user_name).first()
     if not user:
         return JSONResponse(status_code=401, content={"success": False, "message": "使用者名稱錯誤"})
 
@@ -138,8 +142,18 @@ async def update_user_plan_setting(request: Request, content: List[PlanContent],
     更新理財計畫設定
     """
     payload = request.state.payload
-    user = sqldb.query(User).filter(
-        User.username == payload["username"]).first()
+    user_name = payload.get("username")
+    line_user_id = payload.get("line_user_id", None)
+    login_method = check_user_login_method(payload)
+
+    if login_method == "bind" or login_method == "password":
+        user = sqldb.query(User).filter(
+            User.username == user_name).first()
+    elif login_method == "line":
+        user = sqldb.query(User).filter(
+            User.line_user_id == line_user_id).first()
+    else:
+        user = None
     if not user:
         # TODO: 需新增通知訊息 Log
         return JSONResponse(status_code=401, content={"success": False, "message": "使用者名稱錯誤"})
