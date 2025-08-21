@@ -394,6 +394,13 @@ async def get_user_expense_information(request: Request, params: DashboardMenuIn
     #
 
     # 預算設定相關
+    if login_method == "bind" or login_method == "password":
+        where_condition = User.username == user_name
+    elif login_method == "line":
+        where_condition = User.line_user_id == line_user_id
+    else:
+        where_condition = User.username == user_name
+
     join_sql = (
         select(
             UserBudgetSetting.is_open_plan,
@@ -401,7 +408,7 @@ async def get_user_expense_information(request: Request, params: DashboardMenuIn
         )
         .select_from(User)
         .join(UserBudgetSetting, User.id == UserBudgetSetting.user_id)
-        .where(User.username == user_name)
+        .where(where_condition)
     )
     result = sqldb.execute(join_sql).first()
     if result:
@@ -506,6 +513,13 @@ async def get_user_remaining_information(request: Request, timeinfo: TimeInfo, s
     #
 
     # 取得預算設定
+    if login_method == "bind" or login_method == "password":
+        where_condition = User.username == user_name
+    elif login_method == "line":
+        where_condition = User.line_user_id == line_user_id
+    else:
+        where_condition = User.username == user_name
+
     join_sql = (
         select(
             UserBudgetSetting.is_open_plan,
@@ -513,7 +527,7 @@ async def get_user_remaining_information(request: Request, timeinfo: TimeInfo, s
         )
         .select_from(User)
         .join(UserBudgetSetting, User.id == UserBudgetSetting.user_id)
-        .where(User.username == user_name)
+        .where(where_condition)
     )
     result = sqldb.execute(join_sql).first()
     if result:

@@ -163,7 +163,13 @@ async def get_new_record(request: Request, sqldb: Session = Depends(connect_mysq
     line_user_id = payload.get("line_user_id", None)
     login_method = check_user_login_method(payload)
 
-    user = sqldb.query(User).filter(User.username == username).first()
+    if login_method == "bind" or login_method == "password":
+        user = sqldb.query(User).filter(User.username == username).first()
+    elif login_method == "line":
+        user = sqldb.query(User).filter(
+            User.line_user_id == line_user_id).first()
+    else:
+        user = None
 
     if not user:
         return JSONResponse(status_code=403, content={"success": False, "message": "使用者名稱不正確"})
@@ -228,7 +234,13 @@ async def update_last_browser_time(request: Request, sqldb: Session = Depends(co
     line_user_id = payload.get("line_user_id", None)
     login_method = check_user_login_method(payload)
 
-    user = sqldb.query(User).filter(User.username == username).first()
+    if login_method == "bind" or login_method == "password":
+        user = sqldb.query(User).filter(User.username == username).first()
+    elif login_method == "line":
+        user = sqldb.query(User).filter(
+            User.line_user_id == line_user_id).first()
+    else:
+        user = None
 
     if not user:
         return JSONResponse(status_code=403, content={"success": False, "message": "使用者名稱不正確"})

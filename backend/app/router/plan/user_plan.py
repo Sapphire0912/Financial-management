@@ -38,8 +38,15 @@ async def get_user_planning_menu(request: Request, timezone: str, sqldb: Session
     line_user_id = payload.get("line_user_id", None)
     login_method = check_user_login_method(payload)
 
-    user = sqldb.query(User).filter(
-        User.username == user_name).first()
+    if login_method == "bind" or login_method == "password":
+        user = sqldb.query(User).filter(
+            User.username == user_name).first()
+    elif login_method == "line":
+        user = sqldb.query(User).filter(
+            User.line_user_id == line_user_id).first()
+    else:
+        user = None
+
     if not user:
         return JSONResponse(status_code=401, content={"success": False, "message": "使用者名稱錯誤"})
 
