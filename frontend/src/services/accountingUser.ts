@@ -376,3 +376,42 @@ export async function deleteIncomeData(deleteDataId: string) {
   }
   return result;
 }
+
+/* 取得記帳圖表資料 */
+export async function getAccountingFigureData(filterStatus: string) {
+  if (filterStatus === "0") {
+    const response = await fetchWithRefresh(
+      "/app/accounting/figure/user_expense",
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const json_data = await response.json();
+    if (!response.ok) {
+      throw new Error(json_data.message || "伺服器出現未預期錯誤");
+    }
+    return json_data.data;
+  } else if (filterStatus === "1") {
+    const response = await fetchWithRefresh(
+      "/app/accounting/figure/user_income",
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const json_data = await response.json();
+    if (!response.ok) {
+      throw new Error(json_data.message || "伺服器出現未預期錯誤");
+    }
+    return json_data.data;
+  } else {
+    throw new Error("filterStatus 參數錯誤");
+  }
+}

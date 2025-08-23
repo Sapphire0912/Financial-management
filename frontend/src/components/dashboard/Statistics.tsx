@@ -5,6 +5,7 @@ import { getYearStatistics } from "../../services/dashboardUser";
 
 /* chart.js */
 import { Bar } from "react-chartjs-2";
+import { TooltipItem } from "chart.js";
 
 const options = {
   responsive: true,
@@ -27,8 +28,8 @@ const options = {
       },
       padding: 12, // 整個 tooltip 的內距
       callbacks: {
-        label: (context) => {
-          const value = context.raw;
+        label: (context: TooltipItem<"bar">) => {
+          const value = context.raw as number;
           return `$${
             value < 0 ? (value * -1).toLocaleString() : value.toLocaleString()
           }`;
