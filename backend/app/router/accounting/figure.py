@@ -16,6 +16,7 @@ from app.utils.cachekey import accounting_figure_key_builder
 from app.utils.attach_info import verify_utc_time, convert_to_utc_datetime, check_user_login_method
 from app.utils.query_map import handle_filter_query
 from datetime import datetime
+from dateutil.relativedelta import relativedelta
 
 # cache time
 _CACHE_MEMORY_TIME = 60 * 60
@@ -49,8 +50,8 @@ async def get_user_income_figure(request: Request):
             query = IncomeAccounting.objects(user_name=user_name)
 
         query_data = query.aggregate(
-            {"$match": {"unit": "TWD", "created_at": {"$gte": datetime.utcnow().replace(day=1),
-                                                      "$lt": datetime.utcnow()}}},
+            {"$match": {"unit": "TWD", "created_at": {"$gte": current_start_date,
+                                                      "$lt": current_end_date}}},
             {"$group": {"_id": "$income_kind", "total_income": {"$sum": "$amount"}}},
             {"$sort": {"_id": 1}}
         )
@@ -89,9 +90,13 @@ async def get_user_expense_figure(request: Request):
         else:
             query = Accounting.objects(user_name=user_name)
 
+        current_start_date = datetime.utcnow().replace(
+            day=1, hour=0, minute=0, second=0, microsecond=0)
+        current_end_date = current_start_date + relativedelta(months=1)
+
         query_data = query.aggregate(
-            {"$match": {"unit": "TWD", "created_at": {"$gte": datetime.utcnow().replace(day=1),
-                                                      "$lt": datetime.utcnow()}}},
+            {"$match": {"unit": "TWD", "created_at": {"$gte": current_start_date,
+                                                      "$lt": current_end_date}}},
             {"$group": {"_id": "$statistics_kind", "total_expense": {"$sum": "$cost"}}},
             {"$sort": {"_id": 1}}
         )
